@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter & Validator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+
+        .output {
+            width: 100%;
+            height: 400px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: auto;
+            background: #fafafa;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .status.valid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.invalid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.empty {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .string { color: #22863a; }
+        .number { color: #005cc5; }
+        .boolean { color: #d73a49; }
+        .null { color: #6f42c1; }
+        .key { color: #032f62; }
+    </style>
+</head>
+<body>
+    <h1>JSON Formatter & Validator</h1>
+    <p class="subtitle">Paste your JSON to format, validate, and prettify</p>
+
+    <div id="status" class="status empty">Paste JSON to get started</div>
+
+    <div class="options">
+        <label>
+            Indent:
+            <select id="indent">
+                <option value="2">2 spaces</option>
+                <option value="4">4 spaces</option>
+                <option value="tab">Tab</option>
+            </select>
+        </label>
+        <label>
+            <input type="checkbox" id="syntaxHighlight" checked>
+            Syntax highlighting
+        </label>
+    </div>
+
+    <div class="buttons">
+        <button class="btn-primary" onclick="formatJSON()">Format</button>
+        <button class="btn-secondary" onclick="minifyJSON()">Minify</button>
+        <button class="btn-secondary" onclick="copyOutput()">Copy Output</button>
+        <button class="btn-secondary" onclick="clearAll()">Clear</button>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title">Input</span>
+            </div>
+            <textarea id="input" placeholder="Paste your JSON here..."></textarea>
+        </div>
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title">Output</span>
+            </div>
+            <div id="output" class="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('input');
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        const indentSelect = document.getElementById('indent');
+        const syntaxHighlight = document.getElementById('syntaxHighlight');
+
+        // Auto-format on paste
+        input.addEventListener('paste', () => {
+            setTimeout(formatJSON, 10);
+        });
+
+        // Validate on input
+        input.addEventListener('input', () => {
+            validateJSON();
+        });
+
+        function getIndent() {
+            const value = indentSelect.value;
+            return value === 'tab' ? '\t' : parseInt(value);
+        }
+
+        function validateJSON() {
+            const text = input.value.trim();
+            if (!text) {
+                status.className = 'status empty';
+                status.textContent = 'Paste JSON to get started';
+                return null;
+            }
+
+            try {
+                const parsed = JSON.parse(text);
+                status.className = 'status valid';
+                status.textContent = 'Valid JSON';
+                return parsed;
+            } catch (e) {
+                status.className = 'status invalid';
+                status.textContent = 'Invalid JSON: ' + e.message;
+                return null;
+            }
+        }
+
+        function syntaxHighlightJSON(json) {
+            if (!syntaxHighlight.checked) {
+                return escapeHtml(json);
+            }
+
+            return json.replace(
+                /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+                function (match) {
+                    let cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + escapeHtml(match) + '</span>';
+                }
+            );
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatJSON() {
+            const parsed = validateJSON();
+            if (parsed !== null) {
+                const formatted = JSON.stringify(parsed, null, getIndent());
+                output.innerHTML = syntaxHighlightJSON(formatted);
+            } else if (input.value.trim()) {
+                output.textContent = 'Cannot format invalid JSON';
+            } else {
+                output.textContent = '';
+            }
+        }
+
+        function minifyJSON() {
+            const parsed = validateJSON();
+            if (parsed !== null) {
+                const minified = JSON.stringify(parsed);
+                output.innerHTML = syntaxHighlightJSON(minified);
+            } else if (input.value.trim()) {
+                output.textContent = 'Cannot minify invalid JSON';
+            } else {
+                output.textContent = '';
+            }
+        }
+
+        function copyOutput() {
+            const text = output.textContent;
+            if (text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 1500);
+                });
+            }
+        }
+
+        function clearAll() {
+            input.value = '';
+            output.innerHTML = '';
+            status.className = 'status empty';
+            status.textContent = 'Paste JSON to get started';
+        }
+
+        // Format on option changes
+        indentSelect.addEventListener('change', formatJSON);
+        syntaxHighlight.addEventListener('change', formatJSON);
+    </script>
+</body>
+</html>
