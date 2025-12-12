@@ -66,9 +66,15 @@
             </div>
         </div>
 
-        <!-- Dog Information Form -->
-        <div class="bg-white rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
-            <h3 class="text-primary-500 font-semibold text-lg mb-4 sm:mb-5">Your Dog's Information</h3>
+        <!-- Dog Information Form (Collapsible) -->
+        <div class="bg-white rounded-xl mb-6 sm:mb-8 shadow-sm overflow-hidden">
+            <button onclick="toggleSection('dogInfo')" class="w-full flex items-center justify-between p-4 sm:p-6 pb-0 text-left hover:bg-gray-50 transition-colors">
+                <h3 class="text-primary-500 font-semibold text-lg">Your Dog's Information</h3>
+                <svg id="dogInfoChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="dogInfoContent" class="px-4 sm:px-6 pb-4 sm:pb-6 pt-4 sm:pt-5">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 <div class="flex flex-col">
                     <label for="weight" class="text-gray-600 text-sm mb-2 font-medium">Weight</label>
@@ -130,6 +136,7 @@
             </div>
             <div class="text-xs text-gray-500 mt-4" id="multiplierInfo">
                 Current multiplier: <strong class="text-primary-500" id="currentMultiplier">1.6</strong>x RER
+            </div>
             </div>
         </div>
 
@@ -247,9 +254,10 @@
             if (saved) {
                 return JSON.parse(saved);
             }
-            // Default: stats expanded (to show results), forms collapsed
+            // Default: stats expanded (to show results), forms collapsed, dog info expanded
             return {
                 stats: false,
+                dogInfo: false,
                 addFood: true,
                 addTreat: true
             };
@@ -282,7 +290,7 @@
         function initCollapsibleSections() {
             const state = getCollapsedState();
 
-            ['stats', 'addFood', 'addTreat'].forEach(sectionId => {
+            ['stats', 'dogInfo', 'addFood', 'addTreat'].forEach(sectionId => {
                 const content = document.getElementById(sectionId + 'Content');
                 const chevron = document.getElementById(sectionId + 'Chevron');
 
