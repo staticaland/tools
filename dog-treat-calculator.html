@@ -4,512 +4,189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dog Treat Calculator</title>
-    <style>
-        * {
-            box-sizing: border-box;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#ebf4ff',
+                            100: '#e9d8fd',
+                            500: '#5a67d8',
+                            600: '#434190',
+                            700: '#3c366b'
+                        },
+                        success: {
+                            50: '#f0fff4',
+                            100: '#c6f6d5',
+                            500: '#38a169',
+                            600: '#276749'
+                        }
+                    }
+                }
+            }
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f8f9fa;
-            min-height: 100vh;
-            color: #333;
-        }
-
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .results {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .result-card {
-            background: #fff;
-            padding: 20px 15px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .result-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #5a67d8;
-        }
-
-        .result-unit {
-            font-size: 16px;
-            color: #666;
-        }
-
-        .result-label {
-            color: #666;
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        .treat-highlight {
-            background: linear-gradient(135deg, #ebf4ff 0%, #e9d8fd 100%);
-            border: 2px solid #5a67d8;
-        }
-
-        .treat-highlight .result-value {
-            color: #434190;
-        }
-
-        .food-highlight {
-            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
-            border: 2px solid #38a169;
-        }
-
-        .food-highlight .result-value {
-            color: #276749;
-        }
-
-        .form-container {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .form-container h3 {
-            color: #5a67d8;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            color: #555;
-            font-size: 14px;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            padding: 12px 15px;
-            font-size: 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            background: #fff;
-            color: #333;
-            transition: border-color 0.2s;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #5a67d8;
-        }
-
-        select {
-            cursor: pointer;
-        }
-
-        select option {
-            background: #fff;
-            color: #333;
-        }
-
-        .weight-input-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .weight-input-group input {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .weight-input-group select {
-            width: 80px;
-        }
-
-        .info-panel {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .info-panel h3 {
-            color: #5a67d8;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-
-        .food-panel h3 {
-            color: #38a169;
-        }
-
-        .product-row {
-            display: grid;
-            grid-template-columns: 1fr 120px 100px auto;
-            gap: 10px;
-            align-items: end;
-            margin-bottom: 10px;
-        }
-
-        .product-row.with-percentage {
-            grid-template-columns: 1fr 120px 80px 100px auto;
-        }
-
-        .product-row input {
-            padding: 10px 12px;
-            font-size: 14px;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            font-size: 14px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .btn-add {
-            background: #5a67d8;
-            color: white;
-        }
-
-        .btn-add:hover {
-            background: #434190;
-        }
-
-        .btn-remove {
-            background: #e53e3e;
-            color: white;
-            padding: 10px 12px;
-        }
-
-        .btn-remove:hover {
-            background: #c53030;
-        }
-
-        .btn-save {
-            background: #38a169;
-            color: white;
-        }
-
-        .btn-save:hover {
-            background: #276749;
-        }
-
-        .product-list {
-            margin-top: 15px;
-        }
-
-        .product-item {
-            display: grid;
-            grid-template-columns: 1fr 100px 80px auto;
-            gap: 10px;
-            align-items: center;
-            padding: 12px 15px;
-            background: #f7fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 8px;
-        }
-
-        .product-item.with-percentage {
-            grid-template-columns: 1fr 100px 80px 100px auto;
-        }
-
-        .product-name {
-            color: #4a5568;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .product-info {
-            color: #718096;
-            font-size: 13px;
-        }
-
-        .product-result {
-            color: #5a67d8;
-            font-weight: 600;
-            font-size: 14px;
-            text-align: right;
-        }
-
-        .product-result.food {
-            color: #38a169;
-        }
-
-        .percentage-input {
-            width: 70px;
-            text-align: center;
-        }
-
-        .percentage-total {
-            margin-top: 10px;
-            padding: 10px 15px;
-            background: #ebf4ff;
-            border-radius: 8px;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .percentage-total.valid {
-            background: #f0fff4;
-            color: #276749;
-        }
-
-        .percentage-total.invalid {
-            background: #fff5f5;
-            color: #c53030;
-        }
-
-        .formula-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #ebf4ff;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #4a5568;
-        }
-
-        .formula-info strong {
-            color: #5a67d8;
-        }
-
-        .disclaimer {
-            margin-top: 30px;
-            padding: 15px;
-            background: #fff5f5;
-            border-radius: 8px;
-            font-size: 13px;
-            color: #c53030;
-            text-align: center;
-            border: 1px solid #feb2b2;
-        }
-
-        .multiplier-info {
-            font-size: 12px;
-            color: #718096;
-            margin-top: 15px;
-        }
-
-        .multiplier-info strong {
-            color: #5a67d8;
-        }
-
-        .section-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 20px;
-            color: #718096;
-            font-size: 14px;
-        }
-
-        .add-form {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 15px;
-            margin-top: 15px;
-        }
-
-        .add-form-title {
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-    </style>
+    </script>
 </head>
-<body>
-    <h1>Dog Treat Calculator</h1>
-    <p class="subtitle">Calculate daily food and treat allowances for your dog</p>
+<body class="font-sans bg-gray-50 min-h-screen text-gray-800">
+    <div class="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">Dog Treat Calculator</h1>
+        <p class="text-center text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base">Calculate daily food and treat allowances for your dog</p>
 
-    <div class="results">
-        <div class="result-card">
-            <div class="result-value"><span id="dailyCalories">0</span></div>
-            <div class="result-label">Daily Calories (MER)</div>
+        <!-- Results Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div class="bg-white p-4 sm:p-5 rounded-xl text-center shadow-sm">
+                <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="dailyCalories">0</span></div>
+                <div class="text-gray-500 text-xs sm:text-sm mt-1">Daily Calories (MER)</div>
+            </div>
+            <div class="bg-gradient-to-br from-success-50 to-success-100 p-4 sm:p-5 rounded-xl text-center border-2 border-success-500">
+                <div class="text-2xl sm:text-3xl font-bold text-success-600"><span id="foodCalories">0</span></div>
+                <div class="text-gray-600 text-xs sm:text-sm mt-1">Food (<span id="foodPercentLabel">90</span>%)</div>
+            </div>
+            <div class="bg-gradient-to-br from-primary-50 to-primary-100 p-4 sm:p-5 rounded-xl text-center border-2 border-primary-500">
+                <div class="text-2xl sm:text-3xl font-bold text-primary-600"><span id="treatCalories">0</span></div>
+                <div class="text-gray-600 text-xs sm:text-sm mt-1">Treats (<span id="treatPercentLabel">10</span>%)</div>
+            </div>
+            <div class="bg-white p-4 sm:p-5 rounded-xl text-center shadow-sm">
+                <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="rerValue">0</span></div>
+                <div class="text-gray-500 text-xs sm:text-sm mt-1">Resting Energy (RER)</div>
+            </div>
         </div>
-        <div class="result-card food-highlight">
-            <div class="result-value"><span id="foodCalories">0</span></div>
-            <div class="result-label">Food Calories (<span id="foodPercentLabel">90</span>%)</div>
-        </div>
-        <div class="result-card treat-highlight">
-            <div class="result-value"><span id="treatCalories">0</span></div>
-            <div class="result-label">Treat Calories (<span id="treatPercentLabel">10</span>%)</div>
-        </div>
-        <div class="result-card">
-            <div class="result-value"><span id="rerValue">0</span></div>
-            <div class="result-label">Resting Energy (RER)</div>
-        </div>
-    </div>
 
-    <div class="form-container">
-        <h3>Your Dog's Information</h3>
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="weight">Weight</label>
-                <div class="weight-input-group">
-                    <input type="number" id="weight" min="0.5" max="150" step="0.1" value="15" placeholder="Weight">
-                    <select id="weightUnit">
-                        <option value="kg">kg</option>
-                        <option value="lbs">lbs</option>
+        <!-- Dog Information Form -->
+        <div class="bg-white rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm">
+            <h3 class="text-primary-500 font-semibold text-lg mb-4 sm:mb-5">Your Dog's Information</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                <div class="flex flex-col">
+                    <label for="weight" class="text-gray-600 text-sm mb-2 font-medium">Weight</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="weight" min="0.5" max="150" step="0.1" value="15" placeholder="Weight"
+                            class="flex-1 min-w-0 px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors">
+                        <select id="weightUnit" class="w-20 px-2 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
+                            <option value="kg">kg</option>
+                            <option value="lbs">lbs</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="lifeStage" class="text-gray-600 text-sm mb-2 font-medium">Life Stage</label>
+                    <select id="lifeStage" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
+                        <option value="adult">Adult (1-7 years)</option>
+                        <option value="senior">Senior (7+ years)</option>
+                        <option value="puppy_young">Puppy (under 4 months)</option>
+                        <option value="puppy_older">Puppy (4-12 months)</option>
                     </select>
                 </div>
+
+                <div class="flex flex-col">
+                    <label for="neutered" class="text-gray-600 text-sm mb-2 font-medium">Neutered/Spayed</label>
+                    <select id="neutered" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
+                        <option value="yes">Yes</option>
+                        <option value="no">No (Intact)</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="activityLevel" class="text-gray-600 text-sm mb-2 font-medium">Activity Level</label>
+                    <select id="activityLevel" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
+                        <option value="low">Low (mostly resting)</option>
+                        <option value="normal" selected>Normal (daily walks)</option>
+                        <option value="active">Active (1-3 hrs exercise)</option>
+                        <option value="working">Working/Sport dog</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="bodyCondition" class="text-gray-600 text-sm mb-2 font-medium">Body Condition</label>
+                    <select id="bodyCondition" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
+                        <option value="underweight">Underweight (needs to gain)</option>
+                        <option value="ideal" selected>Ideal weight</option>
+                        <option value="overweight">Overweight (needs to lose)</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="treatPercent" class="text-gray-600 text-sm mb-2 font-medium">Treat Allowance</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="number" id="treatPercent" min="1" max="30" step="1" value="10"
+                            class="flex-1 min-w-0 px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors">
+                        <span class="text-gray-500 text-base px-2">%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="text-xs text-gray-500 mt-4" id="multiplierInfo">
+                Current multiplier: <strong class="text-primary-500" id="currentMultiplier">1.6</strong>x RER
+            </div>
+        </div>
+
+        <!-- Main Food Section -->
+        <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
+            <h3 class="text-success-500 font-semibold text-lg mb-2">Main Food</h3>
+            <p class="text-gray-500 text-sm mb-4">Add your dog's main food to see how many grams to feed daily (based on <span id="foodBudget" class="font-medium">0</span> kcal budget)</p>
+
+            <div class="space-y-2" id="foodList">
+                <div class="text-center py-4 text-gray-500 text-sm">No food added yet. Add your dog's main food below.</div>
             </div>
 
-            <div class="form-group">
-                <label for="lifeStage">Life Stage</label>
-                <select id="lifeStage">
-                    <option value="adult">Adult (1-7 years)</option>
-                    <option value="senior">Senior (7+ years)</option>
-                    <option value="puppy_young">Puppy (under 4 months)</option>
-                    <option value="puppy_older">Puppy (4-12 months)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="neutered">Neutered/Spayed</label>
-                <select id="neutered">
-                    <option value="yes">Yes</option>
-                    <option value="no">No (Intact)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="activityLevel">Activity Level</label>
-                <select id="activityLevel">
-                    <option value="low">Low (mostly resting)</option>
-                    <option value="normal" selected>Normal (daily walks)</option>
-                    <option value="active">Active (1-3 hrs exercise)</option>
-                    <option value="working">Working/Sport dog</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="bodyCondition">Body Condition</label>
-                <select id="bodyCondition">
-                    <option value="underweight">Underweight (needs to gain)</option>
-                    <option value="ideal" selected>Ideal weight</option>
-                    <option value="overweight">Overweight (needs to lose)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="treatPercent">Treat Allowance</label>
-                <div class="weight-input-group">
-                    <input type="number" id="treatPercent" min="1" max="30" step="1" value="10">
-                    <span style="padding: 12px 15px; font-size: 16px; color: #666;">%</span>
+            <div class="border-t border-gray-200 pt-4 mt-4">
+                <div class="text-sm text-gray-600 mb-3 font-medium">Add Food Product</div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="newFoodName" placeholder="Food name (e.g., Brand Kibble)"
+                        class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                    <input type="number" id="newFoodCalories" placeholder="kcal/100g" min="1" step="1"
+                        class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                    <button onclick="addFood()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
+                        Add
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="multiplier-info" id="multiplierInfo">
-            Current multiplier: <strong id="currentMultiplier">1.6</strong>x RER
-        </div>
-    </div>
 
-    <div class="info-panel food-panel">
-        <h3>Main Food</h3>
-        <p style="color: #666; font-size: 14px; margin-top: 0;">Add your dog's main food to see how many grams to feed daily (based on <span id="foodBudget">0</span> kcal budget)</p>
+        <!-- Treats Section -->
+        <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
+            <h3 class="text-primary-500 font-semibold text-lg mb-2">Treats</h3>
+            <p class="text-gray-500 text-sm mb-4">Add treats and set percentage split (based on <span id="treatBudget" class="font-medium">0</span> kcal treat budget)</p>
 
-        <div class="product-list" id="foodList">
-            <div class="empty-state">No food added yet. Add your dog's main food below.</div>
-        </div>
+            <div class="space-y-2" id="treatList">
+                <div class="text-center py-4 text-gray-500 text-sm">No treats added yet. Add treats below.</div>
+            </div>
 
-        <div class="add-form">
-            <div class="add-form-title">Add Food Product</div>
-            <div class="product-row">
-                <div class="form-group">
-                    <input type="text" id="newFoodName" placeholder="Food name (e.g., Brand Kibble)">
-                </div>
-                <div class="form-group">
-                    <input type="number" id="newFoodCalories" placeholder="kcal/100g" min="1" step="1">
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-add" onclick="addFood()">Add</button>
+            <div class="mt-3 p-3 rounded-lg text-sm flex justify-between items-center" id="percentageTotal">
+                <span>Total allocation:</span>
+                <span class="font-medium" id="percentageValue">0%</span>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4 mt-4">
+                <div class="text-sm text-gray-600 mb-3 font-medium">Add Treat Product</div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="newTreatName" placeholder="Treat name"
+                        class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                    <input type="number" id="newTreatCalories" placeholder="kcal/100g" min="1" step="1"
+                        class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                    <input type="number" id="newTreatPercentage" placeholder="%" min="1" max="100" step="1"
+                        class="w-full sm:w-20 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-center">
+                    <button onclick="addTreat()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
+                        Add
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="info-panel">
-        <h3>Treats</h3>
-        <p style="color: #666; font-size: 14px; margin-top: 0;">Add treats and set percentage split (based on <span id="treatBudget">0</span> kcal treat budget)</p>
-
-        <div class="product-list" id="treatList">
-            <div class="empty-state">No treats added yet. Add treats below.</div>
+        <!-- Formula Info -->
+        <div class="bg-primary-50 rounded-lg p-4 text-sm text-gray-600 mb-5">
+            <strong class="text-primary-500">How it's calculated:</strong><br>
+            <span class="block mt-2"><strong class="text-primary-500">RER</strong> (Resting Energy Requirement) = 70 x (weight in kg)^0.75</span>
+            <span class="block"><strong class="text-primary-500">MER</strong> (Maintenance Energy Requirement) = RER x life stage/activity multiplier</span>
+            <span class="block"><strong class="text-primary-500">Food/Treat split</strong> = Configurable (default 10% treats, 90% food)</span>
+            <span class="block"><strong class="text-primary-500">Grams</strong> = (Calorie budget x 100) / kcal per 100g</span>
         </div>
 
-        <div class="percentage-total" id="percentageTotal">
-            <span>Total allocation:</span>
-            <span id="percentageValue">0%</span>
+        <!-- Disclaimer -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-600 text-center">
+            This calculator provides estimates only. Consult your veterinarian for personalized dietary advice, especially for dogs with health conditions, pregnant/nursing dogs, or unusual circumstances.
         </div>
-
-        <div class="add-form">
-            <div class="add-form-title">Add Treat Product</div>
-            <div class="product-row with-percentage">
-                <div class="form-group">
-                    <input type="text" id="newTreatName" placeholder="Treat name">
-                </div>
-                <div class="form-group">
-                    <input type="number" id="newTreatCalories" placeholder="kcal/100g" min="1" step="1">
-                </div>
-                <div class="form-group">
-                    <input type="number" id="newTreatPercentage" placeholder="%" min="1" max="100" step="1" class="percentage-input">
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-add" onclick="addTreat()">Add</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="formula-info">
-        <strong>How it's calculated:</strong><br>
-        <strong>RER</strong> (Resting Energy Requirement) = 70 x (weight in kg)^0.75<br>
-        <strong>MER</strong> (Maintenance Energy Requirement) = RER x life stage/activity multiplier<br>
-        <strong>Food/Treat split</strong> = Configurable (default 10% treats, 90% food)<br>
-        <strong>Grams</strong> = (Calorie budget x 100) / kcal per 100g
-    </div>
-
-    <div class="disclaimer">
-        This calculator provides estimates only. Consult your veterinarian for personalized dietary advice, especially for dogs with health conditions, pregnant/nursing dogs, or unusual circumstances.
     </div>
 
     <script>
@@ -707,18 +384,18 @@
             const container = document.getElementById('foodList');
 
             if (foods.length === 0) {
-                container.innerHTML = '<div class="empty-state">No food added yet. Add your dog\'s main food below.</div>';
+                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No food added yet. Add your dog\'s main food below.</div>';
                 return;
             }
 
             container.innerHTML = foods.map(food => {
                 const grams = calculateGrams(foodCalories, food.kcalPer100g);
                 return `
-                    <div class="product-item">
-                        <span class="product-name">${food.name}</span>
-                        <span class="product-info">${food.kcalPer100g} kcal/100g</span>
-                        <span class="product-result food">${grams.toFixed(0)}g/day</span>
-                        <button class="btn btn-remove" onclick="removeFood(${food.id})">x</button>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="font-medium text-gray-700 text-sm flex-1">${food.name}</span>
+                        <span class="text-gray-500 text-xs sm:text-sm">${food.kcalPer100g} kcal/100g</span>
+                        <span class="text-success-500 font-semibold text-sm">${grams.toFixed(0)}g/day</span>
+                        <button onclick="removeFood(${food.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
                     </div>
                 `;
             }).join('');
@@ -729,8 +406,8 @@
             const totalContainer = document.getElementById('percentageTotal');
 
             if (treats.length === 0) {
-                container.innerHTML = '<div class="empty-state">No treats added yet. Add treats below.</div>';
-                totalContainer.className = 'percentage-total';
+                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No treats added yet. Add treats below.</div>';
+                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-primary-50';
                 document.getElementById('percentageValue').textContent = '0%';
                 return;
             }
@@ -741,20 +418,24 @@
                 const treatShare = treatCalories * (treat.percentage / 100);
                 const grams = calculateGrams(treatShare, treat.kcalPer100g);
                 return `
-                    <div class="product-item with-percentage">
-                        <span class="product-name">${treat.name}</span>
-                        <span class="product-info">${treat.kcalPer100g} kcal/100g</span>
-                        <input type="number" class="percentage-input" value="${treat.percentage}" min="0" max="100"
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="font-medium text-gray-700 text-sm flex-1">${treat.name}</span>
+                        <span class="text-gray-500 text-xs sm:text-sm">${treat.kcalPer100g} kcal/100g</span>
+                        <input type="number" value="${treat.percentage}" min="0" max="100"
                             onchange="updateTreatPercentage(${treat.id}, this.value)"
-                            style="padding: 8px; font-size: 13px;">
-                        <span class="product-result">${grams.toFixed(1)}g/day</span>
-                        <button class="btn btn-remove" onclick="removeTreat(${treat.id})">x</button>
+                            class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                        <span class="text-primary-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(1)}g/day</span>
+                        <button onclick="removeTreat(${treat.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
                     </div>
                 `;
             }).join('');
 
             document.getElementById('percentageValue').textContent = totalPercentage + '%';
-            totalContainer.className = 'percentage-total ' + (totalPercentage === 100 ? 'valid' : 'invalid');
+            if (totalPercentage === 100) {
+                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+            } else {
+                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+            }
         }
 
         function updateDisplay() {
