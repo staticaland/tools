@@ -72,6 +72,15 @@
             color: #434190;
         }
 
+        .food-highlight {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 2px solid #38a169;
+        }
+
+        .food-highlight .result-value {
+            color: #276749;
+        }
+
         .form-container {
             background: #fff;
             border-radius: 12px;
@@ -105,6 +114,7 @@
         }
 
         input[type="number"],
+        input[type="text"],
         select {
             padding: 12px 15px;
             font-size: 16px;
@@ -116,6 +126,7 @@
         }
 
         input[type="number"]:focus,
+        input[type="text"]:focus,
         select:focus {
             outline: none;
             border-color: #5a67d8;
@@ -158,39 +169,131 @@
             margin-bottom: 15px;
         }
 
-        .treat-examples {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 12px;
+        .food-panel h3 {
+            color: #38a169;
         }
 
-        .treat-item {
-            display: flex;
-            justify-content: space-between;
+        .product-row {
+            display: grid;
+            grid-template-columns: 1fr 120px 100px auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 10px;
+        }
+
+        .product-row.with-percentage {
+            grid-template-columns: 1fr 120px 80px 100px auto;
+        }
+
+        .product-row input {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-add {
+            background: #5a67d8;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #434190;
+        }
+
+        .btn-remove {
+            background: #e53e3e;
+            color: white;
+            padding: 10px 12px;
+        }
+
+        .btn-remove:hover {
+            background: #c53030;
+        }
+
+        .btn-save {
+            background: #38a169;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #276749;
+        }
+
+        .product-list {
+            margin-top: 15px;
+        }
+
+        .product-item {
+            display: grid;
+            grid-template-columns: 1fr 100px 80px auto;
+            gap: 10px;
             align-items: center;
             padding: 12px 15px;
             background: #f7fafc;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
+            margin-bottom: 8px;
         }
 
-        .treat-name {
+        .product-item.with-percentage {
+            grid-template-columns: 1fr 100px 80px 100px auto;
+        }
+
+        .product-name {
             color: #4a5568;
             font-size: 14px;
+            font-weight: 500;
         }
 
-        .treat-amount {
+        .product-info {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .product-result {
             color: #5a67d8;
             font-weight: 600;
             font-size: 14px;
+            text-align: right;
         }
 
-        .treat-amount.warning {
-            color: #d69e2e;
+        .product-result.food {
+            color: #38a169;
         }
 
-        .treat-amount.danger {
-            color: #e53e3e;
+        .percentage-input {
+            width: 70px;
+            text-align: center;
+        }
+
+        .percentage-total {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: #ebf4ff;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .percentage-total.valid {
+            background: #f0fff4;
+            color: #276749;
+        }
+
+        .percentage-total.invalid {
+            background: #fff5f5;
+            color: #c53030;
         }
 
         .formula-info {
@@ -226,24 +329,50 @@
         .multiplier-info strong {
             color: #5a67d8;
         }
+
+        .section-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .add-form {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .add-form-title {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
     <h1>Dog Treat Calculator</h1>
-    <p class="subtitle">Calculate safe daily treat allowance for your dog</p>
+    <p class="subtitle">Calculate daily food and treat allowances for your dog</p>
 
     <div class="results">
         <div class="result-card">
             <div class="result-value"><span id="dailyCalories">0</span></div>
             <div class="result-label">Daily Calories (MER)</div>
         </div>
+        <div class="result-card food-highlight">
+            <div class="result-value"><span id="foodCalories">0</span></div>
+            <div class="result-label">Food Calories (<span id="foodPercentLabel">90</span>%)</div>
+        </div>
         <div class="result-card treat-highlight">
             <div class="result-value"><span id="treatCalories">0</span></div>
-            <div class="result-label">Max Treat Calories (10%)</div>
-        </div>
-        <div class="result-card">
-            <div class="result-value"><span id="foodCalories">0</span></div>
-            <div class="result-label">Food Calories (90%)</div>
+            <div class="result-label">Treat Calories (<span id="treatPercentLabel">10</span>%)</div>
         </div>
         <div class="result-card">
             <div class="result-value"><span id="rerValue">0</span></div>
@@ -301,25 +430,82 @@
                     <option value="overweight">Overweight (needs to lose)</option>
                 </select>
             </div>
+
+            <div class="form-group">
+                <label for="treatPercent">Treat Allowance</label>
+                <div class="weight-input-group">
+                    <input type="number" id="treatPercent" min="1" max="30" step="1" value="10">
+                    <span style="padding: 12px 15px; font-size: 16px; color: #666;">%</span>
+                </div>
+            </div>
         </div>
         <div class="multiplier-info" id="multiplierInfo">
             Current multiplier: <strong id="currentMultiplier">1.6</strong>x RER
         </div>
     </div>
 
+    <div class="info-panel food-panel">
+        <h3>Main Food</h3>
+        <p style="color: #666; font-size: 14px; margin-top: 0;">Add your dog's main food to see how many grams to feed daily (based on <span id="foodBudget">0</span> kcal budget)</p>
+
+        <div class="product-list" id="foodList">
+            <div class="empty-state">No food added yet. Add your dog's main food below.</div>
+        </div>
+
+        <div class="add-form">
+            <div class="add-form-title">Add Food Product</div>
+            <div class="product-row">
+                <div class="form-group">
+                    <input type="text" id="newFoodName" placeholder="Food name (e.g., Brand Kibble)">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="newFoodCalories" placeholder="kcal/100g" min="1" step="1">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-add" onclick="addFood()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="info-panel">
-        <h3>How Many Treats Is That?</h3>
-        <p style="color: #888; font-size: 14px; margin-top: 0;">Based on your <span id="treatBudget">0</span> calorie treat budget:</p>
-        <div class="treat-examples" id="treatExamples">
-            <!-- Populated by JavaScript -->
+        <h3>Treats</h3>
+        <p style="color: #666; font-size: 14px; margin-top: 0;">Add treats and set percentage split (based on <span id="treatBudget">0</span> kcal treat budget)</p>
+
+        <div class="product-list" id="treatList">
+            <div class="empty-state">No treats added yet. Add treats below.</div>
+        </div>
+
+        <div class="percentage-total" id="percentageTotal">
+            <span>Total allocation:</span>
+            <span id="percentageValue">0%</span>
+        </div>
+
+        <div class="add-form">
+            <div class="add-form-title">Add Treat Product</div>
+            <div class="product-row with-percentage">
+                <div class="form-group">
+                    <input type="text" id="newTreatName" placeholder="Treat name">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="newTreatCalories" placeholder="kcal/100g" min="1" step="1">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="newTreatPercentage" placeholder="%" min="1" max="100" step="1" class="percentage-input">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-add" onclick="addTreat()">Add</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="formula-info">
         <strong>How it's calculated:</strong><br>
-        <strong>RER</strong> (Resting Energy Requirement) = 70 × (weight in kg)<sup>0.75</sup><br>
-        <strong>MER</strong> (Maintenance Energy Requirement) = RER × life stage/activity multiplier<br>
-        <strong>Treat allowance</strong> = 10% of MER (veterinary guideline to maintain balanced nutrition)
+        <strong>RER</strong> (Resting Energy Requirement) = 70 x (weight in kg)^0.75<br>
+        <strong>MER</strong> (Maintenance Energy Requirement) = RER x life stage/activity multiplier<br>
+        <strong>Food/Treat split</strong> = Configurable (default 10% treats, 90% food)<br>
+        <strong>Grams</strong> = (Calorie budget x 100) / kcal per 100g
     </div>
 
     <div class="disclaimer">
@@ -327,21 +513,14 @@
     </div>
 
     <script>
-        // Common treat calorie data (approximate values)
-        const treatData = [
-            { name: 'Small training treat', calories: 3 },
-            { name: 'Medium dog biscuit', calories: 30 },
-            { name: 'Large Milk-Bone', calories: 40 },
-            { name: 'Dental chew (medium)', calories: 70 },
-            { name: 'Pig ear', calories: 150 },
-            { name: 'Bully stick (6")', calories: 90 },
-            { name: 'Slice of cheese', calories: 80 },
-            { name: 'Baby carrot', calories: 4 },
-            { name: 'Apple slice', calories: 15 },
-            { name: 'Peanut butter (1 tbsp)', calories: 95 },
-            { name: 'Freeze-dried liver', calories: 5 },
-            { name: 'Greenies (regular)', calories: 90 },
-        ];
+        // Data storage
+        let foods = JSON.parse(localStorage.getItem('dogFoods') || '[]');
+        let treats = JSON.parse(localStorage.getItem('dogTreats') || '[]');
+
+        function saveData() {
+            localStorage.setItem('dogFoods', JSON.stringify(foods));
+            localStorage.setItem('dogTreats', JSON.stringify(treats));
+        }
 
         function getMultiplier() {
             const lifeStage = document.getElementById('lifeStage').value;
@@ -394,58 +573,159 @@
                 return { rer: 0, mer: 0, treats: 0, food: 0 };
             }
 
-            // RER = 70 × (weight in kg)^0.75
+            // RER = 70 x (weight in kg)^0.75
             const rer = 70 * Math.pow(weight, 0.75);
 
-            // MER = RER × multiplier
+            // MER = RER x multiplier
             const multiplier = getMultiplier();
             const mer = rer * multiplier;
 
-            // Treats = 10% of MER
-            const treats = mer * 0.10;
-            const food = mer * 0.90;
+            // Get configurable treat percentage
+            const treatPercent = parseFloat(document.getElementById('treatPercent').value) || 10;
+            const foodPercent = 100 - treatPercent;
+
+            const treatsCalories = mer * (treatPercent / 100);
+            const foodCalories = mer * (foodPercent / 100);
 
             return {
                 rer: Math.round(rer),
                 mer: Math.round(mer),
-                treats: Math.round(treats),
-                food: Math.round(food),
-                multiplier: multiplier.toFixed(2)
+                treats: Math.round(treatsCalories),
+                food: Math.round(foodCalories),
+                multiplier: multiplier.toFixed(2),
+                treatPercent: treatPercent,
+                foodPercent: foodPercent
             };
         }
 
-        function updateTreatExamples(treatCalories) {
-            const container = document.getElementById('treatExamples');
+        function calculateGrams(calories, kcalPer100g) {
+            if (kcalPer100g <= 0) return 0;
+            return (calories * 100) / kcalPer100g;
+        }
 
-            if (treatCalories <= 0) {
-                container.innerHTML = '<p style="color: #666;">Enter your dog\'s weight to see treat allowances</p>';
+        function addFood() {
+            const name = document.getElementById('newFoodName').value.trim();
+            const calories = parseFloat(document.getElementById('newFoodCalories').value);
+
+            if (!name || !calories || calories <= 0) {
+                alert('Please enter a valid food name and calories per 100g');
                 return;
             }
 
-            container.innerHTML = treatData.map(treat => {
-                const amount = treatCalories / treat.calories;
-                let amountText;
-                let className = '';
+            foods.push({
+                id: Date.now(),
+                name: name,
+                kcalPer100g: calories
+            });
 
-                if (amount < 0.5) {
-                    amountText = 'Avoid';
-                    className = 'danger';
-                } else if (amount < 1) {
-                    amountText = '½ or less';
-                    className = 'warning';
-                } else if (amount >= 10) {
-                    amountText = Math.floor(amount) + '+';
-                } else {
-                    amountText = Math.floor(amount) + (amount % 1 >= 0.5 ? '-' + Math.ceil(amount) : '');
-                }
+            saveData();
+            document.getElementById('newFoodName').value = '';
+            document.getElementById('newFoodCalories').value = '';
+            updateDisplay();
+        }
 
+        function removeFood(id) {
+            foods = foods.filter(f => f.id !== id);
+            saveData();
+            updateDisplay();
+        }
+
+        function addTreat() {
+            const name = document.getElementById('newTreatName').value.trim();
+            const calories = parseFloat(document.getElementById('newTreatCalories').value);
+            const percentage = parseFloat(document.getElementById('newTreatPercentage').value);
+
+            if (!name || !calories || calories <= 0) {
+                alert('Please enter a valid treat name and calories per 100g');
+                return;
+            }
+
+            if (!percentage || percentage <= 0 || percentage > 100) {
+                alert('Please enter a valid percentage (1-100)');
+                return;
+            }
+
+            treats.push({
+                id: Date.now(),
+                name: name,
+                kcalPer100g: calories,
+                percentage: percentage
+            });
+
+            saveData();
+            document.getElementById('newTreatName').value = '';
+            document.getElementById('newTreatCalories').value = '';
+            document.getElementById('newTreatPercentage').value = '';
+            updateDisplay();
+        }
+
+        function removeTreat(id) {
+            treats = treats.filter(t => t.id !== id);
+            saveData();
+            updateDisplay();
+        }
+
+        function updateTreatPercentage(id, newPercentage) {
+            const treat = treats.find(t => t.id === id);
+            if (treat) {
+                treat.percentage = Math.max(0, Math.min(100, parseFloat(newPercentage) || 0));
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function renderFoodList(foodCalories) {
+            const container = document.getElementById('foodList');
+
+            if (foods.length === 0) {
+                container.innerHTML = '<div class="empty-state">No food added yet. Add your dog\'s main food below.</div>';
+                return;
+            }
+
+            container.innerHTML = foods.map(food => {
+                const grams = calculateGrams(foodCalories, food.kcalPer100g);
                 return `
-                    <div class="treat-item">
-                        <span class="treat-name">${treat.name}</span>
-                        <span class="treat-amount ${className}">${amountText}</span>
+                    <div class="product-item">
+                        <span class="product-name">${food.name}</span>
+                        <span class="product-info">${food.kcalPer100g} kcal/100g</span>
+                        <span class="product-result food">${grams.toFixed(0)}g/day</span>
+                        <button class="btn btn-remove" onclick="removeFood(${food.id})">x</button>
                     </div>
                 `;
             }).join('');
+        }
+
+        function renderTreatList(treatCalories) {
+            const container = document.getElementById('treatList');
+            const totalContainer = document.getElementById('percentageTotal');
+
+            if (treats.length === 0) {
+                container.innerHTML = '<div class="empty-state">No treats added yet. Add treats below.</div>';
+                totalContainer.className = 'percentage-total';
+                document.getElementById('percentageValue').textContent = '0%';
+                return;
+            }
+
+            const totalPercentage = treats.reduce((sum, t) => sum + t.percentage, 0);
+
+            container.innerHTML = treats.map(treat => {
+                const treatShare = treatCalories * (treat.percentage / 100);
+                const grams = calculateGrams(treatShare, treat.kcalPer100g);
+                return `
+                    <div class="product-item with-percentage">
+                        <span class="product-name">${treat.name}</span>
+                        <span class="product-info">${treat.kcalPer100g} kcal/100g</span>
+                        <input type="number" class="percentage-input" value="${treat.percentage}" min="0" max="100"
+                            onchange="updateTreatPercentage(${treat.id}, this.value)"
+                            style="padding: 8px; font-size: 13px;">
+                        <span class="product-result">${grams.toFixed(1)}g/day</span>
+                        <button class="btn btn-remove" onclick="removeTreat(${treat.id})">x</button>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('percentageValue').textContent = totalPercentage + '%';
+            totalContainer.className = 'percentage-total ' + (totalPercentage === 100 ? 'valid' : 'invalid');
         }
 
         function updateDisplay() {
@@ -457,8 +737,12 @@
             document.getElementById('rerValue').textContent = results.rer;
             document.getElementById('currentMultiplier').textContent = results.multiplier;
             document.getElementById('treatBudget').textContent = results.treats;
+            document.getElementById('foodBudget').textContent = results.food;
+            document.getElementById('treatPercentLabel').textContent = results.treatPercent;
+            document.getElementById('foodPercentLabel').textContent = results.foodPercent;
 
-            updateTreatExamples(results.treats);
+            renderFoodList(results.food);
+            renderTreatList(results.treats);
         }
 
         // Add event listeners to all inputs
@@ -468,6 +752,7 @@
         document.getElementById('neutered').addEventListener('change', updateDisplay);
         document.getElementById('activityLevel').addEventListener('change', updateDisplay);
         document.getElementById('bodyCondition').addEventListener('change', updateDisplay);
+        document.getElementById('treatPercent').addEventListener('input', updateDisplay);
 
         // Initialize
         updateDisplay();
