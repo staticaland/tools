@@ -229,6 +229,19 @@
                 </svg>
                 Share Settings
             </button>
+            <button onclick="exportToJSON()" class="px-5 py-2.5 text-sm font-medium bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors active:scale-95 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export JSON
+            </button>
+            <button onclick="document.getElementById('jsonFileInput').click()" class="px-5 py-2.5 text-sm font-medium bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors active:scale-95 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Import JSON
+            </button>
+            <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="importFromJSON(event)">
             <div id="shareStatus" class="text-sm text-gray-500 hidden"></div>
         </div>
     </div>
@@ -671,6 +684,114 @@
                 // Fallback: show URL in prompt
                 prompt('Copy this link:', url);
             });
+        }
+
+        function exportToJSON() {
+            const state = {
+                settings: {
+                    weight: document.getElementById('weight').value,
+                    weightUnit: document.getElementById('weightUnit').value,
+                    lifeStage: document.getElementById('lifeStage').value,
+                    neutered: document.getElementById('neutered').value,
+                    activityLevel: document.getElementById('activityLevel').value,
+                    bodyCondition: document.getElementById('bodyCondition').value,
+                    treatPercent: document.getElementById('treatPercent').value
+                },
+                foods: foods.map(f => ({ name: f.name, kcalPer100g: f.kcalPer100g })),
+                treats: treats.map(t => ({ name: t.name, kcalPer100g: t.kcalPer100g, percentage: t.percentage }))
+            };
+
+            const json = JSON.stringify(state, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dog-calculator-settings.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            const statusEl = document.getElementById('shareStatus');
+            statusEl.textContent = 'Settings exported!';
+            statusEl.className = 'text-sm text-success-600';
+            statusEl.classList.remove('hidden');
+            setTimeout(() => statusEl.classList.add('hidden'), 3000);
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('shareStatus');
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+
+                    // Validate structure
+                    if (!state.settings && !state.foods && !state.treats) {
+                        throw new Error('Invalid file format');
+                    }
+
+                    // Apply settings
+                    if (state.settings) {
+                        if (state.settings.weight) document.getElementById('weight').value = state.settings.weight;
+                        if (state.settings.weightUnit) document.getElementById('weightUnit').value = state.settings.weightUnit;
+                        if (state.settings.lifeStage) document.getElementById('lifeStage').value = state.settings.lifeStage;
+                        if (state.settings.neutered) document.getElementById('neutered').value = state.settings.neutered;
+                        if (state.settings.activityLevel) document.getElementById('activityLevel').value = state.settings.activityLevel;
+                        if (state.settings.bodyCondition) document.getElementById('bodyCondition').value = state.settings.bodyCondition;
+                        if (state.settings.treatPercent) document.getElementById('treatPercent').value = state.settings.treatPercent;
+                    }
+
+                    // Apply foods
+                    if (state.foods && Array.isArray(state.foods)) {
+                        foods = state.foods.map((f, i) => ({
+                            id: Date.now() + i,
+                            name: f.name,
+                            kcalPer100g: f.kcalPer100g
+                        }));
+                    }
+
+                    // Apply treats
+                    if (state.treats && Array.isArray(state.treats)) {
+                        treats = state.treats.map((t, i) => ({
+                            id: Date.now() + 1000 + i,
+                            name: t.name,
+                            kcalPer100g: t.kcalPer100g,
+                            percentage: t.percentage
+                        }));
+                    }
+
+                    saveSettings();
+                    saveData();
+                    updateDisplay();
+
+                    statusEl.textContent = 'Settings imported successfully!';
+                    statusEl.className = 'text-sm text-success-600';
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                } catch (err) {
+                    statusEl.textContent = 'Error: Invalid JSON file';
+                    statusEl.className = 'text-sm text-red-600';
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 4000);
+                }
+            };
+
+            reader.onerror = function() {
+                statusEl.textContent = 'Error reading file';
+                statusEl.className = 'text-sm text-red-600';
+                statusEl.classList.remove('hidden');
+                setTimeout(() => statusEl.classList.add('hidden'), 4000);
+            };
+
+            reader.readAsText(file);
+            // Reset input so same file can be selected again
+            event.target.value = '';
         }
 
         function loadFromURL() {
