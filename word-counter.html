@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Counter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #eee;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 20px 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .editor-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .editor-header h3 {
+            margin: 0;
+            color: #667eea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            background: rgba(255,255,255,0.1);
+            color: #ccc;
+        }
+
+        button:hover {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: #2a2a4a;
+            color: #eee;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea::placeholder {
+            color: #666;
+        }
+
+        .details-panel {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .details-panel h3 {
+            color: #667eea;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+        }
+
+        .detail-label {
+            color: #888;
+        }
+
+        .detail-value {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .keyword-section {
+            margin-top: 20px;
+        }
+
+        .keyword-section h4 {
+            color: #888;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .keyword {
+            padding: 5px 12px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #aab;
+        }
+
+        .keyword .count {
+            color: #667eea;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .empty-state {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Word Counter</h1>
+    <p class="subtitle">Analyze your text with detailed statistics</p>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="wordCount">0</div>
+            <div class="stat-label">Words</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="charCount">0</div>
+            <div class="stat-label">Characters</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="charNoSpaceCount">0</div>
+            <div class="stat-label">Characters (no spaces)</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="sentenceCount">0</div>
+            <div class="stat-label">Sentences</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="paragraphCount">0</div>
+            <div class="stat-label">Paragraphs</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="readingTime">0</div>
+            <div class="stat-label">Min read</div>
+        </div>
+    </div>
+
+    <div class="editor-container">
+        <div class="editor-header">
+            <h3>Your Text</h3>
+            <div class="btn-group">
+                <button onclick="copyText()">Copy</button>
+                <button onclick="clearText()">Clear</button>
+                <button class="btn-primary" onclick="pasteText()">Paste</button>
+            </div>
+        </div>
+        <textarea
+            id="textInput"
+            placeholder="Type or paste your text here..."
+            autofocus
+        ></textarea>
+    </div>
+
+    <div class="details-panel">
+        <h3>Detailed Analysis</h3>
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Average word length</span>
+                <span class="detail-value" id="avgWordLength">0</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Average sentence length</span>
+                <span class="detail-value" id="avgSentenceLength">0 words</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Longest word</span>
+                <span class="detail-value" id="longestWord">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Speaking time</span>
+                <span class="detail-value" id="speakingTime">0 min</span>
+            </div>
+        </div>
+
+        <div class="keyword-section">
+            <h4>Top Words</h4>
+            <div class="keywords" id="topWords">
+                <span class="empty-state">Start typing to see word frequency</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+
+        function countWords(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return 0;
+            return trimmed.split(/\s+/).filter(word => word.length > 0).length;
+        }
+
+        function countSentences(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return 0;
+            // Match sentence-ending punctuation followed by space or end of string
+            const sentences = trimmed.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            return sentences.length;
+        }
+
+        function countParagraphs(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return 0;
+            return trimmed.split(/\n\s*\n/).filter(p => p.trim().length > 0).length ||
+                   (trimmed.length > 0 ? 1 : 0);
+        }
+
+        function getWords(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return [];
+            return trimmed.toLowerCase().match(/\b[a-z']+\b/gi) || [];
+        }
+
+        function getLongestWord(words) {
+            if (words.length === 0) return '-';
+            return words.reduce((longest, word) =>
+                word.length > longest.length ? word : longest, '');
+        }
+
+        function getTopWords(words, limit = 10) {
+            // Filter out common stop words
+            const stopWords = new Set([
+                'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+                'of', 'with', 'by', 'from', 'is', 'it', 'that', 'this', 'as', 'be',
+                'was', 'are', 'been', 'being', 'have', 'has', 'had', 'do', 'does',
+                'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+                'i', 'you', 'he', 'she', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+                'my', 'your', 'his', 'its', 'our', 'their', 'what', 'which', 'who',
+                'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few',
+                'more', 'most', 'other', 'some', 'such', 'no', 'not', 'only', 'same',
+                'so', 'than', 'too', 'very', 'just', 'can', 'into', 'if', 'then'
+            ]);
+
+            const frequency = {};
+            words.forEach(word => {
+                const lower = word.toLowerCase();
+                if (!stopWords.has(lower) && lower.length > 2) {
+                    frequency[lower] = (frequency[lower] || 0) + 1;
+                }
+            });
+
+            return Object.entries(frequency)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, limit);
+        }
+
+        function updateStats() {
+            const text = textInput.value;
+            const words = getWords(text);
+            const wordCount = countWords(text);
+            const charCount = text.length;
+            const charNoSpace = text.replace(/\s/g, '').length;
+            const sentenceCount = countSentences(text);
+            const paragraphCount = countParagraphs(text);
+
+            // Average reading speed: 200-250 words per minute
+            const readingTime = Math.ceil(wordCount / 225);
+            // Average speaking speed: 125-150 words per minute
+            const speakingTime = Math.ceil(wordCount / 130);
+
+            // Update main stats
+            document.getElementById('wordCount').textContent = wordCount;
+            document.getElementById('charCount').textContent = charCount;
+            document.getElementById('charNoSpaceCount').textContent = charNoSpace;
+            document.getElementById('sentenceCount').textContent = sentenceCount;
+            document.getElementById('paragraphCount').textContent = paragraphCount;
+            document.getElementById('readingTime').textContent = readingTime;
+
+            // Update detailed analysis
+            const avgWordLen = words.length > 0
+                ? (words.join('').length / words.length).toFixed(1)
+                : 0;
+            document.getElementById('avgWordLength').textContent = avgWordLen;
+
+            const avgSentenceLen = sentenceCount > 0
+                ? Math.round(wordCount / sentenceCount)
+                : 0;
+            document.getElementById('avgSentenceLength').textContent = avgSentenceLen + ' words';
+
+            document.getElementById('longestWord').textContent = getLongestWord(words);
+            document.getElementById('speakingTime').textContent = speakingTime + ' min';
+
+            // Update top words
+            const topWordsContainer = document.getElementById('topWords');
+            const topWords = getTopWords(words);
+
+            if (topWords.length === 0) {
+                topWordsContainer.innerHTML = '<span class="empty-state">Start typing to see word frequency</span>';
+            } else {
+                topWordsContainer.innerHTML = topWords.map(([word, count]) =>
+                    `<span class="keyword">${word}<span class="count">${count}</span></span>`
+                ).join('');
+            }
+        }
+
+        function clearText() {
+            textInput.value = '';
+            textInput.focus();
+            updateStats();
+        }
+
+        async function copyText() {
+            try {
+                await navigator.clipboard.writeText(textInput.value);
+            } catch (err) {
+                // Fallback for older browsers
+                textInput.select();
+                document.execCommand('copy');
+            }
+        }
+
+        async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                textInput.value = text;
+                updateStats();
+                textInput.focus();
+            } catch (err) {
+                // Clipboard read may be blocked, user can paste manually
+                textInput.focus();
+            }
+        }
+
+        // Listen for input changes
+        textInput.addEventListener('input', updateStats);
+
+        // Initialize
+        updateStats();
+    </script>
+</body>
+</html>
