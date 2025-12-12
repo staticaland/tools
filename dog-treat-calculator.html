@@ -368,11 +368,11 @@
         </div>
         <div class="result-card food-highlight">
             <div class="result-value"><span id="foodCalories">0</span></div>
-            <div class="result-label">Food Calories (90%)</div>
+            <div class="result-label">Food Calories (<span id="foodPercentLabel">90</span>%)</div>
         </div>
         <div class="result-card treat-highlight">
             <div class="result-value"><span id="treatCalories">0</span></div>
-            <div class="result-label">Treat Calories (10%)</div>
+            <div class="result-label">Treat Calories (<span id="treatPercentLabel">10</span>%)</div>
         </div>
         <div class="result-card">
             <div class="result-value"><span id="rerValue">0</span></div>
@@ -429,6 +429,14 @@
                     <option value="ideal" selected>Ideal weight</option>
                     <option value="overweight">Overweight (needs to lose)</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label for="treatPercent">Treat Allowance</label>
+                <div class="weight-input-group">
+                    <input type="number" id="treatPercent" min="1" max="30" step="1" value="10">
+                    <span style="padding: 12px 15px; font-size: 16px; color: #666;">%</span>
+                </div>
             </div>
         </div>
         <div class="multiplier-info" id="multiplierInfo">
@@ -496,7 +504,7 @@
         <strong>How it's calculated:</strong><br>
         <strong>RER</strong> (Resting Energy Requirement) = 70 x (weight in kg)^0.75<br>
         <strong>MER</strong> (Maintenance Energy Requirement) = RER x life stage/activity multiplier<br>
-        <strong>Food allowance</strong> = 90% of MER | <strong>Treat allowance</strong> = 10% of MER<br>
+        <strong>Food/Treat split</strong> = Configurable (default 10% treats, 90% food)<br>
         <strong>Grams</strong> = (Calorie budget x 100) / kcal per 100g
     </div>
 
@@ -572,16 +580,21 @@
             const multiplier = getMultiplier();
             const mer = rer * multiplier;
 
-            // Treats = 10% of MER
-            const treatsCalories = mer * 0.10;
-            const foodCalories = mer * 0.90;
+            // Get configurable treat percentage
+            const treatPercent = parseFloat(document.getElementById('treatPercent').value) || 10;
+            const foodPercent = 100 - treatPercent;
+
+            const treatsCalories = mer * (treatPercent / 100);
+            const foodCalories = mer * (foodPercent / 100);
 
             return {
                 rer: Math.round(rer),
                 mer: Math.round(mer),
                 treats: Math.round(treatsCalories),
                 food: Math.round(foodCalories),
-                multiplier: multiplier.toFixed(2)
+                multiplier: multiplier.toFixed(2),
+                treatPercent: treatPercent,
+                foodPercent: foodPercent
             };
         }
 
@@ -725,6 +738,8 @@
             document.getElementById('currentMultiplier').textContent = results.multiplier;
             document.getElementById('treatBudget').textContent = results.treats;
             document.getElementById('foodBudget').textContent = results.food;
+            document.getElementById('treatPercentLabel').textContent = results.treatPercent;
+            document.getElementById('foodPercentLabel').textContent = results.foodPercent;
 
             renderFoodList(results.food);
             renderTreatList(results.treats);
@@ -737,6 +752,7 @@
         document.getElementById('neutered').addEventListener('change', updateDisplay);
         document.getElementById('activityLevel').addEventListener('change', updateDisplay);
         document.getElementById('bodyCondition').addEventListener('change', updateDisplay);
+        document.getElementById('treatPercent').addEventListener('input', updateDisplay);
 
         // Initialize
         updateDisplay();
