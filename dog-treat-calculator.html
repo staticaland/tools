@@ -34,23 +34,33 @@
         <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">Dog Treat Calculator</h1>
         <p class="text-center text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base">Calculate daily food and treat allowances for your dog</p>
 
-        <!-- Results Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div class="bg-white p-4 sm:p-5 rounded-xl text-center shadow-sm">
-                <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="dailyCalories">0</span></div>
-                <div class="text-gray-500 text-xs sm:text-sm mt-1">Daily Calories (MER)</div>
-            </div>
-            <div class="bg-gradient-to-br from-success-50 to-success-100 p-4 sm:p-5 rounded-xl text-center border-2 border-success-500">
-                <div class="text-2xl sm:text-3xl font-bold text-success-600"><span id="foodCalories">0</span></div>
-                <div class="text-gray-600 text-xs sm:text-sm mt-1">Food (<span id="foodPercentLabel">90</span>%)</div>
-            </div>
-            <div class="bg-gradient-to-br from-primary-50 to-primary-100 p-4 sm:p-5 rounded-xl text-center border-2 border-primary-500">
-                <div class="text-2xl sm:text-3xl font-bold text-primary-600"><span id="treatCalories">0</span></div>
-                <div class="text-gray-600 text-xs sm:text-sm mt-1">Treats (<span id="treatPercentLabel">10</span>%)</div>
-            </div>
-            <div class="bg-white p-4 sm:p-5 rounded-xl text-center shadow-sm">
-                <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="rerValue">0</span></div>
-                <div class="text-gray-500 text-xs sm:text-sm mt-1">Resting Energy (RER)</div>
+        <!-- Results Grid (Collapsible) -->
+        <div class="bg-white rounded-xl mb-6 sm:mb-8 shadow-sm overflow-hidden">
+            <button onclick="toggleSection('stats')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                <h3 class="text-primary-500 font-semibold text-lg">Daily Stats</h3>
+                <svg id="statsChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="statsContent" class="px-4 pb-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-gray-50 p-4 sm:p-5 rounded-xl text-center">
+                        <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="dailyCalories">0</span></div>
+                        <div class="text-gray-500 text-xs sm:text-sm mt-1">Daily Calories (MER)</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-success-50 to-success-100 p-4 sm:p-5 rounded-xl text-center border-2 border-success-500">
+                        <div class="text-2xl sm:text-3xl font-bold text-success-600"><span id="foodCalories">0</span></div>
+                        <div class="text-gray-600 text-xs sm:text-sm mt-1">Food (<span id="foodPercentLabel">90</span>%)</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 p-4 sm:p-5 rounded-xl text-center border-2 border-primary-500">
+                        <div class="text-2xl sm:text-3xl font-bold text-primary-600"><span id="treatCalories">0</span></div>
+                        <div class="text-gray-600 text-xs sm:text-sm mt-1">Treats (<span id="treatPercentLabel">10</span>%)</div>
+                    </div>
+                    <div class="bg-gray-50 p-4 sm:p-5 rounded-xl text-center">
+                        <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="rerValue">0</span></div>
+                        <div class="text-gray-500 text-xs sm:text-sm mt-1">Resting Energy (RER)</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -130,16 +140,23 @@
                 <div class="text-center py-4 text-gray-500 text-sm">No food added yet. Add your dog's main food below.</div>
             </div>
 
-            <div class="border-t border-gray-200 pt-4 mt-4">
-                <div class="text-sm text-gray-600 mb-3 font-medium">Add Food Product</div>
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text" id="newFoodName" placeholder="Food name (e.g., Brand Kibble)"
-                        class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                    <input type="number" id="newFoodCalories" placeholder="kcal/100g" min="1" step="1"
-                        class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                    <button onclick="addFood()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
-                        Add
-                    </button>
+            <div class="border-t border-gray-200 mt-4">
+                <button onclick="toggleSection('addFood')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
+                    <span class="text-sm text-gray-600 font-medium">Add Food Product</span>
+                    <svg id="addFoodChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div id="addFoodContent" class="pb-1">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="newFoodName" placeholder="Food name (e.g., Brand Kibble)"
+                            class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                        <input type="number" id="newFoodCalories" placeholder="kcal/100g" min="1" step="1"
+                            class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                        <button onclick="addFood()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
+                            Add
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -158,18 +175,25 @@
                 <span class="font-medium" id="percentageValue">0%</span>
             </div>
 
-            <div class="border-t border-gray-200 pt-4 mt-4">
-                <div class="text-sm text-gray-600 mb-3 font-medium">Add Treat Product</div>
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <input type="text" id="newTreatName" placeholder="Treat name"
-                        class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                    <input type="number" id="newTreatCalories" placeholder="kcal/100g" min="1" step="1"
-                        class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                    <input type="number" id="newTreatPercentage" placeholder="%" min="1" max="100" step="1"
-                        class="w-full sm:w-20 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-center">
-                    <button onclick="addTreat()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
-                        Add
-                    </button>
+            <div class="border-t border-gray-200 mt-4">
+                <button onclick="toggleSection('addTreat')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
+                    <span class="text-sm text-gray-600 font-medium">Add Treat Product</span>
+                    <svg id="addTreatChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div id="addTreatContent" class="pb-1">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="newTreatName" placeholder="Treat name"
+                            class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                        <input type="number" id="newTreatCalories" placeholder="kcal/100g" min="1" step="1"
+                            class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                        <input type="number" id="newTreatPercentage" placeholder="%" min="1" max="100" step="1"
+                            class="w-full sm:w-20 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-center">
+                        <button onclick="addTreat()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
+                            Add
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -195,6 +219,72 @@
         let treats = JSON.parse(localStorage.getItem('dogTreats') || '[]');
 
         const SETTINGS_KEY = 'dogCalculatorSettings';
+        const COLLAPSED_KEY = 'dogCalculatorCollapsed';
+
+        // Check if this is a first-time user (no localStorage data)
+        function isFirstTimeUser() {
+            return !localStorage.getItem(SETTINGS_KEY) &&
+                   !localStorage.getItem('dogFoods') &&
+                   !localStorage.getItem('dogTreats');
+        }
+
+        // Get collapsed state from localStorage
+        function getCollapsedState() {
+            const saved = localStorage.getItem(COLLAPSED_KEY);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            // Default: expanded for first-time users, collapsed for returning users
+            const defaultCollapsed = !isFirstTimeUser();
+            return {
+                stats: defaultCollapsed,
+                addFood: defaultCollapsed,
+                addTreat: defaultCollapsed
+            };
+        }
+
+        // Save collapsed state to localStorage
+        function saveCollapsedState(state) {
+            localStorage.setItem(COLLAPSED_KEY, JSON.stringify(state));
+        }
+
+        // Toggle a collapsible section
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + 'Content');
+            const chevron = document.getElementById(sectionId + 'Chevron');
+            const state = getCollapsedState();
+
+            state[sectionId] = !state[sectionId];
+            saveCollapsedState(state);
+
+            if (state[sectionId]) {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            } else {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Initialize collapsed sections based on saved state
+        function initCollapsibleSections() {
+            const state = getCollapsedState();
+
+            ['stats', 'addFood', 'addTreat'].forEach(sectionId => {
+                const content = document.getElementById(sectionId + 'Content');
+                const chevron = document.getElementById(sectionId + 'Chevron');
+
+                if (content && chevron) {
+                    if (state[sectionId]) {
+                        content.classList.add('hidden');
+                        chevron.style.transform = 'rotate(-90deg)';
+                    } else {
+                        content.classList.remove('hidden');
+                        chevron.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        }
 
         function saveData() {
             localStorage.setItem('dogFoods', JSON.stringify(foods));
@@ -470,6 +560,7 @@
         document.getElementById('treatPercent').addEventListener('input', handleSettingChange);
 
         // Initialize - load saved settings first, then update display
+        initCollapsibleSections();
         loadSettings();
         updateDisplay();
     </script>
