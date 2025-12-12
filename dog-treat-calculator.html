@@ -234,12 +234,11 @@
             if (saved) {
                 return JSON.parse(saved);
             }
-            // Default: expanded for first-time users, collapsed for returning users
-            const defaultCollapsed = !isFirstTimeUser();
+            // Default: stats expanded (to show results), forms collapsed
             return {
-                stats: defaultCollapsed,
-                addFood: defaultCollapsed,
-                addTreat: defaultCollapsed
+                stats: false,
+                addFood: true,
+                addTreat: true
             };
         }
 
