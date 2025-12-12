@@ -517,9 +517,38 @@
         let foods = JSON.parse(localStorage.getItem('dogFoods') || '[]');
         let treats = JSON.parse(localStorage.getItem('dogTreats') || '[]');
 
+        const SETTINGS_KEY = 'dogCalculatorSettings';
+
         function saveData() {
             localStorage.setItem('dogFoods', JSON.stringify(foods));
             localStorage.setItem('dogTreats', JSON.stringify(treats));
+        }
+
+        function saveSettings() {
+            const settings = {
+                weight: document.getElementById('weight').value,
+                weightUnit: document.getElementById('weightUnit').value,
+                lifeStage: document.getElementById('lifeStage').value,
+                neutered: document.getElementById('neutered').value,
+                activityLevel: document.getElementById('activityLevel').value,
+                bodyCondition: document.getElementById('bodyCondition').value,
+                treatPercent: document.getElementById('treatPercent').value
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem(SETTINGS_KEY);
+            if (saved) {
+                const settings = JSON.parse(saved);
+                if (settings.weight) document.getElementById('weight').value = settings.weight;
+                if (settings.weightUnit) document.getElementById('weightUnit').value = settings.weightUnit;
+                if (settings.lifeStage) document.getElementById('lifeStage').value = settings.lifeStage;
+                if (settings.neutered) document.getElementById('neutered').value = settings.neutered;
+                if (settings.activityLevel) document.getElementById('activityLevel').value = settings.activityLevel;
+                if (settings.bodyCondition) document.getElementById('bodyCondition').value = settings.bodyCondition;
+                if (settings.treatPercent) document.getElementById('treatPercent').value = settings.treatPercent;
+            }
         }
 
         function getMultiplier() {
@@ -746,15 +775,21 @@
         }
 
         // Add event listeners to all inputs
-        document.getElementById('weight').addEventListener('input', updateDisplay);
-        document.getElementById('weightUnit').addEventListener('change', updateDisplay);
-        document.getElementById('lifeStage').addEventListener('change', updateDisplay);
-        document.getElementById('neutered').addEventListener('change', updateDisplay);
-        document.getElementById('activityLevel').addEventListener('change', updateDisplay);
-        document.getElementById('bodyCondition').addEventListener('change', updateDisplay);
-        document.getElementById('treatPercent').addEventListener('input', updateDisplay);
+        function handleSettingChange() {
+            saveSettings();
+            updateDisplay();
+        }
 
-        // Initialize
+        document.getElementById('weight').addEventListener('input', handleSettingChange);
+        document.getElementById('weightUnit').addEventListener('change', handleSettingChange);
+        document.getElementById('lifeStage').addEventListener('change', handleSettingChange);
+        document.getElementById('neutered').addEventListener('change', handleSettingChange);
+        document.getElementById('activityLevel').addEventListener('change', handleSettingChange);
+        document.getElementById('bodyCondition').addEventListener('change', handleSettingChange);
+        document.getElementById('treatPercent').addEventListener('input', handleSettingChange);
+
+        // Initialize - load saved settings first, then update display
+        loadSettings();
         updateDisplay();
     </script>
 </body>
