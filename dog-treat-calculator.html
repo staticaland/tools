@@ -6,6 +6,7 @@
     <title>Dog Treat Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -481,46 +482,38 @@
             }
         }
 
-        // Helper to create elements with classes
-        function el(tag, classes, textContent) {
-            const element = document.createElement(tag);
-            if (classes) element.className = classes;
-            if (textContent !== undefined) element.textContent = textContent;
-            return element;
+        // Sanitize user input for safe HTML rendering
+        function safe(str) {
+            return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
         }
 
         function renderFoodList(foodCalories) {
             const container = document.getElementById('foodList');
-            container.innerHTML = '';
 
             if (foods.length === 0) {
-                container.appendChild(el('div', 'text-center py-4 text-gray-500 text-sm', "No food added yet. Add your dog's main food below."));
+                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No food added yet. Add your dog\'s main food below.</div>';
                 return;
             }
 
-            foods.forEach(food => {
+            container.innerHTML = foods.map(food => {
                 const grams = calculateGrams(foodCalories, food.kcalPer100g);
-                const row = el('div', 'flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200');
-
-                row.appendChild(el('span', 'font-medium text-gray-700 text-sm flex-1', food.name));
-                row.appendChild(el('span', 'text-gray-500 text-xs sm:text-sm', `${food.kcalPer100g} kcal/100g`));
-                row.appendChild(el('span', 'text-success-500 font-semibold text-sm', `${grams.toFixed(0)}g/day`));
-
-                const btn = el('button', 'self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95', '×');
-                btn.onclick = () => removeFood(food.id);
-                row.appendChild(btn);
-
-                container.appendChild(row);
-            });
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
+                        <span class="text-gray-500 text-xs sm:text-sm">${food.kcalPer100g} kcal/100g</span>
+                        <span class="text-success-500 font-semibold text-sm">${grams.toFixed(0)}g/day</span>
+                        <button onclick="removeFood(${food.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderTreatList(treatCalories) {
             const container = document.getElementById('treatList');
             const totalContainer = document.getElementById('percentageTotal');
-            container.innerHTML = '';
 
             if (treats.length === 0) {
-                container.appendChild(el('div', 'text-center py-4 text-gray-500 text-sm', 'No treats added yet. Add treats below.'));
+                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No treats added yet. Add treats below.</div>';
                 totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-primary-50';
                 document.getElementById('percentageValue').textContent = '0%';
                 return;
@@ -528,30 +521,21 @@
 
             const totalPercentage = treats.reduce((sum, t) => sum + t.percentage, 0);
 
-            treats.forEach(treat => {
+            container.innerHTML = treats.map(treat => {
                 const treatShare = treatCalories * (treat.percentage / 100);
                 const grams = calculateGrams(treatShare, treat.kcalPer100g);
-                const row = el('div', 'flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200');
-
-                row.appendChild(el('span', 'font-medium text-gray-700 text-sm flex-1', treat.name));
-                row.appendChild(el('span', 'text-gray-500 text-xs sm:text-sm', `${treat.kcalPer100g} kcal/100g`));
-
-                const input = el('input', 'w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500');
-                input.type = 'number';
-                input.value = treat.percentage;
-                input.min = '0';
-                input.max = '100';
-                input.onchange = () => updateTreatPercentage(treat.id, input.value);
-                row.appendChild(input);
-
-                row.appendChild(el('span', 'text-primary-500 font-semibold text-sm min-w-[70px] text-right', `${grams.toFixed(1)}g/day`));
-
-                const btn = el('button', 'self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95', '×');
-                btn.onclick = () => removeTreat(treat.id);
-                row.appendChild(btn);
-
-                container.appendChild(row);
-            });
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
+                        <span class="text-gray-500 text-xs sm:text-sm">${treat.kcalPer100g} kcal/100g</span>
+                        <input type="number" value="${treat.percentage}" min="0" max="100"
+                            onchange="updateTreatPercentage(${treat.id}, this.value)"
+                            class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                        <span class="text-primary-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(1)}g/day</span>
+                        <button onclick="removeTreat(${treat.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
+                    </div>
+                `;
+            }).join('');
 
             document.getElementById('percentageValue').textContent = totalPercentage + '%';
             if (totalPercentage === 100) {
