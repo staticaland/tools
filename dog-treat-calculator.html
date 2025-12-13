@@ -207,10 +207,15 @@
         <!-- Daily Food Program -->
         <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
             <h3 class="text-success-500 font-semibold text-lg mb-2">Daily Food Program</h3>
-            <p class="text-gray-500 text-sm mb-4">Select food from your inventory for today (based on <span id="foodBudget" class="font-medium">0</span> kcal budget)</p>
+            <p class="text-gray-500 text-sm mb-4">Select food from your inventory and set percentage split (based on <span id="foodBudget" class="font-medium">0</span> kcal budget)</p>
 
             <div class="space-y-2" id="dailyFoodList">
                 <div class="text-center py-4 text-gray-500 text-sm">No food in today's program. Add from inventory below.</div>
+            </div>
+
+            <div class="mt-3 p-3 rounded-lg text-sm flex justify-between items-center" id="foodPercentageTotal">
+                <span>Total allocation:</span>
+                <span class="font-medium" id="foodPercentageValue">0%</span>
             </div>
 
             <div class="border-t border-gray-200 mt-4">
@@ -300,7 +305,7 @@
         // Data storage - New structure with inventory and daily program
         let inventoryFoods = JSON.parse(localStorage.getItem('dogInventoryFoods') || '[]');
         let inventoryTreats = JSON.parse(localStorage.getItem('dogInventoryTreats') || '[]');
-        let dailyFoods = JSON.parse(localStorage.getItem('dogDailyFoods') || '[]'); // Array of inventory IDs
+        let dailyFoods = JSON.parse(localStorage.getItem('dogDailyFoods') || '[]'); // Array of { id, percentage }
         let dailyTreats = JSON.parse(localStorage.getItem('dogDailyTreats') || '[]'); // Array of { id, percentage }
 
         // Migrate old data format if exists
@@ -311,7 +316,12 @@
             if (oldFoods && !localStorage.getItem('dogInventoryFoods')) {
                 const foods = JSON.parse(oldFoods);
                 inventoryFoods = foods.map(f => ({ id: f.id, name: f.name, kcalPer100g: f.kcalPer100g }));
-                dailyFoods = foods.map(f => f.id);
+                // Give each food equal percentage
+                const perFoodPercent = foods.length > 0 ? Math.floor(100 / foods.length) : 100;
+                dailyFoods = foods.map((f, i) => ({
+                    id: f.id,
+                    percentage: i === foods.length - 1 ? 100 - (perFoodPercent * (foods.length - 1)) : perFoodPercent
+                }));
                 localStorage.setItem('dogInventoryFoods', JSON.stringify(inventoryFoods));
                 localStorage.setItem('dogDailyFoods', JSON.stringify(dailyFoods));
                 localStorage.removeItem('dogFoods');
@@ -324,6 +334,16 @@
                 localStorage.setItem('dogInventoryTreats', JSON.stringify(inventoryTreats));
                 localStorage.setItem('dogDailyTreats', JSON.stringify(dailyTreats));
                 localStorage.removeItem('dogTreats');
+            }
+
+            // Migrate dailyFoods from old format (array of IDs) to new format (array of {id, percentage})
+            if (dailyFoods.length > 0 && typeof dailyFoods[0] === 'number') {
+                const perFoodPercent = Math.floor(100 / dailyFoods.length);
+                dailyFoods = dailyFoods.map((id, i) => ({
+                    id: id,
+                    percentage: i === dailyFoods.length - 1 ? 100 - (perFoodPercent * (dailyFoods.length - 1)) : perFoodPercent
+                }));
+                localStorage.setItem('dogDailyFoods', JSON.stringify(dailyFoods));
             }
         }
 
@@ -556,7 +576,7 @@
         function removeFromInventory(type, id) {
             if (type === 'food') {
                 inventoryFoods = inventoryFoods.filter(f => f.id !== id);
-                dailyFoods = dailyFoods.filter(fid => fid !== id);
+                dailyFoods = dailyFoods.filter(f => f.id !== id);
             } else {
                 inventoryTreats = inventoryTreats.filter(t => t.id !== id);
                 dailyTreats = dailyTreats.filter(t => t.id !== id);
@@ -568,8 +588,8 @@
         // Daily program functions
         function addToDailyProgram(type, id) {
             if (type === 'food') {
-                if (!dailyFoods.includes(id)) {
-                    dailyFoods.push(id);
+                if (!dailyFoods.find(f => f.id === id)) {
+                    dailyFoods.push({ id: id, percentage: 50 }); // Default 50%
                 }
             } else {
                 if (!dailyTreats.find(t => t.id === id)) {
@@ -582,12 +602,21 @@
 
         function removeFromDailyProgram(type, id) {
             if (type === 'food') {
-                dailyFoods = dailyFoods.filter(fid => fid !== id);
+                dailyFoods = dailyFoods.filter(f => f.id !== id);
             } else {
                 dailyTreats = dailyTreats.filter(t => t.id !== id);
             }
             saveData();
             updateDisplay();
+        }
+
+        function updateDailyFoodPercentage(id, newPercentage) {
+            const food = dailyFoods.find(f => f.id === id);
+            if (food) {
+                food.percentage = Math.max(0, Math.min(100, parseFloat(newPercentage) || 0));
+                saveData();
+                updateDisplay();
+            }
         }
 
         function updateDailyTreatPercentage(id, newPercentage) {
@@ -611,7 +640,7 @@
                 foodContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No food products in inventory</div>';
             } else {
                 foodContainer.innerHTML = inventoryFoods.map(food => {
-                    const inDaily = dailyFoods.includes(food.id);
+                    const inDaily = dailyFoods.find(f => f.id === food.id);
                     return `
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
                             <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
@@ -648,27 +677,47 @@
 
         function renderDailyFoodList(foodCalories) {
             const container = document.getElementById('dailyFoodList');
-            const dailyFoodItems = inventoryFoods.filter(f => dailyFoods.includes(f.id));
+            const totalContainer = document.getElementById('foodPercentageTotal');
+            const dailyFoodItems = dailyFoods.map(df => {
+                const food = inventoryFoods.find(f => f.id === df.id);
+                return food ? { ...food, percentage: df.percentage } : null;
+            }).filter(Boolean);
 
             if (dailyFoodItems.length === 0) {
                 container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No food in today\'s program. Add from inventory below.</div>';
+                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50';
+                document.getElementById('foodPercentageValue').textContent = '0%';
             } else {
+                const totalPercentage = dailyFoodItems.reduce((sum, f) => sum + f.percentage, 0);
+
                 container.innerHTML = dailyFoodItems.map(food => {
-                    const grams = calculateGrams(foodCalories, food.kcalPer100g);
+                    const foodShare = foodCalories * (food.percentage / 100);
+                    const grams = calculateGrams(foodShare, food.kcalPer100g);
                     return `
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                             <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
                             <span class="text-gray-500 text-xs sm:text-sm">${food.kcalPer100g} kcal/100g</span>
-                            <span class="text-success-500 font-semibold text-sm">${grams.toFixed(0)}g/day</span>
+                            <input type="number" value="${food.percentage}" min="0" max="100"
+                                onchange="updateDailyFoodPercentage(${food.id}, this.value)"
+                                class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-success-500">
+                            <span class="text-success-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(0)}g/day</span>
                             <button onclick="removeFromDailyProgram('food', ${food.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
                         </div>
                     `;
                 }).join('');
+
+                document.getElementById('foodPercentageValue').textContent = totalPercentage + '%';
+                if (totalPercentage === 100) {
+                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+                } else {
+                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+                }
             }
 
             // Render available foods to add
             const availableContainer = document.getElementById('availableFoodsForDaily');
-            const availableFoods = inventoryFoods.filter(f => !dailyFoods.includes(f.id));
+            const dailyFoodIds = dailyFoods.map(f => f.id);
+            const availableFoods = inventoryFoods.filter(f => !dailyFoodIds.includes(f.id));
 
             if (availableFoods.length === 0) {
                 if (inventoryFoods.length === 0) {
@@ -785,7 +834,7 @@
                 },
                 if: inventoryFoods.map(f => ({ n: f.name, k: f.kcalPer100g, i: f.id })), // inventory foods
                 it: inventoryTreats.map(t => ({ n: t.name, k: t.kcalPer100g, i: t.id })), // inventory treats
-                df: dailyFoods, // daily food IDs
+                df: dailyFoods.map(f => ({ i: f.id, p: f.percentage })), // daily foods with percentages
                 dt: dailyTreats.map(t => ({ i: t.id, p: t.percentage })) // daily treats with percentages
             };
         }
@@ -840,7 +889,17 @@
 
             // Apply daily foods
             if (state.df && Array.isArray(state.df)) {
-                dailyFoods = state.df;
+                // Handle both new format ({i, p}) and old format (just IDs)
+                if (state.df.length > 0 && typeof state.df[0] === 'object') {
+                    dailyFoods = state.df.map(f => ({ id: f.i, percentage: f.p }));
+                } else {
+                    // Old format: array of IDs - give equal percentages
+                    const perFoodPercent = state.df.length > 0 ? Math.floor(100 / state.df.length) : 100;
+                    dailyFoods = state.df.map((id, i) => ({
+                        id: id,
+                        percentage: i === state.df.length - 1 ? 100 - (perFoodPercent * (state.df.length - 1)) : perFoodPercent
+                    }));
+                }
             }
 
             // Apply daily treats
@@ -855,7 +914,12 @@
                     name: f.n,
                     kcalPer100g: f.k
                 }));
-                dailyFoods = inventoryFoods.map(f => f.id);
+                // Give each food equal percentage
+                const perFoodPercent = state.f.length > 0 ? Math.floor(100 / state.f.length) : 100;
+                dailyFoods = inventoryFoods.map((f, i) => ({
+                    id: f.id,
+                    percentage: i === inventoryFoods.length - 1 ? 100 - (perFoodPercent * (inventoryFoods.length - 1)) : perFoodPercent
+                }));
             }
             if (state.r && Array.isArray(state.r)) {
                 inventoryTreats = state.r.map((t, i) => ({
@@ -981,7 +1045,17 @@
                         }));
                     }
                     if (state.dailyFoods && Array.isArray(state.dailyFoods)) {
-                        dailyFoods = state.dailyFoods;
+                        // Handle both new format (objects with id/percentage) and old format (just IDs)
+                        if (state.dailyFoods.length > 0 && typeof state.dailyFoods[0] === 'object') {
+                            dailyFoods = state.dailyFoods;
+                        } else {
+                            // Old format: array of IDs - give equal percentages
+                            const perFoodPercent = state.dailyFoods.length > 0 ? Math.floor(100 / state.dailyFoods.length) : 100;
+                            dailyFoods = state.dailyFoods.map((id, i) => ({
+                                id: id,
+                                percentage: i === state.dailyFoods.length - 1 ? 100 - (perFoodPercent * (state.dailyFoods.length - 1)) : perFoodPercent
+                            }));
+                        }
                     }
                     if (state.dailyTreats && Array.isArray(state.dailyTreats)) {
                         dailyTreats = state.dailyTreats;
@@ -994,7 +1068,12 @@
                             name: f.name,
                             kcalPer100g: f.kcalPer100g
                         }));
-                        dailyFoods = inventoryFoods.map(f => f.id);
+                        // Give each food equal percentage
+                        const perFoodPercent = state.foods.length > 0 ? Math.floor(100 / state.foods.length) : 100;
+                        dailyFoods = inventoryFoods.map((f, i) => ({
+                            id: f.id,
+                            percentage: i === inventoryFoods.length - 1 ? 100 - (perFoodPercent * (inventoryFoods.length - 1)) : perFoodPercent
+                        }));
                     }
                     if (state.treats && Array.isArray(state.treats)) {
                         inventoryTreats = state.treats.map((t, i) => ({
