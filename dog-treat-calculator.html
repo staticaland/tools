@@ -24,6 +24,12 @@
                             100: '#c6f6d5',
                             500: '#38a169',
                             600: '#276749'
+                        },
+                        amber: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706'
                         }
                     }
                 }
@@ -140,43 +146,100 @@
             </div>
         </div>
 
-        <!-- Main Food Section -->
-        <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
-            <h3 class="text-success-500 font-semibold text-lg mb-2">Main Food</h3>
-            <p class="text-gray-500 text-sm mb-4">Add your dog's main food to see how many grams to feed daily (based on <span id="foodBudget" class="font-medium">0</span> kcal budget)</p>
-
-            <div class="space-y-2" id="foodList">
-                <div class="text-center py-4 text-gray-500 text-sm">No food added yet. Add your dog's main food below.</div>
-            </div>
-
-            <div class="border-t border-gray-200 mt-4">
-                <button onclick="toggleSection('addFood')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
-                    <span class="text-sm text-gray-600 font-medium">Add Food Product</span>
-                    <svg id="addFoodChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        <!-- Inventory Section -->
+        <div class="bg-white rounded-xl mb-6 sm:mb-8 shadow-sm overflow-hidden">
+            <button onclick="toggleSection('inventory')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
+                <h3 class="text-amber-500 font-semibold text-lg flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                     </svg>
-                </button>
-                <div id="addFoodContent" class="pb-1">
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="text" id="newFoodName" placeholder="Food name (e.g., Brand Kibble)"
-                            class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                        <input type="number" id="newFoodCalories" placeholder="kcal/100g" min="1" step="1"
-                            class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                        <button onclick="addFood()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
-                            Add
+                    Inventory
+                </h3>
+                <svg id="inventoryChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="inventoryContent" class="px-4 pb-4">
+                <p class="text-gray-500 text-sm mb-4">Add all the foods and treats you have available. Then select which ones to use in your daily program.</p>
+
+                <!-- Food Inventory -->
+                <div class="mb-6">
+                    <h4 class="text-success-500 font-medium text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-success-500 rounded-full"></span>
+                        Food Products
+                    </h4>
+                    <div class="space-y-2 mb-3" id="inventoryFoodList">
+                        <div class="text-center py-3 text-gray-400 text-sm">No food products in inventory</div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="newInventoryFoodName" placeholder="Food name (e.g., Brand Kibble)"
+                            class="flex-1 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
+                        <input type="number" id="newInventoryFoodCalories" placeholder="kcal/100g" min="1" step="1"
+                            class="w-full sm:w-28 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
+                        <button onclick="addToInventory('food')" class="px-4 py-2 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors active:scale-95">
+                            Add to Inventory
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Treat Inventory -->
+                <div>
+                    <h4 class="text-primary-500 font-medium text-sm mb-3 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-primary-500 rounded-full"></span>
+                        Treat Products
+                    </h4>
+                    <div class="space-y-2 mb-3" id="inventoryTreatList">
+                        <div class="text-center py-3 text-gray-400 text-sm">No treat products in inventory</div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="newInventoryTreatName" placeholder="Treat name"
+                            class="flex-1 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
+                        <input type="number" id="newInventoryTreatCalories" placeholder="kcal/100g" min="1" step="1"
+                            class="w-full sm:w-28 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
+                        <button onclick="addToInventory('treat')" class="px-4 py-2 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors active:scale-95">
+                            Add to Inventory
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Treats Section -->
+        <!-- Daily Food Program -->
         <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
-            <h3 class="text-primary-500 font-semibold text-lg mb-2">Treats</h3>
-            <p class="text-gray-500 text-sm mb-4">Add treats and set percentage split (based on <span id="treatBudget" class="font-medium">0</span> kcal treat budget)</p>
+            <h3 class="text-success-500 font-semibold text-lg mb-2">Daily Food Program</h3>
+            <p class="text-gray-500 text-sm mb-4">Select food from your inventory and set percentage split (based on <span id="foodBudget" class="font-medium">0</span> kcal budget)</p>
 
-            <div class="space-y-2" id="treatList">
-                <div class="text-center py-4 text-gray-500 text-sm">No treats added yet. Add treats below.</div>
+            <div class="space-y-2" id="dailyFoodList">
+                <div class="text-center py-4 text-gray-500 text-sm">No food in today's program. Add from inventory below.</div>
+            </div>
+
+            <div class="mt-3 p-3 rounded-lg text-sm flex justify-between items-center" id="foodPercentageTotal">
+                <span>Total allocation:</span>
+                <span class="font-medium" id="foodPercentageValue">0%</span>
+            </div>
+
+            <div class="border-t border-gray-200 mt-4">
+                <button onclick="toggleSection('addDailyFood')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
+                    <span class="text-sm text-gray-600 font-medium">Add Food from Inventory</span>
+                    <svg id="addDailyFoodChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div id="addDailyFoodContent" class="pb-1">
+                    <div id="availableFoodsForDaily" class="space-y-2">
+                        <div class="text-center py-3 text-gray-400 text-sm">No food products available in inventory</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Treats Program -->
+        <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
+            <h3 class="text-primary-500 font-semibold text-lg mb-2">Daily Treats Program</h3>
+            <p class="text-gray-500 text-sm mb-4">Select treats from your inventory and set percentage split (based on <span id="treatBudget" class="font-medium">0</span> kcal treat budget)</p>
+
+            <div class="space-y-2" id="dailyTreatList">
+                <div class="text-center py-4 text-gray-500 text-sm">No treats in today's program. Add from inventory below.</div>
             </div>
 
             <div class="mt-3 p-3 rounded-lg text-sm flex justify-between items-center" id="percentageTotal">
@@ -185,23 +248,15 @@
             </div>
 
             <div class="border-t border-gray-200 mt-4">
-                <button onclick="toggleSection('addTreat')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
-                    <span class="text-sm text-gray-600 font-medium">Add Treat Product</span>
-                    <svg id="addTreatChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onclick="toggleSection('addDailyTreat')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
+                    <span class="text-sm text-gray-600 font-medium">Add Treat from Inventory</span>
+                    <svg id="addDailyTreatChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                <div id="addTreatContent" class="pb-1">
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <input type="text" id="newTreatName" placeholder="Treat name"
-                            class="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                        <input type="number" id="newTreatCalories" placeholder="kcal/100g" min="1" step="1"
-                            class="w-full sm:w-28 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                        <input type="number" id="newTreatPercentage" placeholder="%" min="1" max="100" step="1"
-                            class="w-full sm:w-20 px-3 py-2.5 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-center">
-                        <button onclick="addTreat()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95">
-                            Add
-                        </button>
+                <div id="addDailyTreatContent" class="pb-1">
+                    <div id="availableTreatsForDaily" class="space-y-2">
+                        <div class="text-center py-3 text-gray-400 text-sm">No treat products available in inventory</div>
                     </div>
                 </div>
             </div>
@@ -247,9 +302,50 @@
     </div>
 
     <script>
-        // Data storage
-        let foods = JSON.parse(localStorage.getItem('dogFoods') || '[]');
-        let treats = JSON.parse(localStorage.getItem('dogTreats') || '[]');
+        // Data storage - New structure with inventory and daily program
+        let inventoryFoods = JSON.parse(localStorage.getItem('dogInventoryFoods') || '[]');
+        let inventoryTreats = JSON.parse(localStorage.getItem('dogInventoryTreats') || '[]');
+        let dailyFoods = JSON.parse(localStorage.getItem('dogDailyFoods') || '[]'); // Array of { id, percentage }
+        let dailyTreats = JSON.parse(localStorage.getItem('dogDailyTreats') || '[]'); // Array of { id, percentage }
+
+        // Migrate old data format if exists
+        function migrateOldData() {
+            const oldFoods = localStorage.getItem('dogFoods');
+            const oldTreats = localStorage.getItem('dogTreats');
+
+            if (oldFoods && !localStorage.getItem('dogInventoryFoods')) {
+                const foods = JSON.parse(oldFoods);
+                inventoryFoods = foods.map(f => ({ id: f.id, name: f.name, kcalPer100g: f.kcalPer100g }));
+                // Give each food equal percentage
+                const perFoodPercent = foods.length > 0 ? Math.floor(100 / foods.length) : 100;
+                dailyFoods = foods.map((f, i) => ({
+                    id: f.id,
+                    percentage: i === foods.length - 1 ? 100 - (perFoodPercent * (foods.length - 1)) : perFoodPercent
+                }));
+                localStorage.setItem('dogInventoryFoods', JSON.stringify(inventoryFoods));
+                localStorage.setItem('dogDailyFoods', JSON.stringify(dailyFoods));
+                localStorage.removeItem('dogFoods');
+            }
+
+            if (oldTreats && !localStorage.getItem('dogInventoryTreats')) {
+                const treats = JSON.parse(oldTreats);
+                inventoryTreats = treats.map(t => ({ id: t.id, name: t.name, kcalPer100g: t.kcalPer100g }));
+                dailyTreats = treats.map(t => ({ id: t.id, percentage: t.percentage }));
+                localStorage.setItem('dogInventoryTreats', JSON.stringify(inventoryTreats));
+                localStorage.setItem('dogDailyTreats', JSON.stringify(dailyTreats));
+                localStorage.removeItem('dogTreats');
+            }
+
+            // Migrate dailyFoods from old format (array of IDs) to new format (array of {id, percentage})
+            if (dailyFoods.length > 0 && typeof dailyFoods[0] === 'number') {
+                const perFoodPercent = Math.floor(100 / dailyFoods.length);
+                dailyFoods = dailyFoods.map((id, i) => ({
+                    id: id,
+                    percentage: i === dailyFoods.length - 1 ? 100 - (perFoodPercent * (dailyFoods.length - 1)) : perFoodPercent
+                }));
+                localStorage.setItem('dogDailyFoods', JSON.stringify(dailyFoods));
+            }
+        }
 
         const SETTINGS_KEY = 'dogCalculatorSettings';
         const COLLAPSED_KEY = 'dogCalculatorCollapsed';
@@ -257,8 +353,8 @@
         // Check if this is a first-time user (no localStorage data)
         function isFirstTimeUser() {
             return !localStorage.getItem(SETTINGS_KEY) &&
-                   !localStorage.getItem('dogFoods') &&
-                   !localStorage.getItem('dogTreats');
+                   !localStorage.getItem('dogInventoryFoods') &&
+                   !localStorage.getItem('dogInventoryTreats');
         }
 
         // Get collapsed state from localStorage
@@ -267,12 +363,13 @@
             if (saved) {
                 return JSON.parse(saved);
             }
-            // Default: stats expanded (to show results), forms collapsed, dog info expanded
+            // Default: stats expanded, dog info expanded, inventory collapsed, daily forms collapsed
             return {
                 stats: false,
                 dogInfo: false,
-                addFood: true,
-                addTreat: true
+                inventory: true,
+                addDailyFood: true,
+                addDailyTreat: true
             };
         }
 
@@ -303,7 +400,7 @@
         function initCollapsibleSections() {
             const state = getCollapsedState();
 
-            ['stats', 'dogInfo', 'addFood', 'addTreat'].forEach(sectionId => {
+            ['stats', 'dogInfo', 'inventory', 'addDailyFood', 'addDailyTreat'].forEach(sectionId => {
                 const content = document.getElementById(sectionId + 'Content');
                 const chevron = document.getElementById(sectionId + 'Chevron');
 
@@ -320,8 +417,10 @@
         }
 
         function saveData() {
-            localStorage.setItem('dogFoods', JSON.stringify(foods));
-            localStorage.setItem('dogTreats', JSON.stringify(treats));
+            localStorage.setItem('dogInventoryFoods', JSON.stringify(inventoryFoods));
+            localStorage.setItem('dogInventoryTreats', JSON.stringify(inventoryTreats));
+            localStorage.setItem('dogDailyFoods', JSON.stringify(dailyFoods));
+            localStorage.setItem('dogDailyTreats', JSON.stringify(dailyTreats));
         }
 
         function saveSettings() {
@@ -432,70 +531,96 @@
             return (calories * 100) / kcalPer100g;
         }
 
-        function addFood() {
-            const name = document.getElementById('newFoodName').value.trim();
-            const calories = parseFloat(document.getElementById('newFoodCalories').value);
+        // Inventory functions
+        function addToInventory(type) {
+            if (type === 'food') {
+                const name = document.getElementById('newInventoryFoodName').value.trim();
+                const calories = parseFloat(document.getElementById('newInventoryFoodCalories').value);
 
-            if (!name || !calories || calories <= 0) {
-                alert('Please enter a valid food name and calories per 100g');
-                return;
+                if (!name || !calories || calories <= 0) {
+                    alert('Please enter a valid food name and calories per 100g');
+                    return;
+                }
+
+                inventoryFoods.push({
+                    id: Date.now(),
+                    name: name,
+                    kcalPer100g: calories
+                });
+
+                document.getElementById('newInventoryFoodName').value = '';
+                document.getElementById('newInventoryFoodCalories').value = '';
+            } else {
+                const name = document.getElementById('newInventoryTreatName').value.trim();
+                const calories = parseFloat(document.getElementById('newInventoryTreatCalories').value);
+
+                if (!name || !calories || calories <= 0) {
+                    alert('Please enter a valid treat name and calories per 100g');
+                    return;
+                }
+
+                inventoryTreats.push({
+                    id: Date.now(),
+                    name: name,
+                    kcalPer100g: calories
+                });
+
+                document.getElementById('newInventoryTreatName').value = '';
+                document.getElementById('newInventoryTreatCalories').value = '';
             }
 
-            foods.push({
-                id: Date.now(),
-                name: name,
-                kcalPer100g: calories
-            });
-
-            saveData();
-            document.getElementById('newFoodName').value = '';
-            document.getElementById('newFoodCalories').value = '';
-            updateDisplay();
-        }
-
-        function removeFood(id) {
-            foods = foods.filter(f => f.id !== id);
             saveData();
             updateDisplay();
         }
 
-        function addTreat() {
-            const name = document.getElementById('newTreatName').value.trim();
-            const calories = parseFloat(document.getElementById('newTreatCalories').value);
-            const percentage = parseFloat(document.getElementById('newTreatPercentage').value);
-
-            if (!name || !calories || calories <= 0) {
-                alert('Please enter a valid treat name and calories per 100g');
-                return;
+        function removeFromInventory(type, id) {
+            if (type === 'food') {
+                inventoryFoods = inventoryFoods.filter(f => f.id !== id);
+                dailyFoods = dailyFoods.filter(f => f.id !== id);
+            } else {
+                inventoryTreats = inventoryTreats.filter(t => t.id !== id);
+                dailyTreats = dailyTreats.filter(t => t.id !== id);
             }
+            saveData();
+            updateDisplay();
+        }
 
-            if (!percentage || percentage <= 0 || percentage > 100) {
-                alert('Please enter a valid percentage (1-100)');
-                return;
+        // Daily program functions
+        function addToDailyProgram(type, id) {
+            if (type === 'food') {
+                if (!dailyFoods.find(f => f.id === id)) {
+                    dailyFoods.push({ id: id, percentage: 50 }); // Default 50%
+                }
+            } else {
+                if (!dailyTreats.find(t => t.id === id)) {
+                    dailyTreats.push({ id: id, percentage: 25 }); // Default 25%
+                }
             }
-
-            treats.push({
-                id: Date.now(),
-                name: name,
-                kcalPer100g: calories,
-                percentage: percentage
-            });
-
-            saveData();
-            document.getElementById('newTreatName').value = '';
-            document.getElementById('newTreatCalories').value = '';
-            document.getElementById('newTreatPercentage').value = '';
-            updateDisplay();
-        }
-
-        function removeTreat(id) {
-            treats = treats.filter(t => t.id !== id);
             saveData();
             updateDisplay();
         }
 
-        function updateTreatPercentage(id, newPercentage) {
-            const treat = treats.find(t => t.id === id);
+        function removeFromDailyProgram(type, id) {
+            if (type === 'food') {
+                dailyFoods = dailyFoods.filter(f => f.id !== id);
+            } else {
+                dailyTreats = dailyTreats.filter(t => t.id !== id);
+            }
+            saveData();
+            updateDisplay();
+        }
+
+        function updateDailyFoodPercentage(id, newPercentage) {
+            const food = dailyFoods.find(f => f.id === id);
+            if (food) {
+                food.percentage = Math.max(0, Math.min(100, parseFloat(newPercentage) || 0));
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function updateDailyTreatPercentage(id, newPercentage) {
+            const treat = dailyTreats.find(t => t.id === id);
             if (treat) {
                 treat.percentage = Math.max(0, Math.min(100, parseFloat(newPercentage) || 0));
                 saveData();
@@ -508,61 +633,171 @@
             return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
         }
 
-        function renderFoodList(foodCalories) {
-            const container = document.getElementById('foodList');
-
-            if (foods.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No food added yet. Add your dog\'s main food below.</div>';
-                return;
+        function renderInventory() {
+            // Render food inventory
+            const foodContainer = document.getElementById('inventoryFoodList');
+            if (inventoryFoods.length === 0) {
+                foodContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No food products in inventory</div>';
+            } else {
+                foodContainer.innerHTML = inventoryFoods.map(food => {
+                    const inDaily = dailyFoods.find(f => f.id === food.id);
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
+                            <span class="text-gray-500 text-xs">${food.kcalPer100g} kcal/100g</span>
+                            <span class="text-xs px-2 py-0.5 rounded ${inDaily ? 'bg-success-100 text-success-600' : 'bg-gray-100 text-gray-500'}">
+                                ${inDaily ? 'In daily program' : 'Not in use'}
+                            </span>
+                            <button onclick="removeFromInventory('food', ${food.id})" class="self-end sm:self-auto px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Remove</button>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            container.innerHTML = foods.map(food => {
-                const grams = calculateGrams(foodCalories, food.kcalPer100g);
-                return `
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
-                        <span class="text-gray-500 text-xs sm:text-sm">${food.kcalPer100g} kcal/100g</span>
-                        <span class="text-success-500 font-semibold text-sm">${grams.toFixed(0)}g/day</span>
-                        <button onclick="removeFood(${food.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
-                    </div>
-                `;
-            }).join('');
+            // Render treat inventory
+            const treatContainer = document.getElementById('inventoryTreatList');
+            if (inventoryTreats.length === 0) {
+                treatContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No treat products in inventory</div>';
+            } else {
+                treatContainer.innerHTML = inventoryTreats.map(treat => {
+                    const inDaily = dailyTreats.find(t => t.id === treat.id);
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
+                            <span class="text-gray-500 text-xs">${treat.kcalPer100g} kcal/100g</span>
+                            <span class="text-xs px-2 py-0.5 rounded ${inDaily ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'}">
+                                ${inDaily ? 'In daily program' : 'Not in use'}
+                            </span>
+                            <button onclick="removeFromInventory('treat', ${treat.id})" class="self-end sm:self-auto px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Remove</button>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
-        function renderTreatList(treatCalories) {
-            const container = document.getElementById('treatList');
-            const totalContainer = document.getElementById('percentageTotal');
+        function renderDailyFoodList(foodCalories) {
+            const container = document.getElementById('dailyFoodList');
+            const totalContainer = document.getElementById('foodPercentageTotal');
+            const dailyFoodItems = dailyFoods.map(df => {
+                const food = inventoryFoods.find(f => f.id === df.id);
+                return food ? { ...food, percentage: df.percentage } : null;
+            }).filter(Boolean);
 
-            if (treats.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No treats added yet. Add treats below.</div>';
-                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-primary-50';
-                document.getElementById('percentageValue').textContent = '0%';
-                return;
+            if (dailyFoodItems.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No food in today\'s program. Add from inventory below.</div>';
+                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50';
+                document.getElementById('foodPercentageValue').textContent = '0%';
+            } else {
+                const totalPercentage = dailyFoodItems.reduce((sum, f) => sum + f.percentage, 0);
+
+                container.innerHTML = dailyFoodItems.map(food => {
+                    const foodShare = foodCalories * (food.percentage / 100);
+                    const grams = calculateGrams(foodShare, food.kcalPer100g);
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
+                            <span class="text-gray-500 text-xs sm:text-sm">${food.kcalPer100g} kcal/100g</span>
+                            <input type="number" value="${food.percentage}" min="0" max="100"
+                                onchange="updateDailyFoodPercentage(${food.id}, this.value)"
+                                class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-success-500">
+                            <span class="text-success-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(0)}g/day</span>
+                            <button onclick="removeFromDailyProgram('food', ${food.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('foodPercentageValue').textContent = totalPercentage + '%';
+                if (totalPercentage === 100) {
+                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+                } else {
+                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+                }
             }
 
-            const totalPercentage = treats.reduce((sum, t) => sum + t.percentage, 0);
+            // Render available foods to add
+            const availableContainer = document.getElementById('availableFoodsForDaily');
+            const dailyFoodIds = dailyFoods.map(f => f.id);
+            const availableFoods = inventoryFoods.filter(f => !dailyFoodIds.includes(f.id));
 
-            container.innerHTML = treats.map(treat => {
-                const treatShare = treatCalories * (treat.percentage / 100);
-                const grams = calculateGrams(treatShare, treat.kcalPer100g);
-                return `
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
-                        <span class="text-gray-500 text-xs sm:text-sm">${treat.kcalPer100g} kcal/100g</span>
-                        <input type="number" value="${treat.percentage}" min="0" max="100"
-                            onchange="updateTreatPercentage(${treat.id}, this.value)"
-                            class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                        <span class="text-primary-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(1)}g/day</span>
-                        <button onclick="removeTreat(${treat.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('percentageValue').textContent = totalPercentage + '%';
-            if (totalPercentage === 100) {
-                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+            if (availableFoods.length === 0) {
+                if (inventoryFoods.length === 0) {
+                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No food products in inventory. Add some in the Inventory section above.</div>';
+                } else {
+                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">All inventory foods are already in your daily program.</div>';
+                }
             } else {
-                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+                availableContainer.innerHTML = availableFoods.map(food => `
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
+                        <span class="text-gray-500 text-xs">${food.kcalPer100g} kcal/100g</span>
+                        <button onclick="addToDailyProgram('food', ${food.id})" class="self-end sm:self-auto px-3 py-1 text-xs font-medium bg-success-500 text-white rounded hover:bg-success-600 transition-colors">
+                            + Add to Daily
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderDailyTreatList(treatCalories) {
+            const container = document.getElementById('dailyTreatList');
+            const totalContainer = document.getElementById('percentageTotal');
+            const dailyTreatItems = dailyTreats.map(dt => {
+                const treat = inventoryTreats.find(t => t.id === dt.id);
+                return treat ? { ...treat, percentage: dt.percentage } : null;
+            }).filter(Boolean);
+
+            if (dailyTreatItems.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No treats in today\'s program. Add from inventory below.</div>';
+                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-primary-50';
+                document.getElementById('percentageValue').textContent = '0%';
+            } else {
+                const totalPercentage = dailyTreatItems.reduce((sum, t) => sum + t.percentage, 0);
+
+                container.innerHTML = dailyTreatItems.map(treat => {
+                    const treatShare = treatCalories * (treat.percentage / 100);
+                    const grams = calculateGrams(treatShare, treat.kcalPer100g);
+                    return `
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
+                            <span class="text-gray-500 text-xs sm:text-sm">${treat.kcalPer100g} kcal/100g</span>
+                            <input type="number" value="${treat.percentage}" min="0" max="100"
+                                onchange="updateDailyTreatPercentage(${treat.id}, this.value)"
+                                class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
+                            <span class="text-primary-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(1)}g/day</span>
+                            <button onclick="removeFromDailyProgram('treat', ${treat.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('percentageValue').textContent = totalPercentage + '%';
+                if (totalPercentage === 100) {
+                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+                } else {
+                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+                }
+            }
+
+            // Render available treats to add
+            const availableContainer = document.getElementById('availableTreatsForDaily');
+            const dailyTreatIds = dailyTreats.map(t => t.id);
+            const availableTreats = inventoryTreats.filter(t => !dailyTreatIds.includes(t.id));
+
+            if (availableTreats.length === 0) {
+                if (inventoryTreats.length === 0) {
+                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No treat products in inventory. Add some in the Inventory section above.</div>';
+                } else {
+                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">All inventory treats are already in your daily program.</div>';
+                }
+            } else {
+                availableContainer.innerHTML = availableTreats.map(treat => `
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
+                        <span class="text-gray-500 text-xs">${treat.kcalPer100g} kcal/100g</span>
+                        <button onclick="addToDailyProgram('treat', ${treat.id})" class="self-end sm:self-auto px-3 py-1 text-xs font-medium bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors">
+                            + Add to Daily
+                        </button>
+                    </div>
+                `).join('');
             }
         }
 
@@ -579,8 +814,9 @@
             document.getElementById('treatPercentLabel').textContent = results.treatPercent;
             document.getElementById('foodPercentLabel').textContent = results.foodPercent;
 
-            renderFoodList(results.food);
-            renderTreatList(results.treats);
+            renderInventory();
+            renderDailyFoodList(results.food);
+            renderDailyTreatList(results.treats);
         }
 
         // URL Sharing Functions
@@ -596,8 +832,10 @@
                     b: document.getElementById('bodyCondition').value,
                     t: document.getElementById('treatPercent').value
                 },
-                f: foods.map(f => ({ n: f.name, k: f.kcalPer100g })), // foods (without id)
-                r: treats.map(t => ({ n: t.name, k: t.kcalPer100g, p: t.percentage })) // treats (without id)
+                if: inventoryFoods.map(f => ({ n: f.name, k: f.kcalPer100g, i: f.id })), // inventory foods
+                it: inventoryTreats.map(t => ({ n: t.name, k: t.kcalPer100g, i: t.id })), // inventory treats
+                df: dailyFoods.map(f => ({ i: f.id, p: f.percentage })), // daily foods with percentages
+                dt: dailyTreats.map(t => ({ i: t.id, p: t.percentage })) // daily treats with percentages
             };
         }
 
@@ -631,23 +869,65 @@
                 if (state.s.t) document.getElementById('treatPercent').value = state.s.t;
             }
 
-            // Apply foods (regenerate IDs)
-            if (state.f && Array.isArray(state.f)) {
-                foods = state.f.map((f, i) => ({
-                    id: Date.now() + i,
+            // Apply inventory foods
+            if (state.if && Array.isArray(state.if)) {
+                inventoryFoods = state.if.map((f, i) => ({
+                    id: f.i || (Date.now() + i),
                     name: f.n,
                     kcalPer100g: f.k
                 }));
             }
 
-            // Apply treats (regenerate IDs)
+            // Apply inventory treats
+            if (state.it && Array.isArray(state.it)) {
+                inventoryTreats = state.it.map((t, i) => ({
+                    id: t.i || (Date.now() + 1000 + i),
+                    name: t.n,
+                    kcalPer100g: t.k
+                }));
+            }
+
+            // Apply daily foods
+            if (state.df && Array.isArray(state.df)) {
+                // Handle both new format ({i, p}) and old format (just IDs)
+                if (state.df.length > 0 && typeof state.df[0] === 'object') {
+                    dailyFoods = state.df.map(f => ({ id: f.i, percentage: f.p }));
+                } else {
+                    // Old format: array of IDs - give equal percentages
+                    const perFoodPercent = state.df.length > 0 ? Math.floor(100 / state.df.length) : 100;
+                    dailyFoods = state.df.map((id, i) => ({
+                        id: id,
+                        percentage: i === state.df.length - 1 ? 100 - (perFoodPercent * (state.df.length - 1)) : perFoodPercent
+                    }));
+                }
+            }
+
+            // Apply daily treats
+            if (state.dt && Array.isArray(state.dt)) {
+                dailyTreats = state.dt.map(t => ({ id: t.i, percentage: t.p }));
+            }
+
+            // Handle old format (backwards compatibility)
+            if (state.f && Array.isArray(state.f)) {
+                inventoryFoods = state.f.map((f, i) => ({
+                    id: Date.now() + i,
+                    name: f.n,
+                    kcalPer100g: f.k
+                }));
+                // Give each food equal percentage
+                const perFoodPercent = state.f.length > 0 ? Math.floor(100 / state.f.length) : 100;
+                dailyFoods = inventoryFoods.map((f, i) => ({
+                    id: f.id,
+                    percentage: i === inventoryFoods.length - 1 ? 100 - (perFoodPercent * (inventoryFoods.length - 1)) : perFoodPercent
+                }));
+            }
             if (state.r && Array.isArray(state.r)) {
-                treats = state.r.map((t, i) => ({
+                inventoryTreats = state.r.map((t, i) => ({
                     id: Date.now() + 1000 + i,
                     name: t.n,
-                    kcalPer100g: t.k,
-                    percentage: t.p
+                    kcalPer100g: t.k
                 }));
+                dailyTreats = inventoryTreats.map((t, i) => ({ id: t.id, percentage: state.r[i].p }));
             }
 
             // Save to localStorage
@@ -697,8 +977,10 @@
                     bodyCondition: document.getElementById('bodyCondition').value,
                     treatPercent: document.getElementById('treatPercent').value
                 },
-                foods: foods.map(f => ({ name: f.name, kcalPer100g: f.kcalPer100g })),
-                treats: treats.map(t => ({ name: t.name, kcalPer100g: t.kcalPer100g, percentage: t.percentage }))
+                inventoryFoods: inventoryFoods.map(f => ({ id: f.id, name: f.name, kcalPer100g: f.kcalPer100g })),
+                inventoryTreats: inventoryTreats.map(t => ({ id: t.id, name: t.name, kcalPer100g: t.kcalPer100g })),
+                dailyFoods: dailyFoods,
+                dailyTreats: dailyTreats
             };
 
             const json = JSON.stringify(state, null, 2);
@@ -732,7 +1014,7 @@
                     const state = JSON.parse(e.target.result);
 
                     // Validate structure
-                    if (!state.settings && !state.foods && !state.treats) {
+                    if (!state.settings && !state.inventoryFoods && !state.inventoryTreats && !state.foods && !state.treats) {
                         throw new Error('Invalid file format');
                     }
 
@@ -747,23 +1029,59 @@
                         if (state.settings.treatPercent) document.getElementById('treatPercent').value = state.settings.treatPercent;
                     }
 
-                    // Apply foods
-                    if (state.foods && Array.isArray(state.foods)) {
-                        foods = state.foods.map((f, i) => ({
-                            id: Date.now() + i,
+                    // Apply new format
+                    if (state.inventoryFoods && Array.isArray(state.inventoryFoods)) {
+                        inventoryFoods = state.inventoryFoods.map((f, i) => ({
+                            id: f.id || (Date.now() + i),
                             name: f.name,
                             kcalPer100g: f.kcalPer100g
                         }));
                     }
+                    if (state.inventoryTreats && Array.isArray(state.inventoryTreats)) {
+                        inventoryTreats = state.inventoryTreats.map((t, i) => ({
+                            id: t.id || (Date.now() + 1000 + i),
+                            name: t.name,
+                            kcalPer100g: t.kcalPer100g
+                        }));
+                    }
+                    if (state.dailyFoods && Array.isArray(state.dailyFoods)) {
+                        // Handle both new format (objects with id/percentage) and old format (just IDs)
+                        if (state.dailyFoods.length > 0 && typeof state.dailyFoods[0] === 'object') {
+                            dailyFoods = state.dailyFoods;
+                        } else {
+                            // Old format: array of IDs - give equal percentages
+                            const perFoodPercent = state.dailyFoods.length > 0 ? Math.floor(100 / state.dailyFoods.length) : 100;
+                            dailyFoods = state.dailyFoods.map((id, i) => ({
+                                id: id,
+                                percentage: i === state.dailyFoods.length - 1 ? 100 - (perFoodPercent * (state.dailyFoods.length - 1)) : perFoodPercent
+                            }));
+                        }
+                    }
+                    if (state.dailyTreats && Array.isArray(state.dailyTreats)) {
+                        dailyTreats = state.dailyTreats;
+                    }
 
-                    // Apply treats
+                    // Handle old format (backwards compatibility)
+                    if (state.foods && Array.isArray(state.foods)) {
+                        inventoryFoods = state.foods.map((f, i) => ({
+                            id: Date.now() + i,
+                            name: f.name,
+                            kcalPer100g: f.kcalPer100g
+                        }));
+                        // Give each food equal percentage
+                        const perFoodPercent = state.foods.length > 0 ? Math.floor(100 / state.foods.length) : 100;
+                        dailyFoods = inventoryFoods.map((f, i) => ({
+                            id: f.id,
+                            percentage: i === inventoryFoods.length - 1 ? 100 - (perFoodPercent * (inventoryFoods.length - 1)) : perFoodPercent
+                        }));
+                    }
                     if (state.treats && Array.isArray(state.treats)) {
-                        treats = state.treats.map((t, i) => ({
+                        inventoryTreats = state.treats.map((t, i) => ({
                             id: Date.now() + 1000 + i,
                             name: t.name,
-                            kcalPer100g: t.kcalPer100g,
-                            percentage: t.percentage
+                            kcalPer100g: t.kcalPer100g
                         }));
+                        dailyTreats = inventoryTreats.map((t, i) => ({ id: t.id, percentage: state.treats[i].percentage }));
                     }
 
                     saveSettings();
@@ -822,7 +1140,8 @@
         document.getElementById('bodyCondition').addEventListener('change', handleSettingChange);
         document.getElementById('treatPercent').addEventListener('input', handleSettingChange);
 
-        // Initialize - check URL first, then fall back to localStorage
+        // Initialize - migrate old data, check URL, then fall back to localStorage
+        migrateOldData();
         initCollapsibleSections();
         const loadedFromURL = loadFromURL();
         if (!loadedFromURL) {
