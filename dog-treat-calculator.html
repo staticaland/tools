@@ -82,42 +82,6 @@
             <p class="mt-2 text-gray-500 text-sm sm:text-base">Calculate daily food and treat allowances for your dog</p>
         </header>
 
-        <!-- Results Grid (Collapsible) -->
-        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
-            <button onclick="toggleSection('stats')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
-                <h2 class="text-primary-600 font-semibold text-base">Daily Stats</h2>
-                <svg id="statsChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-            <div id="statsContent" class="px-5 pb-5">
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- Primary stat: Daily calories -->
-                    <div class="col-span-2 bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-xl text-center border border-slate-200/60">
-                        <div class="text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums"><span id="dailyCalories">0</span></div>
-                        <div class="text-gray-500 text-xs mt-1.5 font-medium uppercase tracking-wide">Daily Calories (MER)</div>
-                    </div>
-                    <!-- Food calories -->
-                    <div class="bg-success-50/70 p-4 rounded-xl text-center border border-success-200/60">
-                        <div class="text-2xl font-bold text-success-700 tabular-nums"><span id="foodCalories">0</span></div>
-                        <div class="text-success-600/80 text-xs mt-1 font-medium">Food <span class="text-success-500">(<span id="foodPercentLabel">90</span>%)</span></div>
-                    </div>
-                    <!-- Treat calories -->
-                    <div class="bg-primary-50/70 p-4 rounded-xl text-center border border-primary-200/60">
-                        <div class="text-2xl font-bold text-primary-700 tabular-nums"><span id="treatCalories">0</span></div>
-                        <div class="text-primary-600/80 text-xs mt-1 font-medium">Treats <span class="text-primary-500">(<span id="treatPercentLabel">10</span>%)</span></div>
-                    </div>
-                    <!-- RER stat -->
-                    <div class="col-span-2 bg-gray-50/50 p-3 rounded-xl text-center border border-gray-100">
-                        <div class="flex items-center justify-center gap-2">
-                            <span class="text-lg font-semibold text-gray-600 tabular-nums"><span id="rerValue">0</span></span>
-                            <span class="text-gray-400 text-xs font-medium">Resting Energy (RER)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Dog Information Form (Collapsible) -->
         <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
             <button onclick="toggleSection('dogInfo')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
@@ -263,7 +227,7 @@
         <!-- Daily Food Program -->
         <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
             <div class="px-5 pt-5 pb-4">
-                <h2 class="text-success-600 font-semibold text-base mb-1">Daily Food Program</h2>
+                <h2 class="text-success-600 font-semibold text-base mb-1">Food</h2>
                 <p class="text-gray-500 text-sm">Select food from your inventory and set percentage split (based on <span id="foodBudget" class="font-semibold text-gray-700">0</span> kcal budget)</p>
             </div>
 
@@ -296,7 +260,7 @@
         <!-- Daily Treats Program -->
         <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
             <div class="px-5 pt-5 pb-4">
-                <h2 class="text-primary-600 font-semibold text-base mb-1">Daily Treats Program</h2>
+                <h2 class="text-primary-600 font-semibold text-base mb-1">Treats</h2>
                 <p class="text-gray-500 text-sm">Select treats from your inventory and set percentage split (based on <span id="treatBudget" class="font-semibold text-gray-700">0</span> kcal treat budget)</p>
             </div>
 
@@ -321,6 +285,42 @@
                 <div id="addDailyTreatContent" class="px-5 pb-5">
                     <div id="availableTreatsForDaily" class="space-y-2">
                         <div class="text-center py-4 text-gray-400 text-sm">No treat products available in inventory</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Stats (Collapsible) -->
+        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('stats')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-primary-600 font-semibold text-base">Daily Stats</h2>
+                <svg id="statsChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="statsContent" class="px-5 pb-5">
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Primary stat: Daily calories -->
+                    <div class="col-span-2 bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-xl text-center border border-slate-200/60">
+                        <div class="text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums"><span id="dailyCalories">0</span></div>
+                        <div class="text-gray-500 text-xs mt-1.5 font-medium uppercase tracking-wide">Daily Calories (MER)</div>
+                    </div>
+                    <!-- Food calories -->
+                    <div class="bg-success-50/70 p-4 rounded-xl text-center border border-success-200/60">
+                        <div class="text-2xl font-bold text-success-700 tabular-nums"><span id="foodCalories">0</span></div>
+                        <div class="text-success-600/80 text-xs mt-1 font-medium">Food <span class="text-success-500">(<span id="foodPercentLabel">90</span>%)</span></div>
+                    </div>
+                    <!-- Treat calories -->
+                    <div class="bg-primary-50/70 p-4 rounded-xl text-center border border-primary-200/60">
+                        <div class="text-2xl font-bold text-primary-700 tabular-nums"><span id="treatCalories">0</span></div>
+                        <div class="text-primary-600/80 text-xs mt-1 font-medium">Treats <span class="text-primary-500">(<span id="treatPercentLabel">10</span>%)</span></div>
+                    </div>
+                    <!-- RER stat -->
+                    <div class="col-span-2 bg-gray-50/50 p-3 rounded-xl text-center border border-gray-100">
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-lg font-semibold text-gray-600 tabular-nums"><span id="rerValue">0</span></span>
+                            <span class="text-gray-400 text-xs font-medium">Resting Energy (RER)</span>
+                        </div>
                     </div>
                 </div>
             </div>
