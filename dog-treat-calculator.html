@@ -13,278 +13,344 @@
                 extend: {
                     colors: {
                         primary: {
-                            50: '#ebf4ff',
-                            100: '#e9d8fd',
-                            500: '#5a67d8',
-                            600: '#434190',
-                            700: '#3c366b'
+                            50: '#f0f4ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
                         },
                         success: {
-                            50: '#f0fff4',
-                            100: '#c6f6d5',
-                            500: '#38a169',
-                            600: '#276749'
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
                         },
                         amber: {
                             50: '#fffbeb',
                             100: '#fef3c7',
+                            200: '#fde68a',
+                            400: '#fbbf24',
                             500: '#f59e0b',
                             600: '#d97706'
                         }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+                        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)'
                     }
                 }
             }
         }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom focus ring for better accessibility */
+        input:focus, select:focus, button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        /* Smooth transitions for interactive elements */
+        .transition-base {
+            transition: all 0.15s ease-in-out;
+        }
+        /* Hide number input spinners for cleaner look */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
 </head>
-<body class="font-sans bg-gray-50 min-h-screen text-gray-800">
-    <div class="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">Dog Treat Calculator</h1>
-        <p class="text-center text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base">Calculate daily food and treat allowances for your dog</p>
+<body class="font-sans bg-slate-50 min-h-screen text-gray-700 antialiased">
+    <div class="max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
+        <!-- Header -->
+        <header class="text-center mb-8 sm:mb-10">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Dog Treat Calculator</h1>
+            <p class="mt-2 text-gray-500 text-sm sm:text-base">Calculate daily food and treat allowances for your dog</p>
+        </header>
 
         <!-- Results Grid (Collapsible) -->
-        <div class="bg-white rounded-xl mb-6 sm:mb-8 shadow-sm overflow-hidden">
-            <button onclick="toggleSection('stats')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-                <h3 class="text-primary-500 font-semibold text-lg">Daily Stats</h3>
-                <svg id="statsChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('stats')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-primary-600 font-semibold text-base">Daily Stats</h2>
+                <svg id="statsChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </button>
-            <div id="statsContent" class="px-4 pb-4">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                    <div class="bg-gray-50 p-4 sm:p-5 rounded-xl text-center">
-                        <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="dailyCalories">0</span></div>
-                        <div class="text-gray-500 text-xs sm:text-sm mt-1">Daily Calories (MER)</div>
+            <div id="statsContent" class="px-5 pb-5">
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Primary stat: Daily calories -->
+                    <div class="col-span-2 bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-xl text-center border border-slate-200/60">
+                        <div class="text-3xl sm:text-4xl font-bold text-gray-900 tabular-nums"><span id="dailyCalories">0</span></div>
+                        <div class="text-gray-500 text-xs mt-1.5 font-medium uppercase tracking-wide">Daily Calories (MER)</div>
                     </div>
-                    <div class="bg-gradient-to-br from-success-50 to-success-100 p-4 sm:p-5 rounded-xl text-center border-2 border-success-500">
-                        <div class="text-2xl sm:text-3xl font-bold text-success-600"><span id="foodCalories">0</span></div>
-                        <div class="text-gray-600 text-xs sm:text-sm mt-1">Food (<span id="foodPercentLabel">90</span>%)</div>
+                    <!-- Food calories -->
+                    <div class="bg-success-50/70 p-4 rounded-xl text-center border border-success-200/60">
+                        <div class="text-2xl font-bold text-success-700 tabular-nums"><span id="foodCalories">0</span></div>
+                        <div class="text-success-600/80 text-xs mt-1 font-medium">Food <span class="text-success-500">(<span id="foodPercentLabel">90</span>%)</span></div>
                     </div>
-                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 p-4 sm:p-5 rounded-xl text-center border-2 border-primary-500">
-                        <div class="text-2xl sm:text-3xl font-bold text-primary-600"><span id="treatCalories">0</span></div>
-                        <div class="text-gray-600 text-xs sm:text-sm mt-1">Treats (<span id="treatPercentLabel">10</span>%)</div>
+                    <!-- Treat calories -->
+                    <div class="bg-primary-50/70 p-4 rounded-xl text-center border border-primary-200/60">
+                        <div class="text-2xl font-bold text-primary-700 tabular-nums"><span id="treatCalories">0</span></div>
+                        <div class="text-primary-600/80 text-xs mt-1 font-medium">Treats <span class="text-primary-500">(<span id="treatPercentLabel">10</span>%)</span></div>
                     </div>
-                    <div class="bg-gray-50 p-4 sm:p-5 rounded-xl text-center">
-                        <div class="text-2xl sm:text-3xl font-bold text-primary-500"><span id="rerValue">0</span></div>
-                        <div class="text-gray-500 text-xs sm:text-sm mt-1">Resting Energy (RER)</div>
+                    <!-- RER stat -->
+                    <div class="col-span-2 bg-gray-50/50 p-3 rounded-xl text-center border border-gray-100">
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-lg font-semibold text-gray-600 tabular-nums"><span id="rerValue">0</span></span>
+                            <span class="text-gray-400 text-xs font-medium">Resting Energy (RER)</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Dog Information Form (Collapsible) -->
-        <div class="bg-white rounded-xl mb-6 sm:mb-8 shadow-sm overflow-hidden">
-            <button onclick="toggleSection('dogInfo')" class="w-full flex items-center justify-between p-4 sm:p-6 pb-0 text-left hover:bg-gray-50 transition-colors">
-                <h3 class="text-primary-500 font-semibold text-lg">Your Dog's Information</h3>
-                <svg id="dogInfoChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('dogInfo')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-primary-600 font-semibold text-base">Your Dog's Information</h2>
+                <svg id="dogInfoChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </button>
-            <div id="dogInfoContent" class="px-4 sm:px-6 pb-4 sm:pb-6 pt-4 sm:pt-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                <div class="flex flex-col">
-                    <label for="weight" class="text-gray-600 text-sm mb-2 font-medium">Weight</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="weight" min="0.5" max="150" step="0.1" value="15" placeholder="Weight"
-                            class="flex-1 min-w-0 px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors">
-                        <select id="weightUnit" class="w-20 px-2 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
-                            <option value="kg">kg</option>
-                            <option value="lbs">lbs</option>
+            <div id="dogInfoContent" class="px-5 pb-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Weight -->
+                    <div class="space-y-1.5">
+                        <label for="weight" class="block text-gray-600 text-xs font-medium uppercase tracking-wide">Weight</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="weight" min="0.5" max="150" step="0.1" value="15" placeholder="Weight"
+                                class="flex-1 min-w-0 h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors">
+                            <select id="weightUnit" class="w-20 h-11 px-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer transition-colors">
+                                <option value="kg">kg</option>
+                                <option value="lbs">lbs</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Life Stage -->
+                    <div class="space-y-1.5">
+                        <label for="lifeStage" class="block text-gray-600 text-xs font-medium uppercase tracking-wide">Life Stage</label>
+                        <select id="lifeStage" class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer transition-colors">
+                            <option value="adult">Adult (1-7 years)</option>
+                            <option value="senior">Senior (7+ years)</option>
+                            <option value="puppy_young">Puppy (under 4 months)</option>
+                            <option value="puppy_older">Puppy (4-12 months)</option>
                         </select>
                     </div>
-                </div>
 
-                <div class="flex flex-col">
-                    <label for="lifeStage" class="text-gray-600 text-sm mb-2 font-medium">Life Stage</label>
-                    <select id="lifeStage" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
-                        <option value="adult">Adult (1-7 years)</option>
-                        <option value="senior">Senior (7+ years)</option>
-                        <option value="puppy_young">Puppy (under 4 months)</option>
-                        <option value="puppy_older">Puppy (4-12 months)</option>
-                    </select>
-                </div>
+                    <!-- Neutered -->
+                    <div class="space-y-1.5">
+                        <label for="neutered" class="block text-gray-600 text-xs font-medium uppercase tracking-wide">Neutered/Spayed</label>
+                        <select id="neutered" class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer transition-colors">
+                            <option value="yes">Yes</option>
+                            <option value="no">No (Intact)</option>
+                        </select>
+                    </div>
 
-                <div class="flex flex-col">
-                    <label for="neutered" class="text-gray-600 text-sm mb-2 font-medium">Neutered/Spayed</label>
-                    <select id="neutered" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
-                        <option value="yes">Yes</option>
-                        <option value="no">No (Intact)</option>
-                    </select>
-                </div>
+                    <!-- Activity Level -->
+                    <div class="space-y-1.5">
+                        <label for="activityLevel" class="block text-gray-600 text-xs font-medium uppercase tracking-wide">Activity Level</label>
+                        <select id="activityLevel" class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer transition-colors">
+                            <option value="low">Low (mostly resting)</option>
+                            <option value="normal" selected>Normal (daily walks)</option>
+                            <option value="active">Active (1-3 hrs exercise)</option>
+                            <option value="working">Working/Sport dog</option>
+                        </select>
+                    </div>
 
-                <div class="flex flex-col">
-                    <label for="activityLevel" class="text-gray-600 text-sm mb-2 font-medium">Activity Level</label>
-                    <select id="activityLevel" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
-                        <option value="low">Low (mostly resting)</option>
-                        <option value="normal" selected>Normal (daily walks)</option>
-                        <option value="active">Active (1-3 hrs exercise)</option>
-                        <option value="working">Working/Sport dog</option>
-                    </select>
-                </div>
+                    <!-- Body Condition -->
+                    <div class="space-y-1.5">
+                        <label for="bodyCondition" class="block text-gray-600 text-xs font-medium uppercase tracking-wide">Body Condition</label>
+                        <select id="bodyCondition" class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer transition-colors">
+                            <option value="underweight">Underweight (needs to gain)</option>
+                            <option value="ideal" selected>Ideal weight</option>
+                            <option value="overweight">Overweight (needs to lose)</option>
+                        </select>
+                    </div>
 
-                <div class="flex flex-col">
-                    <label for="bodyCondition" class="text-gray-600 text-sm mb-2 font-medium">Body Condition</label>
-                    <select id="bodyCondition" class="px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 cursor-pointer">
-                        <option value="underweight">Underweight (needs to gain)</option>
-                        <option value="ideal" selected>Ideal weight</option>
-                        <option value="overweight">Overweight (needs to lose)</option>
-                    </select>
-                </div>
-
-                <div class="flex flex-col">
-                    <label for="treatPercent" class="text-gray-600 text-sm mb-2 font-medium">Treat Allowance</label>
-                    <div class="flex gap-2 items-center">
-                        <input type="number" id="treatPercent" min="1" max="30" step="1" value="10"
-                            class="flex-1 min-w-0 px-3 py-3 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors">
-                        <span class="text-gray-500 text-base px-2">%</span>
+                    <!-- Treat Allowance -->
+                    <div class="space-y-1.5">
+                        <label for="treatPercent" class="block text-gray-600 text-xs font-medium uppercase tracking-wide">Treat Allowance</label>
+                        <div class="relative">
+                            <input type="number" id="treatPercent" min="1" max="30" step="1" value="10"
+                                class="w-full h-11 px-3 pr-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">%</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Multiplier info -->
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <p class="text-xs text-gray-500" id="multiplierInfo">
+                        Current multiplier: <span class="font-semibold text-primary-600" id="currentMultiplier">1.6</span>x RER
+                    </p>
+                </div>
             </div>
-            <div class="text-xs text-gray-500 mt-4" id="multiplierInfo">
-                Current multiplier: <strong class="text-primary-500" id="currentMultiplier">1.6</strong>x RER
-            </div>
-            </div>
-        </div>
+        </section>
 
         <!-- Inventory Section -->
-        <div class="bg-white rounded-xl mb-6 sm:mb-8 shadow-sm overflow-hidden">
-            <button onclick="toggleSection('inventory')" class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-                <h3 class="text-amber-500 font-semibold text-lg flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('inventory')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-amber-600 font-semibold text-base flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                     </svg>
                     Inventory
-                </h3>
-                <svg id="inventoryChevron" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                </h2>
+                <svg id="inventoryChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </button>
-            <div id="inventoryContent" class="px-4 pb-4">
-                <p class="text-gray-500 text-sm mb-4">Add all the foods and treats you have available. Then select which ones to use in your daily program.</p>
+            <div id="inventoryContent" class="px-5 pb-5">
+                <p class="text-gray-500 text-sm mb-5">Add all the foods and treats you have available. Then select which ones to use in your daily program.</p>
 
                 <!-- Food Inventory -->
                 <div class="mb-6">
-                    <h4 class="text-success-500 font-medium text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-success-500 rounded-full"></span>
+                    <h3 class="text-success-600 font-medium text-xs uppercase tracking-wide mb-3 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-success-500 rounded-full"></span>
                         Food Products
-                    </h4>
+                    </h3>
                     <div class="space-y-2 mb-3" id="inventoryFoodList">
-                        <div class="text-center py-3 text-gray-400 text-sm">No food products in inventory</div>
+                        <div class="text-center py-4 text-gray-400 text-sm">No food products in inventory</div>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <input type="text" id="newInventoryFoodName" placeholder="Food name (e.g., Brand Kibble)"
-                            class="flex-1 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
+                            class="flex-1 h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-amber-400 transition-colors">
                         <input type="number" id="newInventoryFoodCalories" placeholder="kcal/100g" min="1" step="1"
-                            class="w-full sm:w-28 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
-                        <button onclick="addToInventory('food')" class="px-4 py-2 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors active:scale-95">
-                            Add to Inventory
+                            class="w-full sm:w-28 h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-amber-400 transition-colors">
+                        <button onclick="addToInventory('food')" class="h-10 px-4 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors active:scale-[0.98]">
+                            Add
                         </button>
                     </div>
                 </div>
 
                 <!-- Treat Inventory -->
                 <div>
-                    <h4 class="text-primary-500 font-medium text-sm mb-3 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-primary-500 rounded-full"></span>
+                    <h3 class="text-primary-600 font-medium text-xs uppercase tracking-wide mb-3 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-primary-500 rounded-full"></span>
                         Treat Products
-                    </h4>
+                    </h3>
                     <div class="space-y-2 mb-3" id="inventoryTreatList">
-                        <div class="text-center py-3 text-gray-400 text-sm">No treat products in inventory</div>
+                        <div class="text-center py-4 text-gray-400 text-sm">No treat products in inventory</div>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <input type="text" id="newInventoryTreatName" placeholder="Treat name"
-                            class="flex-1 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
+                            class="flex-1 h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-amber-400 transition-colors">
                         <input type="number" id="newInventoryTreatCalories" placeholder="kcal/100g" min="1" step="1"
-                            class="w-full sm:w-28 px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-amber-500">
-                        <button onclick="addToInventory('treat')" class="px-4 py-2 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors active:scale-95">
-                            Add to Inventory
+                            class="w-full sm:w-28 h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-amber-400 transition-colors">
+                        <button onclick="addToInventory('treat')" class="h-10 px-4 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors active:scale-[0.98]">
+                            Add
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Daily Food Program -->
-        <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
-            <h3 class="text-success-500 font-semibold text-lg mb-2">Daily Food Program</h3>
-            <p class="text-gray-500 text-sm mb-4">Select food from your inventory and set percentage split (based on <span id="foodBudget" class="font-medium">0</span> kcal budget)</p>
-
-            <div class="space-y-2" id="dailyFoodList">
-                <div class="text-center py-4 text-gray-500 text-sm">No food in today's program. Add from inventory below.</div>
+        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
+            <div class="px-5 pt-5 pb-4">
+                <h2 class="text-success-600 font-semibold text-base mb-1">Daily Food Program</h2>
+                <p class="text-gray-500 text-sm">Select food from your inventory and set percentage split (based on <span id="foodBudget" class="font-semibold text-gray-700">0</span> kcal budget)</p>
             </div>
 
-            <div class="mt-3 p-3 rounded-lg text-sm flex justify-between items-center" id="foodPercentageTotal">
-                <span>Total allocation:</span>
-                <span class="font-medium" id="foodPercentageValue">0%</span>
+            <div class="px-5">
+                <div class="space-y-2" id="dailyFoodList">
+                    <div class="text-center py-6 text-gray-400 text-sm">No food in today's program. Add from inventory below.</div>
+                </div>
+
+                <div class="mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center" id="foodPercentageTotal">
+                    <span class="text-gray-600">Total allocation:</span>
+                    <span class="font-semibold tabular-nums" id="foodPercentageValue">0%</span>
+                </div>
             </div>
 
-            <div class="border-t border-gray-200 mt-4">
-                <button onclick="toggleSection('addDailyFood')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
+            <div class="mt-4 border-t border-gray-100">
+                <button onclick="toggleSection('addDailyFood')" class="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50/50 transition-colors">
                     <span class="text-sm text-gray-600 font-medium">Add Food from Inventory</span>
-                    <svg id="addDailyFoodChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="addDailyFoodChevron" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                <div id="addDailyFoodContent" class="pb-1">
+                <div id="addDailyFoodContent" class="px-5 pb-5">
                     <div id="availableFoodsForDaily" class="space-y-2">
-                        <div class="text-center py-3 text-gray-400 text-sm">No food products available in inventory</div>
+                        <div class="text-center py-4 text-gray-400 text-sm">No food products available in inventory</div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Daily Treats Program -->
-        <div class="bg-white rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
-            <h3 class="text-primary-500 font-semibold text-lg mb-2">Daily Treats Program</h3>
-            <p class="text-gray-500 text-sm mb-4">Select treats from your inventory and set percentage split (based on <span id="treatBudget" class="font-medium">0</span> kcal treat budget)</p>
-
-            <div class="space-y-2" id="dailyTreatList">
-                <div class="text-center py-4 text-gray-500 text-sm">No treats in today's program. Add from inventory below.</div>
+        <section class="bg-white rounded-2xl mb-4 shadow-card border border-gray-100 overflow-hidden">
+            <div class="px-5 pt-5 pb-4">
+                <h2 class="text-primary-600 font-semibold text-base mb-1">Daily Treats Program</h2>
+                <p class="text-gray-500 text-sm">Select treats from your inventory and set percentage split (based on <span id="treatBudget" class="font-semibold text-gray-700">0</span> kcal treat budget)</p>
             </div>
 
-            <div class="mt-3 p-3 rounded-lg text-sm flex justify-between items-center" id="percentageTotal">
-                <span>Total allocation:</span>
-                <span class="font-medium" id="percentageValue">0%</span>
+            <div class="px-5">
+                <div class="space-y-2" id="dailyTreatList">
+                    <div class="text-center py-6 text-gray-400 text-sm">No treats in today's program. Add from inventory below.</div>
+                </div>
+
+                <div class="mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center" id="percentageTotal">
+                    <span class="text-gray-600">Total allocation:</span>
+                    <span class="font-semibold tabular-nums" id="percentageValue">0%</span>
+                </div>
             </div>
 
-            <div class="border-t border-gray-200 mt-4">
-                <button onclick="toggleSection('addDailyTreat')" class="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors">
+            <div class="mt-4 border-t border-gray-100">
+                <button onclick="toggleSection('addDailyTreat')" class="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50/50 transition-colors">
                     <span class="text-sm text-gray-600 font-medium">Add Treat from Inventory</span>
-                    <svg id="addDailyTreatChevron" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg id="addDailyTreatChevron" class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                <div id="addDailyTreatContent" class="pb-1">
+                <div id="addDailyTreatContent" class="px-5 pb-5">
                     <div id="availableTreatsForDaily" class="space-y-2">
-                        <div class="text-center py-3 text-gray-400 text-sm">No treat products available in inventory</div>
+                        <div class="text-center py-4 text-gray-400 text-sm">No treat products available in inventory</div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Share Section -->
-        <div class="mt-6 flex flex-col sm:flex-row gap-3 items-center justify-center">
-            <button onclick="shareSettings()" class="px-5 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-95 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-                </svg>
-                Share Settings
-            </button>
-            <button onclick="exportToJSON()" class="px-5 py-2.5 text-sm font-medium bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors active:scale-95 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Export JSON
-            </button>
-            <button onclick="document.getElementById('jsonFileInput').click()" class="px-5 py-2.5 text-sm font-medium bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors active:scale-95 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                </svg>
-                Import JSON
-            </button>
+        <section class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex flex-wrap gap-2 items-center justify-center">
+                <button onclick="shareSettings()" class="h-10 px-4 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors active:scale-[0.98] flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                    </svg>
+                    Share
+                </button>
+                <button onclick="exportToJSON()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export
+                </button>
+                <button onclick="document.getElementById('jsonFileInput').click()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Import
+                </button>
+            </div>
             <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="importFromJSON(event)">
-            <div id="shareStatus" class="text-sm text-gray-500 hidden"></div>
-        </div>
+            <div id="shareStatus" class="mt-3 text-center text-sm text-gray-500 hidden"></div>
+        </section>
     </div>
 
     <script>
@@ -623,18 +689,22 @@
             // Render food inventory
             const foodContainer = document.getElementById('inventoryFoodList');
             if (inventoryFoods.length === 0) {
-                foodContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No food products in inventory</div>';
+                foodContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No food products in inventory</div>';
             } else {
                 foodContainer.innerHTML = inventoryFoods.map(food => {
                     const inDaily = dailyFoods.find(f => f.id === food.id);
                     return `
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
-                            <span class="text-gray-500 text-xs">${food.kcalPer100g} kcal/100g</span>
-                            <span class="text-xs px-2 py-0.5 rounded ${inDaily ? 'bg-success-100 text-success-600' : 'bg-gray-100 text-gray-500'}">
-                                ${inDaily ? 'In daily program' : 'Not in use'}
+                        <div class="flex items-center gap-3 px-3 py-2.5 bg-amber-50/50 rounded-xl border border-amber-100 group hover:border-amber-200 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-800 text-sm truncate">${safe(food.name)}</div>
+                                <div class="text-gray-500 text-xs mt-0.5">${food.kcalPer100g} kcal/100g</div>
+                            </div>
+                            <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium ${inDaily ? 'bg-success-100 text-success-700' : 'bg-gray-100 text-gray-500'}">
+                                ${inDaily ? 'Active' : 'Inactive'}
                             </span>
-                            <button onclick="removeFromInventory('food', ${food.id})" class="self-end sm:self-auto px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Remove</button>
+                            <button onclick="removeFromInventory('food', ${food.id})" class="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
                         </div>
                     `;
                 }).join('');
@@ -643,18 +713,22 @@
             // Render treat inventory
             const treatContainer = document.getElementById('inventoryTreatList');
             if (inventoryTreats.length === 0) {
-                treatContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No treat products in inventory</div>';
+                treatContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No treat products in inventory</div>';
             } else {
                 treatContainer.innerHTML = inventoryTreats.map(treat => {
                     const inDaily = dailyTreats.find(t => t.id === treat.id);
                     return `
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
-                            <span class="text-gray-500 text-xs">${treat.kcalPer100g} kcal/100g</span>
-                            <span class="text-xs px-2 py-0.5 rounded ${inDaily ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'}">
-                                ${inDaily ? 'In daily program' : 'Not in use'}
+                        <div class="flex items-center gap-3 px-3 py-2.5 bg-amber-50/50 rounded-xl border border-amber-100 group hover:border-amber-200 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-800 text-sm truncate">${safe(treat.name)}</div>
+                                <div class="text-gray-500 text-xs mt-0.5">${treat.kcalPer100g} kcal/100g</div>
+                            </div>
+                            <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium ${inDaily ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}">
+                                ${inDaily ? 'Active' : 'Inactive'}
                             </span>
-                            <button onclick="removeFromInventory('treat', ${treat.id})" class="self-end sm:self-auto px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Remove</button>
+                            <button onclick="removeFromInventory('treat', ${treat.id})" class="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
                         </div>
                     `;
                 }).join('');
@@ -670,8 +744,8 @@
             }).filter(Boolean);
 
             if (dailyFoodItems.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No food in today\'s program. Add from inventory below.</div>';
-                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50';
+                container.innerHTML = '<div class="text-center py-6 text-gray-400 text-sm">No food in today\'s program. Add from inventory below.</div>';
+                totalContainer.className = 'mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center bg-success-50/50 border border-success-100';
                 document.getElementById('foodPercentageValue').textContent = '0%';
             } else {
                 const totalPercentage = dailyFoodItems.reduce((sum, f) => sum + f.percentage, 0);
@@ -680,23 +754,35 @@
                     const foodShare = foodCalories * (food.percentage / 100);
                     const grams = calculateGrams(foodShare, food.kcalPer100g);
                     return `
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
-                            <span class="text-gray-500 text-xs sm:text-sm">${food.kcalPer100g} kcal/100g</span>
-                            <input type="number" value="${food.percentage}" min="0" max="100"
-                                onchange="updateDailyFoodPercentage(${food.id}, this.value)"
-                                class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-success-500">
-                            <span class="text-success-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(0)}g/day</span>
-                            <button onclick="removeFromDailyProgram('food', ${food.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-800 text-sm truncate">${safe(food.name)}</div>
+                                <div class="text-gray-500 text-xs mt-0.5">${food.kcalPer100g} kcal/100g</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="relative">
+                                    <input type="number" value="${food.percentage}" min="0" max="100"
+                                        onchange="updateDailyFoodPercentage(${food.id}, this.value)"
+                                        class="w-14 h-9 px-2 pr-5 text-sm text-center bg-white border border-gray-200 rounded-lg focus:border-success-400 transition-colors">
+                                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">%</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span class="text-success-600 font-semibold text-sm tabular-nums">${grams.toFixed(0)}g</span>
+                                    <span class="text-gray-400 text-xs">/day</span>
+                                </div>
+                                <button onclick="removeFromDailyProgram('food', ${food.id})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
 
                 document.getElementById('foodPercentageValue').textContent = totalPercentage + '%';
                 if (totalPercentage === 100) {
-                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+                    totalContainer.className = 'mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center bg-success-50 border border-success-200 text-success-700';
                 } else {
-                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+                    totalContainer.className = 'mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center bg-red-50 border border-red-200 text-red-700';
                 }
             }
 
@@ -707,17 +793,19 @@
 
             if (availableFoods.length === 0) {
                 if (inventoryFoods.length === 0) {
-                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No food products in inventory. Add some in the Inventory section above.</div>';
+                    availableContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No food products in inventory. Add some in the Inventory section above.</div>';
                 } else {
-                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">All inventory foods are already in your daily program.</div>';
+                    availableContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">All inventory foods are already in your daily program.</div>';
                 }
             } else {
                 availableContainer.innerHTML = availableFoods.map(food => `
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(food.name)}</span>
-                        <span class="text-gray-500 text-xs">${food.kcalPer100g} kcal/100g</span>
-                        <button onclick="addToDailyProgram('food', ${food.id})" class="self-end sm:self-auto px-3 py-1 text-xs font-medium bg-success-500 text-white rounded hover:bg-success-600 transition-colors">
-                            + Add to Daily
+                    <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-50/50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-gray-800 text-sm truncate">${safe(food.name)}</div>
+                            <div class="text-gray-500 text-xs mt-0.5">${food.kcalPer100g} kcal/100g</div>
+                        </div>
+                        <button onclick="addToDailyProgram('food', ${food.id})" class="shrink-0 h-8 px-3 text-xs font-medium bg-success-500 text-white rounded-lg hover:bg-success-600 transition-colors active:scale-[0.98]">
+                            Add
                         </button>
                     </div>
                 `).join('');
@@ -733,8 +821,8 @@
             }).filter(Boolean);
 
             if (dailyTreatItems.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-gray-500 text-sm">No treats in today\'s program. Add from inventory below.</div>';
-                totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-primary-50';
+                container.innerHTML = '<div class="text-center py-6 text-gray-400 text-sm">No treats in today\'s program. Add from inventory below.</div>';
+                totalContainer.className = 'mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center bg-primary-50/50 border border-primary-100';
                 document.getElementById('percentageValue').textContent = '0%';
             } else {
                 const totalPercentage = dailyTreatItems.reduce((sum, t) => sum + t.percentage, 0);
@@ -743,23 +831,35 @@
                     const treatShare = treatCalories * (treat.percentage / 100);
                     const grams = calculateGrams(treatShare, treat.kcalPer100g);
                     return `
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
-                            <span class="text-gray-500 text-xs sm:text-sm">${treat.kcalPer100g} kcal/100g</span>
-                            <input type="number" value="${treat.percentage}" min="0" max="100"
-                                onchange="updateDailyTreatPercentage(${treat.id}, this.value)"
-                                class="w-16 px-2 py-1.5 text-sm text-center border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500">
-                            <span class="text-primary-500 font-semibold text-sm min-w-[70px] text-right">${grams.toFixed(1)}g/day</span>
-                            <button onclick="removeFromDailyProgram('treat', ${treat.id})" class="self-end sm:self-auto px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors active:scale-95">×</button>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-800 text-sm truncate">${safe(treat.name)}</div>
+                                <div class="text-gray-500 text-xs mt-0.5">${treat.kcalPer100g} kcal/100g</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="relative">
+                                    <input type="number" value="${treat.percentage}" min="0" max="100"
+                                        onchange="updateDailyTreatPercentage(${treat.id}, this.value)"
+                                        class="w-14 h-9 px-2 pr-5 text-sm text-center bg-white border border-gray-200 rounded-lg focus:border-primary-400 transition-colors">
+                                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">%</span>
+                                </div>
+                                <div class="w-20 text-right">
+                                    <span class="text-primary-600 font-semibold text-sm tabular-nums">${grams.toFixed(1)}g</span>
+                                    <span class="text-gray-400 text-xs">/day</span>
+                                </div>
+                                <button onclick="removeFromDailyProgram('treat', ${treat.id})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
 
                 document.getElementById('percentageValue').textContent = totalPercentage + '%';
                 if (totalPercentage === 100) {
-                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-success-50 text-success-600';
+                    totalContainer.className = 'mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center bg-success-50 border border-success-200 text-success-700';
                 } else {
-                    totalContainer.className = 'mt-3 p-3 rounded-lg text-sm flex justify-between items-center bg-red-50 text-red-600';
+                    totalContainer.className = 'mt-3 px-4 py-3 rounded-xl text-sm flex justify-between items-center bg-red-50 border border-red-200 text-red-700';
                 }
             }
 
@@ -770,17 +870,19 @@
 
             if (availableTreats.length === 0) {
                 if (inventoryTreats.length === 0) {
-                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">No treat products in inventory. Add some in the Inventory section above.</div>';
+                    availableContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No treat products in inventory. Add some in the Inventory section above.</div>';
                 } else {
-                    availableContainer.innerHTML = '<div class="text-center py-3 text-gray-400 text-sm">All inventory treats are already in your daily program.</div>';
+                    availableContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">All inventory treats are already in your daily program.</div>';
                 }
             } else {
                 availableContainer.innerHTML = availableTreats.map(treat => `
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                        <span class="font-medium text-gray-700 text-sm flex-1">${safe(treat.name)}</span>
-                        <span class="text-gray-500 text-xs">${treat.kcalPer100g} kcal/100g</span>
-                        <button onclick="addToDailyProgram('treat', ${treat.id})" class="self-end sm:self-auto px-3 py-1 text-xs font-medium bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors">
-                            + Add to Daily
+                    <div class="flex items-center gap-3 px-3 py-2.5 bg-gray-50/50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-gray-800 text-sm truncate">${safe(treat.name)}</div>
+                            <div class="text-gray-500 text-xs mt-0.5">${treat.kcalPer100g} kcal/100g</div>
+                        </div>
+                        <button onclick="addToDailyProgram('treat', ${treat.id})" class="shrink-0 h-8 px-3 text-xs font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-[0.98]">
+                            Add
                         </button>
                     </div>
                 `).join('');
