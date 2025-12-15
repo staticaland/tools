@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TV Size Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Mobile optimizations */
+    html {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+      padding-top: max(1rem, env(safe-area-inset-top));
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+      overflow-x: hidden;
+    }
+
+    /* Ensure inputs don't zoom on iOS */
+    input[type="number"],
+    input[type="text"],
+    select {
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    /* Custom select dropdown styling */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23374151' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 12px;
+      padding-right: 2.5rem !important;
+    }
+
+    /* Better touch targets on mobile */
+    @media (max-width: 640px) {
+      button,
+      input,
+      select {
+        min-height: 44px;
+      }
+    }
+
+    /* TV visualization */
+    .tv-screen {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 4px solid #2d2d2d;
+      border-radius: 4px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .tv-stand {
+      background: linear-gradient(to bottom, #3d3d3d 0%, #2d2d2d 100%);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 p-4 sm:p-6 font-sans min-h-screen">
+  <div class="max-w-lg mx-auto pb-8">
+    <!-- Distance Input Card -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <label for="distance" class="block text-sm sm:text-[0.9rem] mb-2 text-gray-700 font-medium">Distance from sofa to TV</label>
+      <div class="flex gap-2 items-center">
+        <input
+          id="distance"
+          type="number"
+          step="0.1"
+          min="0.5"
+          max="10"
+          placeholder="2.5"
+          class="w-24 px-2 sm:px-3 py-2.5 rounded-lg border-2 border-gray-400 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 box-border shadow-sm"
+        />
+        <select id="unit" class="px-2 sm:px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent box-border">
+          <option value="m">meters</option>
+          <option value="ft">feet</option>
+        </select>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button data-distance="2" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">2m</button>
+        <button data-distance="2.5" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">2.5m</button>
+        <button data-distance="3" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">3m</button>
+        <button data-distance="3.5" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">3.5m</button>
+      </div>
+    </div>
+
+    <!-- Resolution Card -->
+    <div class="bg-white rounded-2xl shadow-lg mb-3 sm:mb-4 border border-gray-200 overflow-hidden">
+      <!-- Tab Navigation -->
+      <div class="flex border-b border-gray-200">
+        <button id="tab4k" class="flex-1 px-4 py-3 text-sm sm:text-base font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50 focus:outline-none transition-colors">
+          4K UHD
+        </button>
+        <button id="tab1080p" class="flex-1 px-4 py-3 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 focus:outline-none transition-colors">
+          1080p HD
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5">
+        <div id="resolutionInfo" class="text-sm text-gray-600">
+          <p>4K TVs allow you to sit closer without seeing pixels, enabling larger screens for the same viewing distance.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Card -->
+    <div id="resultCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200 hidden">
+      <!-- Recommended Size -->
+      <div class="mb-4">
+        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 mb-3">
+          <div class="text-sm text-gray-700 mb-1">Recommended TV size</div>
+          <div id="recommendedSize" class="text-2xl sm:text-3xl font-bold text-blue-600 mb-1"></div>
+          <div id="sizeRange" class="text-xs sm:text-sm text-gray-600"></div>
+        </div>
+
+        <!-- TV Visualization -->
+        <div class="flex justify-center mb-4">
+          <div class="relative">
+            <div id="tvVisualization" class="tv-screen flex items-center justify-center">
+              <span id="tvSizeLabel" class="text-white text-opacity-50 font-bold"></span>
+            </div>
+            <div class="tv-stand h-2 w-1/3 mx-auto rounded-b"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Size Options -->
+      <div class="space-y-2">
+        <div class="text-sm font-medium text-gray-700 mb-2">All options for your distance:</div>
+        <div id="sizeOptions" class="space-y-2"></div>
+      </div>
+
+      <!-- Collapsible Details -->
+      <details class="mt-4">
+        <summary class="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 select-none">How is this calculated?</summary>
+        <div id="calculationDetails" class="text-sm text-gray-600 mt-3 space-y-2"></div>
+      </details>
+    </div>
+
+    <!-- Error Card -->
+    <div id="errorCard" class="bg-red-50 rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-red-200 hidden">
+      <div id="error" class="text-red-600 text-sm"></div>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-4 sm:p-5 shadow-lg border border-blue-200 mb-3 sm:mb-4 mt-12 sm:mt-16">
+      <div id="tip" class="text-sm sm:text-base text-gray-800 font-medium text-center"></div>
+    </div>
+
+    <!-- Fact Section -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-gray-200">
+      <div id="fact" class="text-sm sm:text-base text-gray-700 italic"></div>
+      <div id="factSource" class="text-xs sm:text-sm text-gray-500 mt-2"></div>
+    </div>
+  </div>
+
+  <script>
+    // Standard TV sizes in inches
+    const TV_SIZES = [32, 40, 43, 50, 55, 65, 75, 77, 83, 85];
+
+    // Viewing angle recommendations (in degrees)
+    const VIEWING_ANGLES = {
+      thx: 40,      // THX recommended for immersive cinema
+      smpte: 30,    // SMPTE recommended for general viewing
+      minimum: 20   // Minimum for comfortable viewing
+    };
+
+    function inchesToCm(inches) {
+      return inches * 2.54;
+    }
+
+    function metersToFeet(meters) {
+      return meters * 3.28084;
+    }
+
+    function feetToMeters(feet) {
+      return feet / 3.28084;
+    }
+
+    function calculateTVSize(distanceMeters, viewingAngle) {
+      // Formula: Screen diagonal = 2 * distance * tan(angle/2)
+      // TV diagonal (inches) = (distance in cm) * 2 * tan(angle/2) / 2.54
+      const distanceCm = distanceMeters * 100;
+      const angleRad = (viewingAngle / 2) * (Math.PI / 180);
+      const diagonalCm = 2 * distanceCm * Math.tan(angleRad);
+      const diagonalInches = diagonalCm / 2.54;
+      return diagonalInches;
+    }
+
+    function findClosestTVSize(targetInches) {
+      return TV_SIZES.reduce((prev, curr) =>
+        Math.abs(curr - targetInches) < Math.abs(prev - targetInches) ? curr : prev
+      );
+    }
+
+    function findTVSizesInRange(minInches, maxInches) {
+      return TV_SIZES.filter(size => size >= minInches && size <= maxInches);
+    }
+
+    function getViewingExperience(actualSize, idealSize) {
+      const ratio = actualSize / idealSize;
+      if (ratio >= 0.9 && ratio <= 1.1) return { label: "Ideal", color: "green" };
+      if (ratio >= 0.7 && ratio <= 1.3) return { label: "Good", color: "blue" };
+      if (ratio >= 0.5) return { label: "Acceptable", color: "yellow" };
+      return { label: "Too small", color: "red" };
+    }
+
+    function calculate() {
+      const distanceInput = document.getElementById("distance");
+      const unitSelect = document.getElementById("unit");
+      const resultCard = document.getElementById("resultCard");
+      const errorCard = document.getElementById("errorCard");
+      const errorEl = document.getElementById("error");
+
+      errorCard.classList.add("hidden");
+      resultCard.classList.add("hidden");
+
+      let distance = parseFloat(distanceInput.value);
+      const unit = unitSelect.value;
+
+      if (isNaN(distance) || distance <= 0) {
+        errorCard.classList.remove("hidden");
+        errorEl.textContent = "Please enter a valid viewing distance.";
+        return;
+      }
+
+      // Convert to meters if needed
+      let distanceMeters = unit === "ft" ? feetToMeters(distance) : distance;
+
+      if (distanceMeters < 0.5) {
+        errorCard.classList.remove("hidden");
+        errorEl.textContent = "That's quite close! Consider sitting at least 0.5m (1.6ft) from the TV.";
+        return;
+      }
+
+      if (distanceMeters > 10) {
+        errorCard.classList.remove("hidden");
+        errorEl.textContent = "For distances over 10m, you might want to consider a projector instead!";
+        return;
+      }
+
+      const is4K = document.getElementById("tab4k").classList.contains("bg-blue-50");
+
+      // Calculate sizes for different viewing angles
+      // For 4K, we can use THX recommendation (closer viewing)
+      // For 1080p, use SMPTE recommendation (farther viewing to hide pixels)
+      const idealAngle = is4K ? VIEWING_ANGLES.smpte : VIEWING_ANGLES.minimum;
+      const maxAngle = is4K ? VIEWING_ANGLES.thx : VIEWING_ANGLES.smpte;
+      const minAngle = VIEWING_ANGLES.minimum;
+
+      const idealSize = calculateTVSize(distanceMeters, idealAngle);
+      const maxSize = calculateTVSize(distanceMeters, maxAngle);
+      const minSize = calculateTVSize(distanceMeters, minAngle);
+
+      const recommendedSize = findClosestTVSize(idealSize);
+      const minRecommended = findClosestTVSize(minSize);
+      const maxRecommended = findClosestTVSize(maxSize);
+
+      // Update recommended size display
+      document.getElementById("recommendedSize").textContent = `${recommendedSize}"`;
+      document.getElementById("sizeRange").textContent =
+        `Range: ${minRecommended}" to ${maxRecommended}" works well`;
+
+      // Update TV visualization
+      const tvViz = document.getElementById("tvVisualization");
+      const baseWidth = 120;
+      const scale = recommendedSize / 55; // 55" as baseline
+      const vizWidth = Math.min(280, Math.max(80, baseWidth * scale));
+      const vizHeight = vizWidth * 9 / 16; // 16:9 aspect ratio
+      tvViz.style.width = `${vizWidth}px`;
+      tvViz.style.height = `${vizHeight}px`;
+      document.getElementById("tvSizeLabel").textContent = `${recommendedSize}"`;
+
+      // Generate size options
+      const optionsContainer = document.getElementById("sizeOptions");
+      optionsContainer.innerHTML = "";
+
+      const relevantSizes = TV_SIZES.filter(size =>
+        size >= minSize * 0.7 && size <= maxSize * 1.3
+      );
+
+      relevantSizes.forEach(size => {
+        const experience = getViewingExperience(size, idealSize);
+        const colorClasses = {
+          green: "bg-green-100 border-green-300 text-green-800",
+          blue: "bg-blue-100 border-blue-300 text-blue-800",
+          yellow: "bg-yellow-100 border-yellow-300 text-yellow-800",
+          red: "bg-red-100 border-red-300 text-red-800"
+        };
+
+        const isRecommended = size === recommendedSize;
+        const div = document.createElement("div");
+        div.className = `flex items-center justify-between p-2 rounded-lg border ${isRecommended ? "border-2 border-blue-500 bg-blue-50" : "border-gray-200"}`;
+
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-gray-900">${size}"</span>
+            <span class="text-xs text-gray-500">(${Math.round(inchesToCm(size))}cm)</span>
+            ${isRecommended ? '<span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">Best match</span>' : ''}
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full border ${colorClasses[experience.color]}">${experience.label}</span>
+        `;
+        optionsContainer.appendChild(div);
+      });
+
+      // Update calculation details
+      const detailsEl = document.getElementById("calculationDetails");
+      const distanceDisplay = unit === "ft"
+        ? `${distance}ft (${distanceMeters.toFixed(2)}m)`
+        : `${distance}m (${metersToFeet(distanceMeters).toFixed(1)}ft)`;
+
+      detailsEl.innerHTML = `
+        <p><strong>Your viewing distance:</strong> ${distanceDisplay}</p>
+        <p><strong>Resolution:</strong> ${is4K ? "4K UHD (3840x2160)" : "1080p Full HD (1920x1080)"}</p>
+        <p><strong>Calculation method:</strong> Based on viewing angle recommendations from SMPTE and THX standards.</p>
+        <p><strong>Ideal viewing angle:</strong> ${idealAngle}° (${is4K ? "SMPTE standard" : "comfortable minimum"})</p>
+        <p><strong>Calculated ideal size:</strong> ${idealSize.toFixed(1)}" diagonal</p>
+        <p class="text-xs text-gray-500 mt-2">4K TVs allow closer viewing distances because individual pixels are harder to see, enabling larger screens for immersive viewing.</p>
+      `;
+
+      resultCard.classList.remove("hidden");
+    }
+
+    // Tab switching
+    const tab4k = document.getElementById("tab4k");
+    const tab1080p = document.getElementById("tab1080p");
+    const resolutionInfo = document.getElementById("resolutionInfo");
+
+    function switchResolution(is4K) {
+      if (is4K) {
+        tab4k.classList.add("text-blue-600", "border-b-2", "border-blue-600", "bg-blue-50");
+        tab4k.classList.remove("text-gray-500", "hover:text-gray-700");
+        tab1080p.classList.remove("text-blue-600", "border-b-2", "border-blue-600", "bg-blue-50");
+        tab1080p.classList.add("text-gray-500", "hover:text-gray-700");
+        resolutionInfo.innerHTML = "<p>4K TVs allow you to sit closer without seeing pixels, enabling larger screens for the same viewing distance.</p>";
+      } else {
+        tab1080p.classList.add("text-blue-600", "border-b-2", "border-blue-600", "bg-blue-50");
+        tab1080p.classList.remove("text-gray-500", "hover:text-gray-700");
+        tab4k.classList.remove("text-blue-600", "border-b-2", "border-blue-600", "bg-blue-50");
+        tab4k.classList.add("text-gray-500", "hover:text-gray-700");
+        resolutionInfo.innerHTML = "<p>1080p TVs require sitting farther away to avoid seeing individual pixels. Consider a smaller screen or upgrading to 4K.</p>";
+      }
+      calculate();
+    }
+
+    tab4k.addEventListener("click", () => switchResolution(true));
+    tab1080p.addEventListener("click", () => switchResolution(false));
+
+    // Distance input handlers
+    document.getElementById("distance").addEventListener("input", calculate);
+    document.getElementById("unit").addEventListener("change", () => {
+      // Convert current value when switching units
+      const distanceInput = document.getElementById("distance");
+      const unitSelect = document.getElementById("unit");
+      const currentValue = parseFloat(distanceInput.value);
+
+      if (!isNaN(currentValue)) {
+        if (unitSelect.value === "ft") {
+          distanceInput.value = metersToFeet(currentValue).toFixed(1);
+        } else {
+          distanceInput.value = feetToMeters(currentValue).toFixed(2);
+        }
+      }
+
+      // Update preset buttons
+      updatePresetButtons();
+      calculate();
+    });
+
+    function updatePresetButtons() {
+      const unit = document.getElementById("unit").value;
+      const buttons = document.querySelectorAll(".preset-btn");
+      const presets = unit === "m"
+        ? [2, 2.5, 3, 3.5]
+        : [6, 8, 10, 12];
+      const labels = unit === "m"
+        ? ["2m", "2.5m", "3m", "3.5m"]
+        : ["6ft", "8ft", "10ft", "12ft"];
+
+      buttons.forEach((btn, i) => {
+        btn.setAttribute("data-distance", presets[i]);
+        btn.textContent = labels[i];
+      });
+    }
+
+    // Preset distance buttons
+    document.querySelectorAll(".preset-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const distance = btn.getAttribute("data-distance");
+        document.getElementById("distance").value = distance;
+        calculate();
+      });
+    });
+
+    // Tips
+    const tips = [
+      "Position your TV at eye level when seated for the most comfortable viewing experience!",
+      "For the best picture quality, avoid placing your TV opposite a window to reduce glare.",
+      "A 4K TV is worth it if you sit within 1.5x the screen diagonal from the TV.",
+      "Consider a TV mount to save space and get the perfect viewing angle!",
+      "Larger isn't always better - the right size depends on your room and seating distance.",
+      "OLED TVs offer perfect blacks and are great for dark room viewing.",
+      "Most streaming services now offer 4K content - make sure your internet can handle it!",
+      "Sound quality matters too - consider a soundbar for a better audio experience."
+    ];
+
+    function displayRandomTip() {
+      const randomIndex = Math.floor(Math.random() * tips.length);
+      document.getElementById("tip").textContent = tips[randomIndex];
+    }
+
+    // Facts
+    const facts = [
+      { text: "The first TV remote control, called 'Lazy Bones', was invented by Zenith in 1950 and was connected to the TV by a wire.", source: "Television history" },
+      { text: "The average American household has 2.3 TVs. The living room TV is typically the largest.", source: "Consumer statistics" },
+      { text: "4K resolution has 8.3 million pixels - four times as many as 1080p Full HD.", source: "Technical specification" },
+      { text: "The human eye can distinguish 4K from 1080p at viewing distances closer than 1.5x the screen diagonal.", source: "Visual perception research" },
+      { text: "OLED TVs can turn individual pixels completely off, achieving true black - something LCD TVs cannot do.", source: "Display technology" },
+      { text: "The THX viewing angle standard (40°) was developed by Lucasfilm to recreate the cinema experience at home.", source: "THX certification" },
+      { text: "The first commercial 4K TV was released by LG in 2012, costing over $20,000.", source: "Technology history" },
+      { text: "Modern TVs refresh at 60-120Hz, but the human eye can perceive differences up to about 240Hz.", source: "Visual perception research" },
+      { text: "The diagonal measurement for TV sizes became standard because early CRT tubes were measured this way.", source: "Industry history" },
+      { text: "Mini-LED backlighting can have over 2,000 dimming zones, dramatically improving contrast on LCD TVs.", source: "Display technology" }
+    ];
+
+    function displayRandomFact() {
+      const randomIndex = Math.floor(Math.random() * facts.length);
+      const fact = facts[randomIndex];
+      document.getElementById("fact").textContent = `"${fact.text}"`;
+      document.getElementById("factSource").textContent = `— ${fact.source}`;
+    }
+
+    // Initialize
+    window.addEventListener("load", () => {
+      document.getElementById("distance").value = "2.5";
+      displayRandomTip();
+      displayRandomFact();
+      calculate();
+    });
+  </script>
+</body>
+</html>
