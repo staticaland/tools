@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Minilager Map – Storage Locations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"></script>
+    <style>
+        html {
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            padding-left: max(0.5rem, env(safe-area-inset-left));
+            padding-right: max(0.5rem, env(safe-area-inset-right));
+            padding-top: max(0.5rem, env(safe-area-inset-top));
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+            overflow-x: hidden;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 1rem;
+            z-index: 1;
+        }
+        .leaflet-container {
+            border-radius: 1rem;
+        }
+        input:focus, button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        input[type="text"], input[type="number"] {
+            font-size: 16px;
+        }
+        @media (max-width: 640px) {
+            button, input {
+                min-height: 44px;
+            }
+            #map {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 min-h-screen text-gray-700 antialiased">
+    <div class="max-w-2xl mx-auto px-2 py-4 sm:px-4 sm:py-6">
+        <!-- Map Card -->
+        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
+            <div class="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
+                <h1 class="text-blue-600 font-semibold text-lg mb-1">Minilager Map</h1>
+                <p class="text-gray-500 text-sm">Storage locations near Ås. Click map to add custom locations.</p>
+            </div>
+            <div class="px-4 pb-4 sm:px-5 sm:pb-5">
+                <div id="map" class="shadow-md border border-gray-200"></div>
+            </div>
+        </section>
+
+        <!-- Add Location Card -->
+        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
+            <button onclick="toggleSection('addLocation')" class="w-full flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-blue-600 font-semibold text-base">Add Location</h2>
+                <svg id="addLocationChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="addLocationContent" class="px-4 pb-4 sm:px-5 sm:pb-5">
+                <div class="space-y-3">
+                    <div>
+                        <label for="locationName" class="block text-gray-600 text-xs font-medium uppercase tracking-wide mb-1.5">Name</label>
+                        <input type="text" id="locationName" placeholder="e.g., Coffee Shop"
+                            class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-400 transition-colors">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="locationLat" class="block text-gray-600 text-xs font-medium uppercase tracking-wide mb-1.5">Latitude</label>
+                            <input type="number" id="locationLat" step="any" placeholder="59.9139"
+                                class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-400 transition-colors">
+                        </div>
+                        <div>
+                            <label for="locationLng" class="block text-gray-600 text-xs font-medium uppercase tracking-wide mb-1.5">Longitude</label>
+                            <input type="number" id="locationLng" step="any" placeholder="10.7522"
+                                class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-400 transition-colors">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="locationNotes" class="block text-gray-600 text-xs font-medium uppercase tracking-wide mb-1.5">Notes (optional)</label>
+                        <input type="text" id="locationNotes" placeholder="Add any notes..."
+                            class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-400 transition-colors">
+                    </div>
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="addLocation()" class="flex-1 h-11 px-4 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors active:scale-[0.98]">
+                            Add Location
+                        </button>
+                        <button onclick="useCurrentLocation()" class="h-11 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span class="hidden sm:inline">Current</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Saved Locations Card -->
+        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
+            <button onclick="toggleSection('savedLocations')" class="w-full flex items-center justify-between px-4 py-3.5 sm:px-5 sm:py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-green-600 font-semibold text-base flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Saved Locations
+                    <span id="locationCount" class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">0</span>
+                </h2>
+                <svg id="savedLocationsChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="savedLocationsContent" class="px-4 pb-4 sm:px-5 sm:pb-5">
+                <div id="locationsList" class="space-y-2">
+                    <div class="text-center py-6 text-gray-400 text-sm">No locations saved yet. Click on the map or use the form above to add one.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Share Section -->
+        <section class="mt-6 pt-5 border-t border-gray-200">
+            <div class="flex flex-wrap gap-2 items-center justify-center">
+                <button onclick="shareLocations()" class="h-10 px-4 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors active:scale-[0.98] flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                    </svg>
+                    Share
+                </button>
+                <button onclick="exportToJSON()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export
+                </button>
+                <button onclick="document.getElementById('jsonFileInput').click()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Import
+                </button>
+                <button onclick="resetToPresets()" class="h-10 px-4 text-sm font-medium bg-amber-50 text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Presets
+                </button>
+                <button onclick="clearAllLocations()" class="h-10 px-4 text-sm font-medium bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Clear
+                </button>
+            </div>
+            <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="importFromJSON(event)">
+            <div id="shareStatus" class="mt-3 text-center text-sm text-gray-500 hidden"></div>
+        </section>
+    </div>
+
+    <script>
+        // Data storage
+        const STORAGE_KEY = 'mapLocations';
+        const COLLAPSED_KEY = 'mapLocationsCollapsed';
+        let locations = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        let map;
+        let markers = {};
+        let pendingMarker = null;
+
+        // Preset locations - Storage facilities near Ås
+        const PRESET_LOCATIONS = [
+            {
+                name: "Ås Sentrum Minilager",
+                lat: 59.6628,
+                lng: 10.7868,
+                notes: "Rådhusplassen 29, 1430 Ås. Temperert/klimakontrollert. Tilgang 06–23 alle dager."
+            },
+            {
+                name: "Høyås Minilager",
+                lat: 59.6730,
+                lng: 10.7710,
+                notes: "Brekkeveien 120, Ås. Adkomst under tak, videoovervåket, egen kode. Åpent 07–22 alle dager."
+            },
+            {
+                name: "Follolager (Kjølstad gård)",
+                lat: 59.6977,
+                lng: 10.7792,
+                notes: "Østre Kjølstad gård, langs Fv. 152 mellom Ski og Ås. Minilager og vanlig lager (med/uten oppvarming)."
+            },
+            {
+                name: "Extra Plass Minilager (Ski)",
+                lat: 59.7220,
+                lng: 10.8400,
+                notes: "Verkstedveien 8, 1424 Ski. Betjent kundekontakt, innebod-opplegg."
+            },
+            {
+                name: "Ski Minilager (Kråkstad)",
+                lat: 59.6730,
+                lng: 10.8980,
+                notes: "Trånåsveien 9A, 1408 Kråkstad. Tilgang 07–22 alle dager."
+            },
+            {
+                name: "123 Minilager (Ski)",
+                lat: 59.7200,
+                lng: 10.8350,
+                notes: "Åsveien 9, 1400 Ski. Drive-in lagercontainere – praktisk ved flytting/tilhenger."
+            },
+            {
+                name: "City Self-Storage Vestby",
+                lat: 59.5990,
+                lng: 10.7430,
+                notes: "Deliveien 17, 1540 Vestby. Temperert, selvbetjent."
+            },
+            {
+                name: "Vestbylager",
+                lat: 59.6050,
+                lng: 10.6950,
+                notes: "Hvitstenveien 210, 1542 Vestby (Ekerholt gård). Ca 15 min fra Ås."
+            },
+            {
+                name: "SmartStore Vestby",
+                lat: 59.5620,
+                lng: 10.7240,
+                notes: "Bruerveien 36, 1550 Hølen."
+            }
+        ];
+
+        // Check if first-time user
+        function isFirstTimeUser() {
+            return !localStorage.getItem(STORAGE_KEY);
+        }
+
+        // Load preset locations for first-time users
+        function loadPresets() {
+            if (isFirstTimeUser() && locations.length === 0) {
+                locations = PRESET_LOCATIONS.map((loc, i) => ({
+                    id: Date.now() + i,
+                    name: loc.name,
+                    lat: loc.lat,
+                    lng: loc.lng,
+                    notes: loc.notes,
+                    createdAt: new Date().toISOString()
+                }));
+                saveLocations();
+            }
+        }
+
+        // Initialize map
+        function initMap() {
+            // Default to Ås, Norway (center of preset storage locations)
+            const defaultLat = 59.6628;
+            const defaultLng = 10.7868;
+            const defaultZoom = 11;
+
+            map = L.map('map').setView([defaultLat, defaultLng], defaultZoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Click handler for adding locations
+            map.on('click', function(e) {
+                document.getElementById('locationLat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('locationLng').value = e.latlng.lng.toFixed(6);
+
+                // Show pending marker
+                if (pendingMarker) {
+                    map.removeLayer(pendingMarker);
+                }
+                pendingMarker = L.marker(e.latlng, {
+                    opacity: 0.6
+                }).addTo(map);
+
+                // Expand add location section
+                const state = getCollapsedState();
+                if (state.addLocation) {
+                    toggleSection('addLocation');
+                }
+
+                // Focus on name input
+                document.getElementById('locationName').focus();
+            });
+
+            // Load saved locations onto map
+            loadMarkersOnMap();
+
+            // Fit map to markers if any exist
+            if (locations.length > 0) {
+                fitMapToMarkers();
+            }
+        }
+
+        // Sanitize user input
+        function safe(str) {
+            return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
+        }
+
+        // Collapsed sections state
+        function getCollapsedState() {
+            const saved = localStorage.getItem(COLLAPSED_KEY);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return {
+                addLocation: true,
+                savedLocations: false
+            };
+        }
+
+        function saveCollapsedState(state) {
+            localStorage.setItem(COLLAPSED_KEY, JSON.stringify(state));
+        }
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + 'Content');
+            const chevron = document.getElementById(sectionId + 'Chevron');
+            const state = getCollapsedState();
+
+            state[sectionId] = !state[sectionId];
+            saveCollapsedState(state);
+
+            if (state[sectionId]) {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            } else {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function initCollapsibleSections() {
+            const state = getCollapsedState();
+
+            ['addLocation', 'savedLocations'].forEach(sectionId => {
+                const content = document.getElementById(sectionId + 'Content');
+                const chevron = document.getElementById(sectionId + 'Chevron');
+
+                if (content && chevron) {
+                    if (state[sectionId]) {
+                        content.classList.add('hidden');
+                        chevron.style.transform = 'rotate(-90deg)';
+                    } else {
+                        content.classList.remove('hidden');
+                        chevron.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        }
+
+        // Save locations to localStorage
+        function saveLocations() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
+        }
+
+        // Add location
+        function addLocation() {
+            const name = document.getElementById('locationName').value.trim();
+            const lat = parseFloat(document.getElementById('locationLat').value);
+            const lng = parseFloat(document.getElementById('locationLng').value);
+            const notes = document.getElementById('locationNotes').value.trim();
+
+            if (!name) {
+                showStatus('Please enter a location name', 'error');
+                return;
+            }
+
+            if (isNaN(lat) || isNaN(lng)) {
+                showStatus('Please enter valid coordinates', 'error');
+                return;
+            }
+
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                showStatus('Coordinates out of range', 'error');
+                return;
+            }
+
+            const location = {
+                id: Date.now(),
+                name: name,
+                lat: lat,
+                lng: lng,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+
+            locations.push(location);
+            saveLocations();
+
+            // Add marker to map
+            addMarkerToMap(location);
+
+            // Clear pending marker
+            if (pendingMarker) {
+                map.removeLayer(pendingMarker);
+                pendingMarker = null;
+            }
+
+            // Clear form
+            document.getElementById('locationName').value = '';
+            document.getElementById('locationLat').value = '';
+            document.getElementById('locationLng').value = '';
+            document.getElementById('locationNotes').value = '';
+
+            // Update display
+            renderLocationsList();
+            showStatus('Location added!', 'success');
+        }
+
+        // Add marker to map
+        function addMarkerToMap(location) {
+            const marker = L.marker([location.lat, location.lng]).addTo(map);
+
+            let popupContent = `<strong>${safe(location.name)}</strong>`;
+            if (location.notes) {
+                popupContent += `<br><span style="color: #666; font-size: 12px;">${safe(location.notes)}</span>`;
+            }
+            popupContent += `<br><span style="color: #999; font-size: 11px;">${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}</span>`;
+
+            marker.bindPopup(popupContent);
+            markers[location.id] = marker;
+        }
+
+        // Load all markers on map
+        function loadMarkersOnMap() {
+            // Clear existing markers
+            Object.values(markers).forEach(marker => map.removeLayer(marker));
+            markers = {};
+
+            // Add markers for all locations
+            locations.forEach(location => addMarkerToMap(location));
+        }
+
+        // Fit map to show all markers
+        function fitMapToMarkers() {
+            if (locations.length === 0) return;
+
+            const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+
+        // Remove location
+        function removeLocation(id) {
+            // Remove marker from map
+            if (markers[id]) {
+                map.removeLayer(markers[id]);
+                delete markers[id];
+            }
+
+            // Remove from array
+            locations = locations.filter(loc => loc.id !== id);
+            saveLocations();
+            renderLocationsList();
+        }
+
+        // Pan to location
+        function panToLocation(id) {
+            const location = locations.find(loc => loc.id === id);
+            if (location && markers[id]) {
+                map.setView([location.lat, location.lng], 15);
+                markers[id].openPopup();
+            }
+        }
+
+        // Use current location
+        function useCurrentLocation() {
+            if (!navigator.geolocation) {
+                showStatus('Geolocation not supported', 'error');
+                return;
+            }
+
+            showStatus('Getting location...', 'info');
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('locationLat').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('locationLng').value = position.coords.longitude.toFixed(6);
+
+                    // Show pending marker
+                    if (pendingMarker) {
+                        map.removeLayer(pendingMarker);
+                    }
+                    pendingMarker = L.marker([position.coords.latitude, position.coords.longitude], {
+                        opacity: 0.6
+                    }).addTo(map);
+
+                    map.setView([position.coords.latitude, position.coords.longitude], 15);
+
+                    showStatus('Location found!', 'success');
+                    document.getElementById('locationName').focus();
+                },
+                (error) => {
+                    showStatus('Could not get location: ' + error.message, 'error');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // Render locations list
+        function renderLocationsList() {
+            const container = document.getElementById('locationsList');
+            const countEl = document.getElementById('locationCount');
+
+            countEl.textContent = locations.length;
+
+            if (locations.length === 0) {
+                container.innerHTML = '<div class="text-center py-6 text-gray-400 text-sm">No locations saved yet. Click on the map or use the form above to add one.</div>';
+                return;
+            }
+
+            container.innerHTML = locations.map(location => `
+                <div class="flex items-center gap-3 p-3 bg-gray-50/80 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors group">
+                    <button onclick="panToLocation(${location.id})" class="flex-1 min-w-0 text-left">
+                        <div class="font-medium text-gray-800 text-sm truncate">${safe(location.name)}</div>
+                        ${location.notes ? `<div class="text-gray-500 text-xs mt-0.5 truncate">${safe(location.notes)}</div>` : ''}
+                        <div class="text-gray-400 text-xs mt-0.5">${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}</div>
+                    </button>
+                    <button onclick="panToLocation(${location.id})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="View on map">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="removeLocation(${location.id})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('shareStatus');
+            statusEl.textContent = message;
+            statusEl.classList.remove('hidden', 'text-green-600', 'text-red-600', 'text-blue-600', 'text-gray-500');
+
+            if (type === 'success') {
+                statusEl.classList.add('text-green-600');
+            } else if (type === 'error') {
+                statusEl.classList.add('text-red-600');
+            } else if (type === 'info') {
+                statusEl.classList.add('text-blue-600');
+            } else {
+                statusEl.classList.add('text-gray-500');
+            }
+
+            if (type !== 'info') {
+                setTimeout(() => {
+                    statusEl.classList.add('hidden');
+                }, 4000);
+            }
+        }
+
+        // Clear all locations
+        function clearAllLocations() {
+            if (locations.length === 0) {
+                showStatus('No locations to clear', 'info');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete all ' + locations.length + ' locations?')) {
+                return;
+            }
+
+            // Remove all markers
+            Object.values(markers).forEach(marker => map.removeLayer(marker));
+            markers = {};
+
+            locations = [];
+            saveLocations();
+            renderLocationsList();
+            showStatus('All locations cleared', 'success');
+        }
+
+        // URL Sharing
+        function getShareableState() {
+            return {
+                l: locations.map(loc => ({
+                    n: loc.name,
+                    a: loc.lat,
+                    o: loc.lng,
+                    t: loc.notes || ''
+                }))
+            };
+        }
+
+        function encodeStateToURL(state) {
+            const json = JSON.stringify(state);
+            return LZString.compressToEncodedURIComponent(json);
+        }
+
+        function decodeStateFromURL(encoded) {
+            try {
+                const json = LZString.decompressFromEncodedURIComponent(encoded);
+                if (!json) return null;
+                return JSON.parse(json);
+            } catch (e) {
+                console.error('Failed to decode state from URL:', e);
+                return null;
+            }
+        }
+
+        function applySharedState(state) {
+            if (!state || !state.l || !Array.isArray(state.l)) return false;
+
+            locations = state.l.map((loc, i) => ({
+                id: Date.now() + i,
+                name: loc.n,
+                lat: loc.a,
+                lng: loc.o,
+                notes: loc.t || '',
+                createdAt: new Date().toISOString()
+            }));
+
+            saveLocations();
+            loadMarkersOnMap();
+            renderLocationsList();
+
+            if (locations.length > 0) {
+                fitMapToMarkers();
+            }
+
+            return true;
+        }
+
+        function shareLocations() {
+            if (locations.length === 0) {
+                showStatus('No locations to share', 'error');
+                return;
+            }
+
+            const state = getShareableState();
+            const encoded = encodeStateToURL(state);
+            const url = window.location.origin + window.location.pathname + '#' + encoded;
+
+            if (url.length > 2000) {
+                showStatus(`Warning: URL is ${url.length} chars (may not work in all browsers)`, 'info');
+            }
+
+            navigator.clipboard.writeText(url).then(() => {
+                showStatus(`Link copied! (${locations.length} location${locations.length === 1 ? '' : 's'})`, 'success');
+            }).catch(() => {
+                prompt('Copy this link:', url);
+            });
+        }
+
+        function exportToJSON() {
+            if (locations.length === 0) {
+                showStatus('No locations to export', 'error');
+                return;
+            }
+
+            const data = {
+                locations: locations.map(loc => ({
+                    name: loc.name,
+                    lat: loc.lat,
+                    lng: loc.lng,
+                    notes: loc.notes,
+                    createdAt: loc.createdAt
+                })),
+                exportedAt: new Date().toISOString()
+            };
+
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'map-locations.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus('Locations exported!', 'success');
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    if (!data.locations || !Array.isArray(data.locations)) {
+                        throw new Error('Invalid file format');
+                    }
+
+                    // Validate and import locations
+                    const imported = data.locations.filter(loc =>
+                        loc.name && typeof loc.lat === 'number' && typeof loc.lng === 'number'
+                    ).map((loc, i) => ({
+                        id: Date.now() + i,
+                        name: loc.name,
+                        lat: loc.lat,
+                        lng: loc.lng,
+                        notes: loc.notes || '',
+                        createdAt: loc.createdAt || new Date().toISOString()
+                    }));
+
+                    if (imported.length === 0) {
+                        throw new Error('No valid locations found');
+                    }
+
+                    locations = imported;
+                    saveLocations();
+                    loadMarkersOnMap();
+                    renderLocationsList();
+                    fitMapToMarkers();
+
+                    showStatus(`Imported ${imported.length} location${imported.length === 1 ? '' : 's'}!`, 'success');
+                } catch (err) {
+                    showStatus('Error: ' + err.message, 'error');
+                }
+            };
+
+            reader.onerror = function() {
+                showStatus('Error reading file', 'error');
+            };
+
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function loadFromURL() {
+            const hash = window.location.hash.slice(1);
+            if (!hash) return false;
+
+            const state = decodeStateFromURL(hash);
+            if (state) {
+                applySharedState(state);
+                history.replaceState(null, '', window.location.pathname);
+                return true;
+            }
+            return false;
+        }
+
+        // Reset to preset locations
+        function resetToPresets() {
+            if (locations.length > 0) {
+                if (!confirm('This will replace all current locations with the preset storage locations. Continue?')) {
+                    return;
+                }
+            }
+
+            // Clear existing markers
+            Object.values(markers).forEach(marker => map.removeLayer(marker));
+            markers = {};
+
+            // Load presets
+            locations = PRESET_LOCATIONS.map((loc, i) => ({
+                id: Date.now() + i,
+                name: loc.name,
+                lat: loc.lat,
+                lng: loc.lng,
+                notes: loc.notes,
+                createdAt: new Date().toISOString()
+            }));
+
+            saveLocations();
+            loadMarkersOnMap();
+            renderLocationsList();
+            fitMapToMarkers();
+            showStatus('Preset locations loaded!', 'success');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPresets(); // Load preset locations for first-time users
+            initMap();
+            initCollapsibleSections();
+
+            const loadedFromURL = loadFromURL();
+            if (!loadedFromURL) {
+                renderLocationsList();
+            }
+        });
+    </script>
+</body>
+</html>
