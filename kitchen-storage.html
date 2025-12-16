@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Storage Organizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        kitchen: {
+                            cabinet: '#d4a574',
+                            cabinetDark: '#b8956a',
+                            counter: '#4a4a4a',
+                            appliance: '#e8e8e8',
+                            applianceDark: '#c0c0c0',
+                            handle: '#888888'
+                        },
+                        primary: {
+                            50: '#f0f4ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        },
+                        success: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .storage-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .storage-item:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+        .storage-item.has-content {
+            box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.5);
+        }
+        .appliance-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .appliance-item:hover {
+            filter: brightness(1.05);
+        }
+        .label-text {
+            font-size: 0.65rem;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        @media (min-width: 640px) {
+            .label-text {
+                font-size: 0.75rem;
+                -webkit-line-clamp: 3;
+            }
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+        input:focus, select:focus, textarea:focus, button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+    </style>
+</head>
+<body class="font-sans bg-slate-50 min-h-screen text-gray-700 antialiased">
+    <div class="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Kitchen Storage</h1>
+            <p class="text-gray-500 text-sm">Click on any cabinet, drawer, or appliance to label what's stored there</p>
+        </div>
+
+        <!-- Kitchen Canvas -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 mb-4 overflow-x-auto">
+            <div class="min-w-[600px]">
+                <!-- Upper Cabinets -->
+                <div class="mb-2">
+                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Upper Cabinets</div>
+                    <div class="flex gap-2">
+                        <div id="upper-1" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-1', 'Upper Cabinet 1')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-1"></span>
+                        </div>
+                        <div id="upper-2" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-2', 'Upper Cabinet 2')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-2"></span>
+                        </div>
+                        <div id="upper-3" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-3', 'Upper Cabinet 3')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-3"></span>
+                        </div>
+                        <div id="upper-4" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-4', 'Upper Cabinet 4')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-4"></span>
+                        </div>
+                        <div id="upper-5" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-5', 'Upper Cabinet 5')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-5"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Counter Area with Appliances -->
+                <div class="mb-2">
+                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Counter & Appliances</div>
+                    <div class="flex gap-2 h-32">
+                        <!-- Fridge -->
+                        <div id="fridge" class="appliance-item w-28 bg-kitchen-appliance rounded-lg border-2 border-kitchen-applianceDark flex flex-col relative" onclick="editStorage('fridge', 'Refrigerator')">
+                            <div class="flex-1 border-b border-kitchen-applianceDark flex items-center justify-center p-1 relative">
+                                <div class="absolute top-1/2 right-2 w-1 h-4 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-gray-600 text-xs" data-label="fridge-freezer"></span>
+                            </div>
+                            <div class="flex-[2] flex items-center justify-center p-1 relative">
+                                <div class="absolute top-1/2 right-2 w-1 h-6 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-gray-600" data-label="fridge"></span>
+                            </div>
+                            <div class="absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-400">Fridge</div>
+                        </div>
+
+                        <!-- Counter Space -->
+                        <div class="flex-1 bg-kitchen-counter rounded-lg flex items-center justify-center">
+                            <span class="text-gray-400 text-sm">Counter</span>
+                        </div>
+
+                        <!-- Stove/Oven -->
+                        <div id="oven" class="appliance-item w-28 bg-kitchen-appliance rounded-lg border-2 border-kitchen-applianceDark flex flex-col relative" onclick="editStorage('oven', 'Oven Storage')">
+                            <div class="h-8 border-b border-kitchen-applianceDark flex items-center justify-center gap-2 px-2">
+                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
+                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
+                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
+                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
+                            </div>
+                            <div class="flex-1 flex items-center justify-center p-1 relative">
+                                <div class="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-gray-600 mt-2" data-label="oven"></span>
+                            </div>
+                            <div class="absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-400">Oven</div>
+                        </div>
+
+                        <!-- Counter Space -->
+                        <div class="flex-1 bg-kitchen-counter rounded-lg flex items-center justify-center">
+                            <span class="text-gray-400 text-sm">Counter</span>
+                        </div>
+
+                        <!-- Dishwasher -->
+                        <div id="dishwasher" class="appliance-item w-24 bg-kitchen-appliance rounded-lg border-2 border-kitchen-applianceDark flex items-center justify-center p-2 relative" onclick="editStorage('dishwasher', 'Dishwasher')">
+                            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-gray-600 mt-3" data-label="dishwasher"></span>
+                            <div class="absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-400">Dishwasher</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spacer for appliance labels -->
+                <div class="h-4"></div>
+
+                <!-- Lower Cabinets & Drawers -->
+                <div>
+                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Lower Cabinets & Drawers</div>
+                    <div class="flex gap-2">
+                        <!-- Left Cabinet with Drawers -->
+                        <div class="flex-1 flex flex-col gap-1">
+                            <div id="drawer-1" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-1', 'Drawer 1')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-1"></span>
+                            </div>
+                            <div id="drawer-2" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-2', 'Drawer 2')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-2"></span>
+                            </div>
+                            <div id="lower-1" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative min-h-[60px]" onclick="editStorage('lower-1', 'Lower Cabinet 1')">
+                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="lower-1"></span>
+                            </div>
+                        </div>
+
+                        <!-- Middle Drawers -->
+                        <div class="flex-1 flex flex-col gap-1">
+                            <div id="drawer-3" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-3', 'Drawer 3')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-3"></span>
+                            </div>
+                            <div id="drawer-4" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-4', 'Drawer 4')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-4"></span>
+                            </div>
+                            <div id="drawer-5" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-5', 'Drawer 5')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-5"></span>
+                            </div>
+                            <div id="lower-2" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative min-h-[40px]" onclick="editStorage('lower-2', 'Lower Cabinet 2')">
+                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="lower-2"></span>
+                            </div>
+                        </div>
+
+                        <!-- Under Sink -->
+                        <div class="flex-1 flex flex-col gap-1">
+                            <div class="h-10 bg-kitchen-counter rounded flex items-center justify-center">
+                                <span class="text-gray-400 text-xs">Sink</span>
+                            </div>
+                            <div id="under-sink" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('under-sink', 'Under Sink')">
+                                <div class="absolute top-3 left-1/2 -translate-x-1/2 flex gap-4">
+                                    <div class="w-4 h-1 bg-kitchen-handle rounded"></div>
+                                    <div class="w-4 h-1 bg-kitchen-handle rounded"></div>
+                                </div>
+                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="under-sink"></span>
+                            </div>
+                        </div>
+
+                        <!-- Right Drawers -->
+                        <div class="flex-1 flex flex-col gap-1">
+                            <div id="drawer-6" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-6', 'Drawer 6')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-6"></span>
+                            </div>
+                            <div id="drawer-7" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-7', 'Drawer 7')">
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-7"></span>
+                            </div>
+                            <div id="lower-3" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative min-h-[60px]" onclick="editStorage('lower-3', 'Lower Cabinet 3')">
+                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="lower-3"></span>
+                            </div>
+                        </div>
+
+                        <!-- Corner Cabinet -->
+                        <div id="corner" class="storage-item w-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('corner', 'Corner Cabinet')">
+                            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="corner"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pantry / Tall Cabinet -->
+                <div class="mt-4">
+                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Pantry / Tall Storage</div>
+                    <div class="flex gap-2">
+                        <div id="pantry-1" class="storage-item flex-1 h-20 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('pantry-1', 'Pantry Shelf 1')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="pantry-1"></span>
+                        </div>
+                        <div id="pantry-2" class="storage-item flex-1 h-20 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('pantry-2', 'Pantry Shelf 2')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="pantry-2"></span>
+                        </div>
+                        <div id="pantry-3" class="storage-item flex-1 h-20 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('pantry-3', 'Pantry Shelf 3')">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
+                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="pantry-3"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage List (Collapsible) -->
+        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
+            <button onclick="toggleSection('storageList')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-primary-600 font-semibold text-base flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    Storage Contents List
+                </h2>
+                <svg id="storageListChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="storageListContent" class="px-5 pb-5">
+                <div id="contentsList" class="space-y-2">
+                    <div class="text-center py-4 text-gray-400 text-sm">No items labeled yet. Click on a storage area to add contents.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Saved Setups -->
+        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
+            <button onclick="toggleSection('savedSetups')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <h2 class="text-primary-600 font-semibold text-base flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                    Saved Setups
+                </h2>
+                <svg id="savedSetupsChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="savedSetupsContent" class="px-5 pb-5">
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="setupName" placeholder="Setup name (e.g., 'Main Kitchen')"
+                        class="flex-1 h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors">
+                    <button onclick="saveSetup()" class="h-10 px-4 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-[0.98]">
+                        Save
+                    </button>
+                </div>
+                <div id="setupsList" class="space-y-2">
+                    <div class="text-center py-4 text-gray-400 text-sm">No saved setups yet</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Share Section -->
+        <section class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex flex-wrap gap-2 items-center justify-center">
+                <button onclick="shareSettings()" class="h-10 px-4 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors active:scale-[0.98] flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                    </svg>
+                    Share Link
+                </button>
+                <button onclick="exportToJSON()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export
+                </button>
+                <button onclick="document.getElementById('jsonFileInput').click()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Import
+                </button>
+                <button onclick="clearAll()" class="h-10 px-4 text-sm font-medium bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Clear All
+                </button>
+            </div>
+            <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="importFromJSON(event)">
+            <div id="shareStatus" class="mt-3 text-center text-sm text-gray-500 hidden"></div>
+        </section>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">Edit Storage</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Contents</label>
+                        <textarea id="storageContents" rows="3" placeholder="What's stored here?"
+                            class="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors resize-none"></textarea>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button onclick="closeModal()" class="flex-1 h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="clearStorage()" class="h-10 px-4 text-sm font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                        Clear
+                    </button>
+                    <button onclick="saveStorage()" class="flex-1 h-10 px-4 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage data
+        let storageData = JSON.parse(localStorage.getItem('kitchenStorage') || '{}');
+        let savedSetups = JSON.parse(localStorage.getItem('kitchenSetups') || '[]');
+        let currentEditId = null;
+
+        const STORAGE_KEY = 'kitchenStorage';
+        const SETUPS_KEY = 'kitchenSetups';
+        const COLLAPSED_KEY = 'kitchenCollapsed';
+
+        // Storage location names for display
+        const locationNames = {
+            'upper-1': 'Upper Cabinet 1',
+            'upper-2': 'Upper Cabinet 2',
+            'upper-3': 'Upper Cabinet 3',
+            'upper-4': 'Upper Cabinet 4',
+            'upper-5': 'Upper Cabinet 5',
+            'drawer-1': 'Drawer 1',
+            'drawer-2': 'Drawer 2',
+            'drawer-3': 'Drawer 3',
+            'drawer-4': 'Drawer 4',
+            'drawer-5': 'Drawer 5',
+            'drawer-6': 'Drawer 6',
+            'drawer-7': 'Drawer 7',
+            'lower-1': 'Lower Cabinet 1',
+            'lower-2': 'Lower Cabinet 2',
+            'lower-3': 'Lower Cabinet 3',
+            'under-sink': 'Under Sink',
+            'corner': 'Corner Cabinet',
+            'pantry-1': 'Pantry Shelf 1',
+            'pantry-2': 'Pantry Shelf 2',
+            'pantry-3': 'Pantry Shelf 3',
+            'fridge': 'Refrigerator',
+            'fridge-freezer': 'Freezer',
+            'oven': 'Oven Storage',
+            'dishwasher': 'Dishwasher'
+        };
+
+        // Sanitize user input
+        function safe(str) {
+            return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
+        }
+
+        // Collapsible sections
+        function getCollapsedState() {
+            const saved = localStorage.getItem(COLLAPSED_KEY);
+            if (saved) return JSON.parse(saved);
+            return { storageList: false, savedSetups: true };
+        }
+
+        function saveCollapsedState(state) {
+            localStorage.setItem(COLLAPSED_KEY, JSON.stringify(state));
+        }
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + 'Content');
+            const chevron = document.getElementById(sectionId + 'Chevron');
+            const state = getCollapsedState();
+
+            state[sectionId] = !state[sectionId];
+            saveCollapsedState(state);
+
+            if (state[sectionId]) {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            } else {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function initCollapsibleSections() {
+            const state = getCollapsedState();
+            ['storageList', 'savedSetups'].forEach(sectionId => {
+                const content = document.getElementById(sectionId + 'Content');
+                const chevron = document.getElementById(sectionId + 'Chevron');
+                if (content && chevron) {
+                    if (state[sectionId]) {
+                        content.classList.add('hidden');
+                        chevron.style.transform = 'rotate(-90deg)';
+                    } else {
+                        content.classList.remove('hidden');
+                        chevron.style.transform = 'rotate(0deg)';
+                    }
+                }
+            });
+        }
+
+        // Modal functions
+        function editStorage(id, title) {
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('storageContents').value = storageData[id] || '';
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('storageContents').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            currentEditId = null;
+        }
+
+        function saveStorage() {
+            if (!currentEditId) return;
+            const contents = document.getElementById('storageContents').value.trim();
+            if (contents) {
+                storageData[currentEditId] = contents;
+            } else {
+                delete storageData[currentEditId];
+            }
+            saveData();
+            updateDisplay();
+            closeModal();
+        }
+
+        function clearStorage() {
+            if (!currentEditId) return;
+            delete storageData[currentEditId];
+            saveData();
+            updateDisplay();
+            closeModal();
+        }
+
+        // Data persistence
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+        }
+
+        function saveSetups() {
+            localStorage.setItem(SETUPS_KEY, JSON.stringify(savedSetups));
+        }
+
+        // Update display
+        function updateDisplay() {
+            // Update labels on kitchen canvas
+            document.querySelectorAll('[data-label]').forEach(el => {
+                const id = el.getAttribute('data-label');
+                const content = storageData[id] || '';
+                el.textContent = content;
+
+                const parent = el.closest('.storage-item, .appliance-item');
+                if (parent) {
+                    if (content) {
+                        parent.classList.add('has-content');
+                    } else {
+                        parent.classList.remove('has-content');
+                    }
+                }
+            });
+
+            // Update contents list
+            renderContentsList();
+            renderSetupsList();
+        }
+
+        function renderContentsList() {
+            const container = document.getElementById('contentsList');
+            const items = Object.entries(storageData).filter(([_, v]) => v);
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No items labeled yet. Click on a storage area to add contents.</div>';
+                return;
+            }
+
+            container.innerHTML = items.map(([id, contents]) => `
+                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-gray-800 text-sm">${safe(locationNames[id] || id)}</div>
+                        <div class="text-gray-500 text-xs mt-1">${safe(contents)}</div>
+                    </div>
+                    <button onclick="editStorage('${id}', '${safe(locationNames[id] || id)}')" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Saved setups
+        function saveSetup() {
+            const name = document.getElementById('setupName').value.trim();
+            if (!name) {
+                alert('Please enter a name for this setup');
+                return;
+            }
+
+            // Check for duplicate names
+            const existingIndex = savedSetups.findIndex(s => s.name === name);
+            if (existingIndex >= 0) {
+                if (!confirm(`A setup named "${name}" already exists. Replace it?`)) {
+                    return;
+                }
+                savedSetups[existingIndex] = { name, data: { ...storageData } };
+            } else {
+                savedSetups.push({ name, data: { ...storageData } });
+            }
+
+            saveSetups();
+            renderSetupsList();
+            document.getElementById('setupName').value = '';
+        }
+
+        function loadSetup(index) {
+            if (index < 0 || index >= savedSetups.length) return;
+            storageData = { ...savedSetups[index].data };
+            saveData();
+            updateDisplay();
+        }
+
+        function deleteSetup(index) {
+            if (index < 0 || index >= savedSetups.length) return;
+            if (!confirm(`Delete setup "${savedSetups[index].name}"?`)) return;
+            savedSetups.splice(index, 1);
+            saveSetups();
+            renderSetupsList();
+        }
+
+        function renderSetupsList() {
+            const container = document.getElementById('setupsList');
+            if (savedSetups.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No saved setups yet</div>';
+                return;
+            }
+
+            container.innerHTML = savedSetups.map((setup, index) => `
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-gray-800 text-sm truncate">${safe(setup.name)}</div>
+                        <div class="text-gray-400 text-xs">${Object.keys(setup.data).length} items</div>
+                    </div>
+                    <button onclick="loadSetup(${index})" class="h-8 px-3 text-xs font-medium bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors">
+                        Load
+                    </button>
+                    <button onclick="deleteSetup(${index})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // URL Sharing
+        function getShareableState() {
+            return {
+                s: storageData,
+                n: savedSetups.map(s => ({ n: s.name, d: s.data }))
+            };
+        }
+
+        function encodeStateToURL(state) {
+            const json = JSON.stringify(state);
+            return LZString.compressToEncodedURIComponent(json);
+        }
+
+        function decodeStateFromURL(encoded) {
+            try {
+                const json = LZString.decompressFromEncodedURIComponent(encoded);
+                if (!json) return null;
+                return JSON.parse(json);
+            } catch (e) {
+                console.error('Failed to decode state:', e);
+                return null;
+            }
+        }
+
+        function applySharedState(state) {
+            if (!state) return false;
+            if (state.s) storageData = state.s;
+            if (state.n) savedSetups = state.n.map(s => ({ name: s.n, data: s.d }));
+            saveData();
+            saveSetups();
+            return true;
+        }
+
+        function shareSettings() {
+            const state = getShareableState();
+            const encoded = encodeStateToURL(state);
+            const url = window.location.origin + window.location.pathname + '#' + encoded;
+
+            const statusEl = document.getElementById('shareStatus');
+
+            navigator.clipboard.writeText(url).then(() => {
+                statusEl.textContent = `Link copied! (${url.length} chars)`;
+                statusEl.className = 'mt-3 text-center text-sm text-success-600';
+                statusEl.classList.remove('hidden');
+                setTimeout(() => statusEl.classList.add('hidden'), 4000);
+            }).catch(() => {
+                prompt('Copy this link:', url);
+            });
+        }
+
+        function exportToJSON() {
+            const state = {
+                storage: storageData,
+                setups: savedSetups
+            };
+
+            const json = JSON.stringify(state, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'kitchen-storage.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            const statusEl = document.getElementById('shareStatus');
+            statusEl.textContent = 'Settings exported!';
+            statusEl.className = 'mt-3 text-center text-sm text-success-600';
+            statusEl.classList.remove('hidden');
+            setTimeout(() => statusEl.classList.add('hidden'), 3000);
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('shareStatus');
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const state = JSON.parse(e.target.result);
+                    if (state.storage) storageData = state.storage;
+                    if (state.setups) savedSetups = state.setups;
+                    saveData();
+                    saveSetups();
+                    updateDisplay();
+
+                    statusEl.textContent = 'Settings imported!';
+                    statusEl.className = 'mt-3 text-center text-sm text-success-600';
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                } catch (err) {
+                    statusEl.textContent = 'Error: Invalid JSON file';
+                    statusEl.className = 'mt-3 text-center text-sm text-red-600';
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 4000);
+                }
+            };
+
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function loadFromURL() {
+            const hash = window.location.hash.slice(1);
+            if (!hash) return false;
+
+            const state = decodeStateFromURL(hash);
+            if (state) {
+                applySharedState(state);
+                history.replaceState(null, '', window.location.pathname);
+                return true;
+            }
+            return false;
+        }
+
+        function clearAll() {
+            if (!confirm('Clear all storage labels? This cannot be undone.')) return;
+            storageData = {};
+            saveData();
+            updateDisplay();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            if (e.key === 'Enter' && e.ctrlKey && document.getElementById('editModal').classList.contains('hidden') === false) {
+                saveStorage();
+            }
+        });
+
+        // Initialize
+        initCollapsibleSections();
+        loadFromURL();
+        updateDisplay();
+    </script>
+</body>
+</html>
