@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kitchen Storage Organizer</title>
+    <title>Kitchen Designer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"></script>
@@ -28,16 +28,7 @@
                             500: '#6366f1',
                             600: '#4f46e5',
                             700: '#4338ca'
-                        },
-                        success: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669'
                         }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
                     }
                 }
             }
@@ -47,728 +38,987 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .storage-item {
-            cursor: pointer;
-            transition: all 0.2s ease;
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
-        .storage-item:hover {
-            filter: brightness(1.1);
+        .grid-canvas {
+            background-image:
+                linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #f9fafb;
+        }
+        .palette-item {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .palette-item:hover {
             transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .storage-item.has-content {
-            box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.5);
+        .palette-item:active {
+            cursor: grabbing;
         }
-        .appliance-item {
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .canvas-item {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: box-shadow 0.15s ease;
         }
-        .appliance-item:hover {
-            filter: brightness(1.05);
+        .canvas-item:hover {
+            z-index: 100;
         }
-        .label-text {
-            font-size: 0.65rem;
-            line-height: 1.1;
+        .canvas-item.selected {
+            outline: 2px solid #4f46e5;
+            outline-offset: 2px;
+            z-index: 101;
+        }
+        .canvas-item.dragging {
+            opacity: 0.8;
+            z-index: 1000;
+            cursor: grabbing;
+        }
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #4f46e5;
+            border: 2px solid white;
+            border-radius: 2px;
+            z-index: 102;
+        }
+        .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
+        .resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
+        .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+        .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
+        .resize-handle.n { top: -5px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+        .resize-handle.s { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+        .resize-handle.w { top: 50%; left: -5px; transform: translateY(-50%); cursor: w-resize; }
+        .resize-handle.e { top: 50%; right: -5px; transform: translateY(-50%); cursor: e-resize; }
+        .ghost-item {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.5;
+            z-index: 999;
+        }
+        .item-label {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            font-size: 10px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            white-space: nowrap;
+            pointer-events: none;
         }
-        @media (min-width: 640px) {
-            .label-text {
-                font-size: 0.75rem;
-                -webkit-line-clamp: 3;
-            }
+        .appliance-label {
+            color: #4a5568;
+            text-shadow: none;
         }
         .modal-backdrop {
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(2px);
         }
-        input:focus, select:focus, textarea:focus, button:focus-visible {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        .toolbar-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+        .toolbar-btn:hover {
+            background: #e5e7eb;
+        }
+        .toolbar-btn.active {
+            background: #e0e7ff;
+            color: #4f46e5;
         }
     </style>
 </head>
-<body class="font-sans bg-slate-50 min-h-screen text-gray-700 antialiased">
-    <div class="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+<body class="bg-slate-100 min-h-screen overflow-hidden">
+    <div class="h-screen flex flex-col">
         <!-- Header -->
-        <div class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Kitchen Storage</h1>
-            <p class="text-gray-500 text-sm">Click on any cabinet, drawer, or appliance to label what's stored there</p>
-        </div>
-
-        <!-- Kitchen Canvas -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 mb-4 overflow-x-auto">
-            <div class="min-w-[600px]">
-                <!-- Upper Cabinets -->
-                <div class="mb-2">
-                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Upper Cabinets</div>
-                    <div class="flex gap-2">
-                        <div id="upper-1" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-1', 'Upper Cabinet 1')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-1"></span>
-                        </div>
-                        <div id="upper-2" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-2', 'Upper Cabinet 2')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-2"></span>
-                        </div>
-                        <div id="upper-3" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-3', 'Upper Cabinet 3')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-3"></span>
-                        </div>
-                        <div id="upper-4" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-4', 'Upper Cabinet 4')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-4"></span>
-                        </div>
-                        <div id="upper-5" class="storage-item flex-1 h-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('upper-5', 'Upper Cabinet 5')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="upper-5"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Counter Area with Appliances -->
-                <div class="mb-2">
-                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Counter & Appliances</div>
-                    <div class="flex gap-2 h-32">
-                        <!-- Fridge -->
-                        <div id="fridge" class="appliance-item w-28 bg-kitchen-appliance rounded-lg border-2 border-kitchen-applianceDark flex flex-col relative" onclick="editStorage('fridge', 'Refrigerator')">
-                            <div class="flex-1 border-b border-kitchen-applianceDark flex items-center justify-center p-1 relative">
-                                <div class="absolute top-1/2 right-2 w-1 h-4 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-gray-600 text-xs" data-label="fridge-freezer"></span>
-                            </div>
-                            <div class="flex-[2] flex items-center justify-center p-1 relative">
-                                <div class="absolute top-1/2 right-2 w-1 h-6 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-gray-600" data-label="fridge"></span>
-                            </div>
-                            <div class="absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-400">Fridge</div>
-                        </div>
-
-                        <!-- Counter Space -->
-                        <div class="flex-1 bg-kitchen-counter rounded-lg flex items-center justify-center">
-                            <span class="text-gray-400 text-sm">Counter</span>
-                        </div>
-
-                        <!-- Stove/Oven -->
-                        <div id="oven" class="appliance-item w-28 bg-kitchen-appliance rounded-lg border-2 border-kitchen-applianceDark flex flex-col relative" onclick="editStorage('oven', 'Oven Storage')">
-                            <div class="h-8 border-b border-kitchen-applianceDark flex items-center justify-center gap-2 px-2">
-                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
-                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
-                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
-                                <div class="w-4 h-4 rounded-full border-2 border-gray-400"></div>
-                            </div>
-                            <div class="flex-1 flex items-center justify-center p-1 relative">
-                                <div class="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-gray-600 mt-2" data-label="oven"></span>
-                            </div>
-                            <div class="absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-400">Oven</div>
-                        </div>
-
-                        <!-- Counter Space -->
-                        <div class="flex-1 bg-kitchen-counter rounded-lg flex items-center justify-center">
-                            <span class="text-gray-400 text-sm">Counter</span>
-                        </div>
-
-                        <!-- Dishwasher -->
-                        <div id="dishwasher" class="appliance-item w-24 bg-kitchen-appliance rounded-lg border-2 border-kitchen-applianceDark flex items-center justify-center p-2 relative" onclick="editStorage('dishwasher', 'Dishwasher')">
-                            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-gray-600 mt-3" data-label="dishwasher"></span>
-                            <div class="absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-400">Dishwasher</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spacer for appliance labels -->
-                <div class="h-4"></div>
-
-                <!-- Lower Cabinets & Drawers -->
-                <div>
-                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Lower Cabinets & Drawers</div>
-                    <div class="flex gap-2">
-                        <!-- Left Cabinet with Drawers -->
-                        <div class="flex-1 flex flex-col gap-1">
-                            <div id="drawer-1" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-1', 'Drawer 1')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-1"></span>
-                            </div>
-                            <div id="drawer-2" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-2', 'Drawer 2')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-2"></span>
-                            </div>
-                            <div id="lower-1" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative min-h-[60px]" onclick="editStorage('lower-1', 'Lower Cabinet 1')">
-                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="lower-1"></span>
-                            </div>
-                        </div>
-
-                        <!-- Middle Drawers -->
-                        <div class="flex-1 flex flex-col gap-1">
-                            <div id="drawer-3" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-3', 'Drawer 3')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-3"></span>
-                            </div>
-                            <div id="drawer-4" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-4', 'Drawer 4')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-4"></span>
-                            </div>
-                            <div id="drawer-5" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-5', 'Drawer 5')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-5"></span>
-                            </div>
-                            <div id="lower-2" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative min-h-[40px]" onclick="editStorage('lower-2', 'Lower Cabinet 2')">
-                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="lower-2"></span>
-                            </div>
-                        </div>
-
-                        <!-- Under Sink -->
-                        <div class="flex-1 flex flex-col gap-1">
-                            <div class="h-10 bg-kitchen-counter rounded flex items-center justify-center">
-                                <span class="text-gray-400 text-xs">Sink</span>
-                            </div>
-                            <div id="under-sink" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('under-sink', 'Under Sink')">
-                                <div class="absolute top-3 left-1/2 -translate-x-1/2 flex gap-4">
-                                    <div class="w-4 h-1 bg-kitchen-handle rounded"></div>
-                                    <div class="w-4 h-1 bg-kitchen-handle rounded"></div>
-                                </div>
-                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="under-sink"></span>
-                            </div>
-                        </div>
-
-                        <!-- Right Drawers -->
-                        <div class="flex-1 flex flex-col gap-1">
-                            <div id="drawer-6" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-6', 'Drawer 6')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-6"></span>
-                            </div>
-                            <div id="drawer-7" class="storage-item h-10 bg-kitchen-cabinet rounded border-2 border-kitchen-cabinetDark flex items-center justify-center p-1 relative" onclick="editStorage('drawer-7', 'Drawer 7')">
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow text-xs" data-label="drawer-7"></span>
-                            </div>
-                            <div id="lower-3" class="storage-item flex-1 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative min-h-[60px]" onclick="editStorage('lower-3', 'Lower Cabinet 3')">
-                                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                                <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="lower-3"></span>
-                            </div>
-                        </div>
-
-                        <!-- Corner Cabinet -->
-                        <div id="corner" class="storage-item w-24 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('corner', 'Corner Cabinet')">
-                            <div class="absolute top-3 left-1/2 -translate-x-1/2 w-6 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow mt-2" data-label="corner"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pantry / Tall Cabinet -->
-                <div class="mt-4">
-                    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2">Pantry / Tall Storage</div>
-                    <div class="flex gap-2">
-                        <div id="pantry-1" class="storage-item flex-1 h-20 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('pantry-1', 'Pantry Shelf 1')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="pantry-1"></span>
-                        </div>
-                        <div id="pantry-2" class="storage-item flex-1 h-20 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('pantry-2', 'Pantry Shelf 2')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="pantry-2"></span>
-                        </div>
-                        <div id="pantry-3" class="storage-item flex-1 h-20 bg-kitchen-cabinet rounded-lg border-2 border-kitchen-cabinetDark flex items-center justify-center p-2 relative" onclick="editStorage('pantry-3', 'Pantry Shelf 3')">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1 bg-kitchen-handle rounded"></div>
-                            <span class="label-text text-center text-white font-medium drop-shadow" data-label="pantry-3"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Storage List (Collapsible) -->
-        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
-            <button onclick="toggleSection('storageList')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
-                <h2 class="text-primary-600 font-semibold text-base flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                    Storage Contents List
-                </h2>
-                <svg id="storageListChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-            <div id="storageListContent" class="px-5 pb-5">
-                <div id="contentsList" class="space-y-2">
-                    <div class="text-center py-4 text-gray-400 text-sm">No items labeled yet. Click on a storage area to add contents.</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Saved Setups -->
-        <section class="bg-white rounded-2xl mb-4 shadow-lg border border-gray-200 overflow-hidden">
-            <button onclick="toggleSection('savedSetups')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
-                <h2 class="text-primary-600 font-semibold text-base flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                    </svg>
-                    Saved Setups
-                </h2>
-                <svg id="savedSetupsChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-            <div id="savedSetupsContent" class="px-5 pb-5">
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="setupName" placeholder="Setup name (e.g., 'Main Kitchen')"
-                        class="flex-1 h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors">
-                    <button onclick="saveSetup()" class="h-10 px-4 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors active:scale-[0.98]">
-                        Save
+        <header class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-4">
+                <h1 class="text-lg font-semibold text-gray-800">Kitchen Designer</h1>
+                <div class="h-6 w-px bg-gray-200"></div>
+                <div class="flex items-center gap-1">
+                    <button onclick="undo()" class="toolbar-btn" title="Undo (Ctrl+Z)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                        </svg>
+                    </button>
+                    <button onclick="redo()" class="toolbar-btn" title="Redo (Ctrl+Y)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+                        </svg>
                     </button>
                 </div>
-                <div id="setupsList" class="space-y-2">
-                    <div class="text-center py-4 text-gray-400 text-sm">No saved setups yet</div>
+                <div class="h-6 w-px bg-gray-200"></div>
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <label class="flex items-center gap-1">
+                        Grid:
+                        <select id="gridSize" onchange="updateGridSize()" class="border border-gray-200 rounded px-2 py-1 text-sm">
+                            <option value="10">10px</option>
+                            <option value="20" selected>20px</option>
+                            <option value="40">40px</option>
+                        </select>
+                    </label>
+                    <label class="flex items-center gap-2 ml-2">
+                        <input type="checkbox" id="snapToggle" checked onchange="toggleSnap()" class="rounded">
+                        Snap
+                    </label>
                 </div>
             </div>
-        </section>
-
-        <!-- Share Section -->
-        <section class="mt-6 pt-6 border-t border-gray-200">
-            <div class="flex flex-wrap gap-2 items-center justify-center">
-                <button onclick="shareSettings()" class="h-10 px-4 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors active:scale-[0.98] flex items-center gap-2 shadow-sm">
+            <div class="flex items-center gap-2">
+                <button onclick="shareDesign()" class="h-9 px-3 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                     </svg>
-                    Share Link
+                    Share
                 </button>
-                <button onclick="exportToJSON()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                <button onclick="exportDesign()" class="h-9 px-3 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
                     Export
                 </button>
-                <button onclick="document.getElementById('jsonFileInput').click()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
+                <button onclick="document.getElementById('importInput').click()" class="h-9 px-3 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                     </svg>
                     Import
                 </button>
-                <button onclick="clearAll()" class="h-10 px-4 text-sm font-medium bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors active:scale-[0.98] flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                    Clear All
+                <input type="file" id="importInput" accept=".json" class="hidden" onchange="importDesign(event)">
+                <button onclick="clearCanvas()" class="h-9 px-3 text-sm font-medium bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
+                    Clear
                 </button>
             </div>
-            <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="importFromJSON(event)">
-            <div id="shareStatus" class="mt-3 text-center text-sm text-gray-500 hidden"></div>
-        </section>
-    </div>
+        </header>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="fixed inset-0 z-50 hidden">
-        <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4">
-            <div class="bg-white rounded-2xl shadow-xl p-6">
-                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">Edit Storage</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Contents</label>
-                        <textarea id="storageContents" rows="3" placeholder="What's stored here?"
-                            class="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors resize-none"></textarea>
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Left Sidebar - Palette -->
+            <aside class="w-56 bg-white border-r border-gray-200 overflow-y-auto shrink-0">
+                <div class="p-3">
+                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Components</h2>
+
+                    <div class="space-y-4">
+                        <!-- Cabinets -->
+                        <div>
+                            <h3 class="text-xs font-medium text-gray-400 mb-2">Cabinets</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="palette-item bg-kitchen-cabinet border-2 border-kitchen-cabinetDark rounded-lg p-2 text-center"
+                                     data-type="cabinet" data-width="80" data-height="60" data-name="Cabinet">
+                                    <div class="w-full h-8 flex items-center justify-center">
+                                        <div class="w-6 h-1 bg-kitchen-handle rounded"></div>
+                                    </div>
+                                    <div class="text-xs text-white font-medium mt-1">Cabinet</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-cabinet border-2 border-kitchen-cabinetDark rounded-lg p-2 text-center"
+                                     data-type="upper-cabinet" data-width="80" data-height="80" data-name="Upper">
+                                    <div class="w-full h-10 flex items-center justify-center">
+                                        <div class="w-6 h-1 bg-kitchen-handle rounded"></div>
+                                    </div>
+                                    <div class="text-xs text-white font-medium mt-1">Upper</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-cabinet border-2 border-kitchen-cabinetDark rounded-lg p-2 text-center"
+                                     data-type="drawer" data-width="80" data-height="40" data-name="Drawer">
+                                    <div class="w-full h-4 flex items-center justify-center">
+                                        <div class="w-8 h-1 bg-kitchen-handle rounded"></div>
+                                    </div>
+                                    <div class="text-xs text-white font-medium">Drawer</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-cabinet border-2 border-kitchen-cabinetDark rounded-lg p-2 text-center"
+                                     data-type="corner-cabinet" data-width="80" data-height="80" data-name="Corner">
+                                    <div class="w-full h-10 flex items-center justify-center">
+                                        <div class="w-4 h-1 bg-kitchen-handle rounded"></div>
+                                    </div>
+                                    <div class="text-xs text-white font-medium mt-1">Corner</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-cabinet border-2 border-kitchen-cabinetDark rounded-lg p-2 text-center"
+                                     data-type="pantry" data-width="60" data-height="120" data-name="Pantry">
+                                    <div class="w-full h-16 flex items-center justify-center">
+                                        <div class="w-6 h-1 bg-kitchen-handle rounded"></div>
+                                    </div>
+                                    <div class="text-xs text-white font-medium">Pantry</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Appliances -->
+                        <div>
+                            <h3 class="text-xs font-medium text-gray-400 mb-2">Appliances</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="palette-item bg-kitchen-appliance border-2 border-kitchen-applianceDark rounded-lg p-2 text-center"
+                                     data-type="fridge" data-width="80" data-height="120" data-name="Fridge">
+                                    <div class="w-full h-16 flex flex-col">
+                                        <div class="flex-1 border-b border-kitchen-applianceDark"></div>
+                                        <div class="flex-[2]"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 font-medium">Fridge</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-appliance border-2 border-kitchen-applianceDark rounded-lg p-2 text-center"
+                                     data-type="oven" data-width="80" data-height="100" data-name="Oven">
+                                    <div class="w-full h-4 flex items-center justify-center gap-1">
+                                        <div class="w-2 h-2 rounded-full border border-gray-400"></div>
+                                        <div class="w-2 h-2 rounded-full border border-gray-400"></div>
+                                        <div class="w-2 h-2 rounded-full border border-gray-400"></div>
+                                        <div class="w-2 h-2 rounded-full border border-gray-400"></div>
+                                    </div>
+                                    <div class="flex-1 mt-1 border-t border-kitchen-applianceDark"></div>
+                                    <div class="text-xs text-gray-600 font-medium mt-1">Oven</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-appliance border-2 border-kitchen-applianceDark rounded-lg p-2 text-center"
+                                     data-type="dishwasher" data-width="80" data-height="80" data-name="Dishwasher">
+                                    <div class="w-full h-10 flex items-start justify-center pt-1">
+                                        <div class="w-8 h-1 bg-kitchen-handle rounded"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-600 font-medium">Dishwasher</div>
+                                </div>
+                                <div class="palette-item bg-kitchen-appliance border-2 border-kitchen-applianceDark rounded-lg p-2 text-center"
+                                     data-type="microwave" data-width="60" data-height="40" data-name="Microwave">
+                                    <div class="w-full h-4 border border-gray-300 rounded"></div>
+                                    <div class="text-xs text-gray-600 font-medium mt-1">Microwave</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Surfaces -->
+                        <div>
+                            <h3 class="text-xs font-medium text-gray-400 mb-2">Surfaces</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="palette-item bg-kitchen-counter rounded-lg p-2 text-center"
+                                     data-type="counter" data-width="100" data-height="40" data-name="Counter">
+                                    <div class="w-full h-6"></div>
+                                    <div class="text-xs text-gray-300 font-medium">Counter</div>
+                                </div>
+                                <div class="palette-item bg-slate-500 rounded-lg p-2 text-center"
+                                     data-type="sink" data-width="80" data-height="60" data-name="Sink">
+                                    <div class="w-full h-8 border-2 border-slate-400 rounded"></div>
+                                    <div class="text-xs text-gray-200 font-medium mt-1">Sink</div>
+                                </div>
+                                <div class="palette-item bg-amber-100 border-2 border-amber-200 rounded-lg p-2 text-center"
+                                     data-type="island" data-width="120" data-height="80" data-name="Island">
+                                    <div class="w-full h-10"></div>
+                                    <div class="text-xs text-amber-700 font-medium">Island</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="flex gap-2 mt-6">
-                    <button onclick="closeModal()" class="flex-1 h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        Cancel
-                    </button>
-                    <button onclick="clearStorage()" class="h-10 px-4 text-sm font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
-                        Clear
-                    </button>
-                    <button onclick="saveStorage()" class="flex-1 h-10 px-4 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
-                        Save
-                    </button>
+            </aside>
+
+            <!-- Main Canvas Area -->
+            <main class="flex-1 overflow-auto relative bg-slate-200 p-4">
+                <div id="canvas" class="grid-canvas relative bg-white rounded-lg shadow-inner"
+                     style="width: 1200px; height: 800px;"
+                     ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event)">
+                    <!-- Canvas items will be rendered here -->
                 </div>
-            </div>
+                <div id="ghostItem" class="ghost-item hidden"></div>
+            </main>
+
+            <!-- Right Sidebar - Properties -->
+            <aside id="propertiesPanel" class="w-64 bg-white border-l border-gray-200 overflow-y-auto shrink-0 hidden">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-semibold text-gray-800">Properties</h2>
+                        <button onclick="deselectAll()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                            <input type="text" id="propName" class="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:border-primary-400 focus:ring-1 focus:ring-primary-400 outline-none" onchange="updateSelectedProperty('name', this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Contents</label>
+                            <textarea id="propContents" rows="3" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-primary-400 focus:ring-1 focus:ring-primary-400 outline-none resize-none" onchange="updateSelectedProperty('contents', this.value)" placeholder="What's stored here?"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">X</label>
+                                <input type="number" id="propX" class="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:border-primary-400 outline-none" onchange="updateSelectedProperty('x', parseInt(this.value))">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Y</label>
+                                <input type="number" id="propY" class="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:border-primary-400 outline-none" onchange="updateSelectedProperty('y', parseInt(this.value))">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Width</label>
+                                <input type="number" id="propWidth" class="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:border-primary-400 outline-none" onchange="updateSelectedProperty('width', parseInt(this.value))">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Height</label>
+                                <input type="number" id="propHeight" class="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg focus:border-primary-400 outline-none" onchange="updateSelectedProperty('height', parseInt(this.value))">
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <button onclick="duplicateSelected()" class="w-full h-9 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors mb-2">
+                                Duplicate
+                            </button>
+                            <button onclick="deleteSelected()" class="w-full h-9 text-sm font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
+
+        <!-- Status bar -->
+        <footer class="bg-white border-t border-gray-200 px-4 py-1 flex items-center justify-between text-xs text-gray-500 shrink-0">
+            <div id="statusText">Click and drag items from the palette to the canvas</div>
+            <div id="itemCount">0 items</div>
+        </footer>
     </div>
 
     <script>
-        // Storage data
-        let storageData = JSON.parse(localStorage.getItem('kitchenStorage') || '{}');
-        let savedSetups = JSON.parse(localStorage.getItem('kitchenSetups') || '[]');
-        let currentEditId = null;
+        // State
+        let items = [];
+        let selectedId = null;
+        let gridSize = 20;
+        let snapEnabled = true;
+        let undoStack = [];
+        let redoStack = [];
+        let isDragging = false;
+        let isResizing = false;
+        let dragOffset = { x: 0, y: 0 };
+        let resizeHandle = null;
+        let resizeStart = { x: 0, y: 0, width: 0, height: 0, itemX: 0, itemY: 0 };
 
-        const STORAGE_KEY = 'kitchenStorage';
-        const SETUPS_KEY = 'kitchenSetups';
-        const COLLAPSED_KEY = 'kitchenCollapsed';
+        const STORAGE_KEY = 'kitchenDesigner';
 
-        // Storage location names for display
-        const locationNames = {
-            'upper-1': 'Upper Cabinet 1',
-            'upper-2': 'Upper Cabinet 2',
-            'upper-3': 'Upper Cabinet 3',
-            'upper-4': 'Upper Cabinet 4',
-            'upper-5': 'Upper Cabinet 5',
-            'drawer-1': 'Drawer 1',
-            'drawer-2': 'Drawer 2',
-            'drawer-3': 'Drawer 3',
-            'drawer-4': 'Drawer 4',
-            'drawer-5': 'Drawer 5',
-            'drawer-6': 'Drawer 6',
-            'drawer-7': 'Drawer 7',
-            'lower-1': 'Lower Cabinet 1',
-            'lower-2': 'Lower Cabinet 2',
-            'lower-3': 'Lower Cabinet 3',
-            'under-sink': 'Under Sink',
-            'corner': 'Corner Cabinet',
-            'pantry-1': 'Pantry Shelf 1',
-            'pantry-2': 'Pantry Shelf 2',
-            'pantry-3': 'Pantry Shelf 3',
-            'fridge': 'Refrigerator',
-            'fridge-freezer': 'Freezer',
-            'oven': 'Oven Storage',
-            'dishwasher': 'Dishwasher'
-        };
-
-        // Sanitize user input
-        function safe(str) {
-            return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
+        // Generate unique ID
+        function generateId() {
+            return 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // Collapsible sections
-        function getCollapsedState() {
-            const saved = localStorage.getItem(COLLAPSED_KEY);
-            if (saved) return JSON.parse(saved);
-            return { storageList: false, savedSetups: true };
+        // Snap to grid
+        function snap(value) {
+            if (!snapEnabled) return value;
+            return Math.round(value / gridSize) * gridSize;
         }
 
-        function saveCollapsedState(state) {
-            localStorage.setItem(COLLAPSED_KEY, JSON.stringify(state));
+        // Save state for undo
+        function saveState() {
+            undoStack.push(JSON.stringify(items));
+            if (undoStack.length > 50) undoStack.shift();
+            redoStack = [];
         }
 
-        function toggleSection(sectionId) {
-            const content = document.getElementById(sectionId + 'Content');
-            const chevron = document.getElementById(sectionId + 'Chevron');
-            const state = getCollapsedState();
+        function undo() {
+            if (undoStack.length === 0) return;
+            redoStack.push(JSON.stringify(items));
+            items = JSON.parse(undoStack.pop());
+            renderCanvas();
+            saveToStorage();
+        }
 
-            state[sectionId] = !state[sectionId];
-            saveCollapsedState(state);
+        function redo() {
+            if (redoStack.length === 0) return;
+            undoStack.push(JSON.stringify(items));
+            items = JSON.parse(redoStack.pop());
+            renderCanvas();
+            saveToStorage();
+        }
 
-            if (state[sectionId]) {
-                content.classList.add('hidden');
-                chevron.style.transform = 'rotate(-90deg)';
-            } else {
-                content.classList.remove('hidden');
-                chevron.style.transform = 'rotate(0deg)';
+        // Storage
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            updateItemCount();
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    items = JSON.parse(saved);
+                } catch (e) {
+                    items = [];
+                }
             }
         }
 
-        function initCollapsibleSections() {
-            const state = getCollapsedState();
-            ['storageList', 'savedSetups'].forEach(sectionId => {
-                const content = document.getElementById(sectionId + 'Content');
-                const chevron = document.getElementById(sectionId + 'Chevron');
-                if (content && chevron) {
-                    if (state[sectionId]) {
-                        content.classList.add('hidden');
-                        chevron.style.transform = 'rotate(-90deg)';
-                    } else {
-                        content.classList.remove('hidden');
-                        chevron.style.transform = 'rotate(0deg)';
-                    }
-                }
-            });
+        function updateItemCount() {
+            document.getElementById('itemCount').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
         }
 
-        // Modal functions
-        function editStorage(id, title) {
-            currentEditId = id;
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('storageContents').value = storageData[id] || '';
-            document.getElementById('editModal').classList.remove('hidden');
-            document.getElementById('storageContents').focus();
+        // Grid size
+        function updateGridSize() {
+            gridSize = parseInt(document.getElementById('gridSize').value);
+            const canvas = document.getElementById('canvas');
+            canvas.style.backgroundSize = `${gridSize}px ${gridSize}px`;
         }
 
-        function closeModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            currentEditId = null;
+        function toggleSnap() {
+            snapEnabled = document.getElementById('snapToggle').checked;
         }
 
-        function saveStorage() {
-            if (!currentEditId) return;
-            const contents = document.getElementById('storageContents').value.trim();
-            if (contents) {
-                storageData[currentEditId] = contents;
-            } else {
-                delete storageData[currentEditId];
-            }
-            saveData();
-            updateDisplay();
-            closeModal();
-        }
+        // Render canvas items
+        function renderCanvas() {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
 
-        function clearStorage() {
-            if (!currentEditId) return;
-            delete storageData[currentEditId];
-            saveData();
-            updateDisplay();
-            closeModal();
-        }
-
-        // Data persistence
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-        }
-
-        function saveSetups() {
-            localStorage.setItem(SETUPS_KEY, JSON.stringify(savedSetups));
-        }
-
-        // Update display
-        function updateDisplay() {
-            // Update labels on kitchen canvas
-            document.querySelectorAll('[data-label]').forEach(el => {
-                const id = el.getAttribute('data-label');
-                const content = storageData[id] || '';
-                el.textContent = content;
-
-                const parent = el.closest('.storage-item, .appliance-item');
-                if (parent) {
-                    if (content) {
-                        parent.classList.add('has-content');
-                    } else {
-                        parent.classList.remove('has-content');
-                    }
-                }
+            items.forEach(item => {
+                const el = createItemElement(item);
+                canvas.appendChild(el);
             });
 
-            // Update contents list
-            renderContentsList();
-            renderSetupsList();
-        }
+            updateItemCount();
 
-        function renderContentsList() {
-            const container = document.getElementById('contentsList');
-            const items = Object.entries(storageData).filter(([_, v]) => v);
-
-            if (items.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No items labeled yet. Click on a storage area to add contents.</div>';
-                return;
-            }
-
-            container.innerHTML = items.map(([id, contents]) => `
-                <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-gray-800 text-sm">${safe(locationNames[id] || id)}</div>
-                        <div class="text-gray-500 text-xs mt-1">${safe(contents)}</div>
-                    </div>
-                    <button onclick="editStorage('${id}', '${safe(locationNames[id] || id)}')" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // Saved setups
-        function saveSetup() {
-            const name = document.getElementById('setupName').value.trim();
-            if (!name) {
-                alert('Please enter a name for this setup');
-                return;
-            }
-
-            // Check for duplicate names
-            const existingIndex = savedSetups.findIndex(s => s.name === name);
-            if (existingIndex >= 0) {
-                if (!confirm(`A setup named "${name}" already exists. Replace it?`)) {
-                    return;
+            if (selectedId) {
+                const selectedItem = items.find(i => i.id === selectedId);
+                if (selectedItem) {
+                    updatePropertiesPanel(selectedItem);
+                } else {
+                    deselectAll();
                 }
-                savedSetups[existingIndex] = { name, data: { ...storageData } };
-            } else {
-                savedSetups.push({ name, data: { ...storageData } });
+            }
+        }
+
+        function createItemElement(item) {
+            const el = document.createElement('div');
+            el.id = item.id;
+            el.className = `canvas-item ${item.id === selectedId ? 'selected' : ''}`;
+            el.style.left = `${item.x}px`;
+            el.style.top = `${item.y}px`;
+            el.style.width = `${item.width}px`;
+            el.style.height = `${item.height}px`;
+
+            // Set appearance based on type
+            const typeStyles = getTypeStyles(item.type);
+            el.innerHTML = typeStyles.html;
+            Object.assign(el.style, typeStyles.style);
+
+            // Add label if contents exist
+            if (item.contents) {
+                const label = document.createElement('div');
+                label.className = `item-label ${item.type === 'fridge' || item.type === 'oven' || item.type === 'dishwasher' || item.type === 'microwave' ? 'appliance-label' : ''}`;
+                label.textContent = item.contents;
+                el.appendChild(label);
             }
 
-            saveSetups();
-            renderSetupsList();
-            document.getElementById('setupName').value = '';
-        }
-
-        function loadSetup(index) {
-            if (index < 0 || index >= savedSetups.length) return;
-            storageData = { ...savedSetups[index].data };
-            saveData();
-            updateDisplay();
-        }
-
-        function deleteSetup(index) {
-            if (index < 0 || index >= savedSetups.length) return;
-            if (!confirm(`Delete setup "${savedSetups[index].name}"?`)) return;
-            savedSetups.splice(index, 1);
-            saveSetups();
-            renderSetupsList();
-        }
-
-        function renderSetupsList() {
-            const container = document.getElementById('setupsList');
-            if (savedSetups.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-gray-400 text-sm">No saved setups yet</div>';
-                return;
+            // Add resize handles if selected
+            if (item.id === selectedId) {
+                ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'].forEach(handle => {
+                    const h = document.createElement('div');
+                    h.className = `resize-handle ${handle}`;
+                    h.dataset.handle = handle;
+                    el.appendChild(h);
+                });
             }
 
-            container.innerHTML = savedSetups.map((setup, index) => `
-                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-gray-800 text-sm truncate">${safe(setup.name)}</div>
-                        <div class="text-gray-400 text-xs">${Object.keys(setup.data).length} items</div>
-                    </div>
-                    <button onclick="loadSetup(${index})" class="h-8 px-3 text-xs font-medium bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors">
-                        Load
-                    </button>
-                    <button onclick="deleteSetup(${index})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </div>
-            `).join('');
+            // Event listeners
+            el.addEventListener('mousedown', (e) => handleItemMouseDown(e, item));
+            el.addEventListener('dblclick', () => editItemContents(item));
+
+            return el;
         }
 
-        // URL Sharing
-        function getShareableState() {
-            return {
-                s: storageData,
-                n: savedSetups.map(s => ({ n: s.name, d: s.data }))
+        function getTypeStyles(type) {
+            const styles = {
+                'cabinet': {
+                    style: { background: '#d4a574', border: '2px solid #b8956a', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:4px;background:#888;border-radius:2px;"></div>'
+                },
+                'upper-cabinet': {
+                    style: { background: '#d4a574', border: '2px solid #b8956a', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:4px;background:#888;border-radius:2px;"></div>'
+                },
+                'drawer': {
+                    style: { background: '#d4a574', border: '2px solid #b8956a', borderRadius: '4px' },
+                    html: '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:4px;background:#888;border-radius:2px;"></div>'
+                },
+                'corner-cabinet': {
+                    style: { background: '#d4a574', border: '2px solid #b8956a', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:4px;background:#888;border-radius:2px;"></div>'
+                },
+                'pantry': {
+                    style: { background: '#d4a574', border: '2px solid #b8956a', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:4px;background:#888;border-radius:2px;"></div>'
+                },
+                'fridge': {
+                    style: { background: '#e8e8e8', border: '2px solid #c0c0c0', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:0;left:0;right:0;height:35%;border-bottom:2px solid #c0c0c0;"></div><div style="position:absolute;top:18%;right:8px;width:4px;height:16px;background:#888;border-radius:2px;"></div><div style="position:absolute;top:50%;right:8px;width:4px;height:24px;background:#888;border-radius:2px;"></div>'
+                },
+                'oven': {
+                    style: { background: '#e8e8e8', border: '2px solid #c0c0c0', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:8px;"><div style="width:12px;height:12px;border-radius:50%;border:2px solid #888;"></div><div style="width:12px;height:12px;border-radius:50%;border:2px solid #888;"></div><div style="width:12px;height:12px;border-radius:50%;border:2px solid #888;"></div><div style="width:12px;height:12px;border-radius:50%;border:2px solid #888;"></div></div><div style="position:absolute;top:32px;left:8px;right:8px;bottom:8px;border-top:2px solid #c0c0c0;"></div>'
+                },
+                'dishwasher': {
+                    style: { background: '#e8e8e8', border: '2px solid #c0c0c0', borderRadius: '8px' },
+                    html: '<div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:32px;height:4px;background:#888;border-radius:2px;"></div>'
+                },
+                'microwave': {
+                    style: { background: '#e8e8e8', border: '2px solid #c0c0c0', borderRadius: '6px' },
+                    html: '<div style="position:absolute;top:8px;left:8px;right:24px;bottom:8px;border:2px solid #c0c0c0;border-radius:4px;"></div><div style="position:absolute;top:50%;right:12px;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:#888;"></div>'
+                },
+                'counter': {
+                    style: { background: '#4a4a4a', borderRadius: '4px' },
+                    html: ''
+                },
+                'sink': {
+                    style: { background: '#64748b', borderRadius: '6px' },
+                    html: '<div style="position:absolute;top:8px;left:8px;right:8px;bottom:8px;border:3px solid #94a3b8;border-radius:6px;"></div>'
+                },
+                'island': {
+                    style: { background: '#fef3c7', border: '2px solid #fde68a', borderRadius: '8px' },
+                    html: ''
+                }
             };
+
+            return styles[type] || styles['cabinet'];
         }
 
-        function encodeStateToURL(state) {
-            const json = JSON.stringify(state);
-            return LZString.compressToEncodedURIComponent(json);
+        // Handle palette drag start
+        document.querySelectorAll('.palette-item').forEach(item => {
+            item.setAttribute('draggable', 'true');
+            item.addEventListener('dragstart', handlePaletteDragStart);
+            item.addEventListener('dragend', handlePaletteDragEnd);
+        });
+
+        function handlePaletteDragStart(e) {
+            const data = {
+                type: e.target.dataset.type,
+                width: parseInt(e.target.dataset.width),
+                height: parseInt(e.target.dataset.height),
+                name: e.target.dataset.name
+            };
+            e.dataTransfer.setData('application/json', JSON.stringify(data));
+            e.dataTransfer.effectAllowed = 'copy';
+
+            // Create ghost
+            const ghost = document.getElementById('ghostItem');
+            const styles = getTypeStyles(data.type);
+            ghost.style.width = `${data.width}px`;
+            ghost.style.height = `${data.height}px`;
+            Object.assign(ghost.style, styles.style);
+            ghost.innerHTML = styles.html;
         }
 
-        function decodeStateFromURL(encoded) {
-            try {
-                const json = LZString.decompressFromEncodedURIComponent(encoded);
-                if (!json) return null;
-                return JSON.parse(json);
-            } catch (e) {
-                console.error('Failed to decode state:', e);
-                return null;
+        function handlePaletteDragEnd(e) {
+            const ghost = document.getElementById('ghostItem');
+            ghost.classList.add('hidden');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = snap(e.clientX - rect.left);
+            const y = snap(e.clientY - rect.top);
+
+            const ghost = document.getElementById('ghostItem');
+            ghost.classList.remove('hidden');
+            ghost.style.left = `${x + rect.left}px`;
+            ghost.style.top = `${y + rect.top}px`;
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const ghost = document.getElementById('ghostItem');
+            ghost.classList.add('hidden');
+
+            const data = JSON.parse(e.dataTransfer.getData('application/json'));
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+
+            const x = snap(e.clientX - rect.left - data.width / 2);
+            const y = snap(e.clientY - rect.top - data.height / 2);
+
+            saveState();
+
+            const newItem = {
+                id: generateId(),
+                type: data.type,
+                name: data.name,
+                x: Math.max(0, x),
+                y: Math.max(0, y),
+                width: data.width,
+                height: data.height,
+                contents: ''
+            };
+
+            items.push(newItem);
+            saveToStorage();
+            selectItem(newItem.id);
+            renderCanvas();
+
+            document.getElementById('statusText').textContent = `Added ${data.name}`;
+        }
+
+        // Handle canvas item interactions
+        function handleItemMouseDown(e, item) {
+            e.stopPropagation();
+
+            // Check if clicking resize handle
+            if (e.target.classList.contains('resize-handle')) {
+                startResize(e, item);
+                return;
+            }
+
+            selectItem(item.id);
+            startDrag(e, item);
+        }
+
+        function selectItem(id) {
+            selectedId = id;
+            renderCanvas();
+
+            const item = items.find(i => i.id === id);
+            if (item) {
+                updatePropertiesPanel(item);
+                document.getElementById('propertiesPanel').classList.remove('hidden');
             }
         }
 
-        function applySharedState(state) {
-            if (!state) return false;
-            if (state.s) storageData = state.s;
-            if (state.n) savedSetups = state.n.map(s => ({ name: s.n, data: s.d }));
-            saveData();
-            saveSetups();
-            return true;
+        function deselectAll() {
+            selectedId = null;
+            document.getElementById('propertiesPanel').classList.add('hidden');
+            renderCanvas();
         }
 
-        function shareSettings() {
-            const state = getShareableState();
-            const encoded = encodeStateToURL(state);
-            const url = window.location.origin + window.location.pathname + '#' + encoded;
+        function updatePropertiesPanel(item) {
+            document.getElementById('propName').value = item.name || '';
+            document.getElementById('propContents').value = item.contents || '';
+            document.getElementById('propX').value = item.x;
+            document.getElementById('propY').value = item.y;
+            document.getElementById('propWidth').value = item.width;
+            document.getElementById('propHeight').value = item.height;
+        }
 
-            const statusEl = document.getElementById('shareStatus');
+        function updateSelectedProperty(prop, value) {
+            if (!selectedId) return;
+            const item = items.find(i => i.id === selectedId);
+            if (!item) return;
+
+            saveState();
+
+            if (prop === 'x' || prop === 'y') {
+                value = snap(value);
+            }
+            if (prop === 'width' || prop === 'height') {
+                value = Math.max(gridSize, snap(value));
+            }
+
+            item[prop] = value;
+            saveToStorage();
+            renderCanvas();
+        }
+
+        // Drag functionality
+        function startDrag(e, item) {
+            isDragging = true;
+            const el = document.getElementById(item.id);
+            const rect = el.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+
+            el.classList.add('dragging');
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function handleDrag(e) {
+            if (!isDragging || !selectedId) return;
+
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            const item = items.find(i => i.id === selectedId);
+            if (!item) return;
+
+            let x = e.clientX - rect.left - dragOffset.x;
+            let y = e.clientY - rect.top - dragOffset.y;
+
+            x = snap(Math.max(0, Math.min(x, 1200 - item.width)));
+            y = snap(Math.max(0, Math.min(y, 800 - item.height)));
+
+            const el = document.getElementById(selectedId);
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+
+            // Store temporarily
+            item._tempX = x;
+            item._tempY = y;
+        }
+
+        function stopDrag(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', stopDrag);
+
+            const item = items.find(i => i.id === selectedId);
+            if (item && (item._tempX !== undefined || item._tempY !== undefined)) {
+                if (item._tempX !== item.x || item._tempY !== item.y) {
+                    saveState();
+                    item.x = item._tempX !== undefined ? item._tempX : item.x;
+                    item.y = item._tempY !== undefined ? item._tempY : item.y;
+                    delete item._tempX;
+                    delete item._tempY;
+                    saveToStorage();
+                }
+            }
+
+            renderCanvas();
+        }
+
+        // Resize functionality
+        function startResize(e, item) {
+            e.stopPropagation();
+            isResizing = true;
+            resizeHandle = e.target.dataset.handle;
+            resizeStart = {
+                x: e.clientX,
+                y: e.clientY,
+                width: item.width,
+                height: item.height,
+                itemX: item.x,
+                itemY: item.y
+            };
+
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        function handleResize(e) {
+            if (!isResizing || !selectedId) return;
+
+            const item = items.find(i => i.id === selectedId);
+            if (!item) return;
+
+            const dx = e.clientX - resizeStart.x;
+            const dy = e.clientY - resizeStart.y;
+
+            let newWidth = resizeStart.width;
+            let newHeight = resizeStart.height;
+            let newX = resizeStart.itemX;
+            let newY = resizeStart.itemY;
+
+            if (resizeHandle.includes('e')) {
+                newWidth = snap(Math.max(gridSize, resizeStart.width + dx));
+            }
+            if (resizeHandle.includes('w')) {
+                const potentialWidth = resizeStart.width - dx;
+                newWidth = snap(Math.max(gridSize, potentialWidth));
+                newX = snap(resizeStart.itemX + (resizeStart.width - newWidth));
+            }
+            if (resizeHandle.includes('s')) {
+                newHeight = snap(Math.max(gridSize, resizeStart.height + dy));
+            }
+            if (resizeHandle.includes('n')) {
+                const potentialHeight = resizeStart.height - dy;
+                newHeight = snap(Math.max(gridSize, potentialHeight));
+                newY = snap(resizeStart.itemY + (resizeStart.height - newHeight));
+            }
+
+            const el = document.getElementById(selectedId);
+            el.style.width = `${newWidth}px`;
+            el.style.height = `${newHeight}px`;
+            el.style.left = `${newX}px`;
+            el.style.top = `${newY}px`;
+
+            item._tempWidth = newWidth;
+            item._tempHeight = newHeight;
+            item._tempX = newX;
+            item._tempY = newY;
+        }
+
+        function stopResize(e) {
+            if (!isResizing) return;
+            isResizing = false;
+
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('mouseup', stopResize);
+
+            const item = items.find(i => i.id === selectedId);
+            if (item && item._tempWidth !== undefined) {
+                saveState();
+                item.width = item._tempWidth;
+                item.height = item._tempHeight;
+                item.x = item._tempX;
+                item.y = item._tempY;
+                delete item._tempWidth;
+                delete item._tempHeight;
+                delete item._tempX;
+                delete item._tempY;
+                saveToStorage();
+            }
+
+            renderCanvas();
+        }
+
+        // Edit contents
+        function editItemContents(item) {
+            const contents = prompt(`What's stored in ${item.name}?`, item.contents || '');
+            if (contents !== null) {
+                saveState();
+                item.contents = contents;
+                saveToStorage();
+                renderCanvas();
+            }
+        }
+
+        // Actions
+        function duplicateSelected() {
+            if (!selectedId) return;
+            const item = items.find(i => i.id === selectedId);
+            if (!item) return;
+
+            saveState();
+
+            const newItem = {
+                ...item,
+                id: generateId(),
+                x: snap(item.x + gridSize * 2),
+                y: snap(item.y + gridSize * 2)
+            };
+
+            items.push(newItem);
+            saveToStorage();
+            selectItem(newItem.id);
+            renderCanvas();
+        }
+
+        function deleteSelected() {
+            if (!selectedId) return;
+            saveState();
+            items = items.filter(i => i.id !== selectedId);
+            saveToStorage();
+            deselectAll();
+            renderCanvas();
+        }
+
+        function clearCanvas() {
+            if (!confirm('Clear all items from the canvas?')) return;
+            saveState();
+            items = [];
+            saveToStorage();
+            deselectAll();
+            renderCanvas();
+        }
+
+        // Import/Export
+        function exportDesign() {
+            const data = JSON.stringify({ items, version: 1 }, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'kitchen-design.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('statusText').textContent = 'Design exported';
+        }
+
+        function importDesign(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.items) {
+                        saveState();
+                        items = data.items;
+                        saveToStorage();
+                        renderCanvas();
+                        document.getElementById('statusText').textContent = 'Design imported';
+                    }
+                } catch (err) {
+                    alert('Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        // Share via URL
+        function shareDesign() {
+            const data = LZString.compressToEncodedURIComponent(JSON.stringify({ items }));
+            const url = window.location.origin + window.location.pathname + '#' + data;
 
             navigator.clipboard.writeText(url).then(() => {
-                statusEl.textContent = `Link copied! (${url.length} chars)`;
-                statusEl.className = 'mt-3 text-center text-sm text-success-600';
-                statusEl.classList.remove('hidden');
-                setTimeout(() => statusEl.classList.add('hidden'), 4000);
+                document.getElementById('statusText').textContent = `Link copied! (${url.length} chars)`;
             }).catch(() => {
                 prompt('Copy this link:', url);
             });
-        }
-
-        function exportToJSON() {
-            const state = {
-                storage: storageData,
-                setups: savedSetups
-            };
-
-            const json = JSON.stringify(state, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'kitchen-storage.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            const statusEl = document.getElementById('shareStatus');
-            statusEl.textContent = 'Settings exported!';
-            statusEl.className = 'mt-3 text-center text-sm text-success-600';
-            statusEl.classList.remove('hidden');
-            setTimeout(() => statusEl.classList.add('hidden'), 3000);
-        }
-
-        function importFromJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const statusEl = document.getElementById('shareStatus');
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                try {
-                    const state = JSON.parse(e.target.result);
-                    if (state.storage) storageData = state.storage;
-                    if (state.setups) savedSetups = state.setups;
-                    saveData();
-                    saveSetups();
-                    updateDisplay();
-
-                    statusEl.textContent = 'Settings imported!';
-                    statusEl.className = 'mt-3 text-center text-sm text-success-600';
-                    statusEl.classList.remove('hidden');
-                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
-                } catch (err) {
-                    statusEl.textContent = 'Error: Invalid JSON file';
-                    statusEl.className = 'mt-3 text-center text-sm text-red-600';
-                    statusEl.classList.remove('hidden');
-                    setTimeout(() => statusEl.classList.add('hidden'), 4000);
-                }
-            };
-
-            reader.readAsText(file);
-            event.target.value = '';
         }
 
         function loadFromURL() {
             const hash = window.location.hash.slice(1);
             if (!hash) return false;
 
-            const state = decodeStateFromURL(hash);
-            if (state) {
-                applySharedState(state);
-                history.replaceState(null, '', window.location.pathname);
-                return true;
+            try {
+                const json = LZString.decompressFromEncodedURIComponent(hash);
+                if (json) {
+                    const data = JSON.parse(json);
+                    if (data.items) {
+                        items = data.items;
+                        saveToStorage();
+                        history.replaceState(null, '', window.location.pathname);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load from URL:', e);
             }
             return false;
         }
 
-        function clearAll() {
-            if (!confirm('Clear all storage labels? This cannot be undone.')) return;
-            storageData = {};
-            saveData();
-            updateDisplay();
-        }
-
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                e.preventDefault();
+                deleteSelected();
             }
-            if (e.key === 'Enter' && e.ctrlKey && document.getElementById('editModal').classList.contains('hidden') === false) {
-                saveStorage();
+            if (e.key === 'Escape') {
+                deselectAll();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                e.preventDefault();
+                redo();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                duplicateSelected();
+            }
+        });
+
+        // Click on canvas to deselect
+        document.getElementById('canvas').addEventListener('click', (e) => {
+            if (e.target.id === 'canvas') {
+                deselectAll();
             }
         });
 
         // Initialize
-        initCollapsibleSections();
-        loadFromURL();
-        updateDisplay();
+        loadFromURL() || loadFromStorage();
+        renderCanvas();
     </script>
 </body>
 </html>
