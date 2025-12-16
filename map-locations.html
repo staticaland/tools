@@ -145,6 +145,12 @@
                     </svg>
                     Export
                 </button>
+                <button onclick="exportToKML()" class="h-10 px-4 text-sm font-medium bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors active:scale-[0.98] flex items-center gap-2" title="Export to Google My Maps">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    Google Maps
+                </button>
                 <button onclick="document.getElementById('jsonFileInput').click()" class="h-10 px-4 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
@@ -531,6 +537,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                         </svg>
                     </button>
+                    <button onclick="openInGoogleMaps(${location.id})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Open in Google Maps">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </button>
                     <button onclick="removeLocation(${location.id})" class="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Remove">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -686,6 +697,70 @@
             URL.revokeObjectURL(url);
 
             showStatus('Locations exported!', 'success');
+        }
+
+        // Get Google Maps URL for a single location
+        function getGoogleMapsUrl(location) {
+            const query = encodeURIComponent(location.name);
+            return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}&query_place_id=${query}`;
+        }
+
+        // Open location in Google Maps
+        function openInGoogleMaps(id) {
+            const location = locations.find(loc => loc.id === id);
+            if (location) {
+                const url = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // Export to KML for Google My Maps
+        function exportToKML() {
+            if (locations.length === 0) {
+                showStatus('No locations to export', 'error');
+                return;
+            }
+
+            // Escape XML special characters
+            function escapeXml(str) {
+                if (!str) return '';
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&apos;');
+            }
+
+            const placemarks = locations.map(loc => `
+    <Placemark>
+      <name>${escapeXml(loc.name)}</name>
+      <description>${escapeXml(loc.notes || '')}</description>
+      <Point>
+        <coordinates>${loc.lng},${loc.lat},0</coordinates>
+      </Point>
+    </Placemark>`).join('');
+
+            const kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Map Locations</name>
+    <description>Exported from Minilager Map on ${new Date().toLocaleDateString()}</description>${placemarks}
+  </Document>
+</kml>`;
+
+            const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'map-locations.kml';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus('KML exported! Import at google.com/maps/d/', 'success');
         }
 
         function importFromJSON(event) {
