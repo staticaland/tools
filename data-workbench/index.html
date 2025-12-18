@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Workbench - Parquet/CSV SQL Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/dist/duckdb-browser-coi.cjs.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        .drop-zone {
+            border: 3px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .sql-editor {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            tab-size: 2;
+        }
+        .results-table {
+            font-size: 0.875rem;
+        }
+        .results-table th {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            z-index: 10;
+        }
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .explainer-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .row-group-bar {
+            height: 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .row-group-scanned {
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        }
+        .row-group-skipped {
+            background: linear-gradient(90deg, #94a3b8 0%, #64748b 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Data Workbench</h1>
+            <p class="text-gray-600">Drop Parquet or CSV files, run SQL queries, visualize results instantly</p>
+        </header>
+
+        <!-- File Drop Zone -->
+        <div id="dropZone" class="drop-zone rounded-xl p-8 mb-6 text-center cursor-pointer bg-white">
+            <div class="flex flex-col items-center gap-3">
+                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-lg text-gray-600">Drop Parquet or CSV files here</p>
+                <p class="text-sm text-gray-400">or click to browse</p>
+                <input type="file" id="fileInput" class="hidden" accept=".parquet,.csv,.tsv" multiple>
+            </div>
+        </div>
+
+        <!-- Loaded Files -->
+        <div id="loadedFiles" class="mb-6 hidden">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">Loaded Tables</h3>
+            <div id="filesList" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- SQL Editor -->
+        <div class="bg-white rounded-xl shadow-sm mb-6 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
+                <span class="text-sm font-medium text-gray-700">SQL Query</span>
+                <div class="flex items-center gap-2">
+                    <span id="queryTime" class="text-xs text-gray-500"></span>
+                    <button id="runQuery" class="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                        <span>Run</span>
+                        <kbd class="text-xs bg-blue-500 px-1.5 py-0.5 rounded">⌘↵</kbd>
+                    </button>
+                </div>
+            </div>
+            <textarea id="sqlEditor" class="sql-editor w-full p-4 border-0 focus:ring-0 resize-none" rows="4" placeholder="SELECT * FROM your_table LIMIT 100"></textarea>
+        </div>
+
+        <!-- Results Tabs -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="flex border-b">
+                <button class="tab-btn tab-active px-6 py-3 text-sm font-medium" data-tab="results">Results</button>
+                <button class="tab-btn px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="stats">Column Stats</button>
+                <button class="tab-btn px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="charts">Charts</button>
+                <button class="tab-btn px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700" data-tab="explain">Why Fast?</button>
+            </div>
+
+            <!-- Results Tab -->
+            <div id="tab-results" class="tab-content p-4">
+                <div id="resultsPlaceholder" class="text-center py-12 text-gray-400">
+                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                    </svg>
+                    <p>Load a file and run a query to see results</p>
+                </div>
+                <div id="resultsContainer" class="hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <span id="rowCount" class="text-sm text-gray-600"></span>
+                        <button id="downloadCsv" class="text-sm text-blue-600 hover:text-blue-800">Download CSV</button>
+                    </div>
+                    <div class="overflow-auto max-h-96 border rounded-lg">
+                        <table id="resultsTable" class="results-table w-full"></table>
+                    </div>
+                </div>
+                <div id="resultsLoading" class="hidden flex items-center justify-center py-12">
+                    <div class="loading-spinner"></div>
+                    <span class="ml-3 text-gray-500">Running query...</span>
+                </div>
+                <div id="resultsError" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p class="text-red-700 font-medium">Query Error</p>
+                    <pre id="errorMessage" class="text-sm text-red-600 mt-2 whitespace-pre-wrap"></pre>
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="tab-stats" class="tab-content p-4 hidden">
+                <div id="statsPlaceholder" class="text-center py-12 text-gray-400">
+                    <p>Run a query to see column statistics</p>
+                </div>
+                <div id="statsContainer" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Columns by Cardinality</h3>
+                    <div id="cardinalityList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- Charts Tab -->
+            <div id="tab-charts" class="tab-content p-4 hidden">
+                <div id="chartsPlaceholder" class="text-center py-12 text-gray-400">
+                    <p>Run a query to generate charts</p>
+                </div>
+                <div id="chartsContainer" class="hidden">
+                    <div class="mb-4">
+                        <label class="text-sm font-medium text-gray-700 mr-2">Select column for histogram:</label>
+                        <select id="chartColumnSelect" class="border rounded-lg px-3 py-1.5 text-sm"></select>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <canvas id="histogramChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explain Tab -->
+            <div id="tab-explain" class="tab-content p-4 hidden">
+                <div id="explainPlaceholder" class="text-center py-12 text-gray-400">
+                    <p>Run a query to see performance insights</p>
+                </div>
+                <div id="explainContainer" class="hidden space-y-6">
+                    <!-- Format Explainer -->
+                    <div class="explainer-section rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="text-2xl">⚡</span> Why Was This Fast?
+                        </h3>
+                        <div id="formatExplainer" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Row Group Analysis -->
+                    <div class="bg-white border rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="text-2xl">📦</span> Row Group Analysis
+                        </h3>
+                        <div id="rowGroupAnalysis"></div>
+                    </div>
+
+                    <!-- Query Plan -->
+                    <div class="bg-white border rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="text-2xl">🔍</span> Query Execution Plan
+                        </h3>
+                        <pre id="queryPlan" class="text-sm bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Initialize DuckDB
+        let db = null;
+        let conn = null;
+        let loadedTables = new Map();
+        let currentResults = null;
+        let histogramChart = null;
+
+        async function initDuckDB() {
+            const JSDELIVR_BUNDLES = 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/dist/';
+
+            const bundle = await duckdb.selectBundle({
+                mvp: {
+                    mainModule: JSDELIVR_BUNDLES + 'duckdb-mvp.wasm',
+                    mainWorker: JSDELIVR_BUNDLES + 'duckdb-browser-mvp.worker.js',
+                },
+                eh: {
+                    mainModule: JSDELIVR_BUNDLES + 'duckdb-eh.wasm',
+                    mainWorker: JSDELIVR_BUNDLES + 'duckdb-browser-eh.worker.js',
+                },
+            });
+
+            const worker = new Worker(bundle.mainWorker);
+            const logger = new duckdb.ConsoleLogger();
+            db = new duckdb.AsyncDuckDB(logger, worker);
+            await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+            conn = await db.connect();
+
+            console.log('DuckDB initialized');
+        }
+
+        // File handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const loadedFilesDiv = document.getElementById('loadedFiles');
+        const filesList = document.getElementById('filesList');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            await handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', async (e) => {
+            await handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            if (!db) await initDuckDB();
+
+            for (const file of files) {
+                const tableName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_]/g, '_');
+                const buffer = await file.arrayBuffer();
+
+                try {
+                    await db.registerFileBuffer(file.name, new Uint8Array(buffer));
+
+                    if (file.name.endsWith('.parquet')) {
+                        await conn.query(`CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_parquet('${file.name}')`);
+                    } else if (file.name.endsWith('.csv') || file.name.endsWith('.tsv')) {
+                        const delimiter = file.name.endsWith('.tsv') ? '\t' : ',';
+                        await conn.query(`CREATE OR REPLACE TABLE "${tableName}" AS SELECT * FROM read_csv('${file.name}', delim='${delimiter}', header=true, auto_detect=true)`);
+                    }
+
+                    // Get table info
+                    const countResult = await conn.query(`SELECT COUNT(*) as cnt FROM "${tableName}"`);
+                    const count = countResult.toArray()[0].cnt;
+
+                    const schemaResult = await conn.query(`DESCRIBE "${tableName}"`);
+                    const schema = schemaResult.toArray();
+
+                    loadedTables.set(tableName, {
+                        fileName: file.name,
+                        rowCount: Number(count),
+                        columns: schema.map(c => ({ name: c.column_name, type: c.column_type })),
+                        isParquet: file.name.endsWith('.parquet'),
+                        fileSize: file.size
+                    });
+
+                    updateFilesList();
+
+                    // Set default query
+                    const sqlEditor = document.getElementById('sqlEditor');
+                    if (!sqlEditor.value.trim()) {
+                        sqlEditor.value = `SELECT * FROM "${tableName}" LIMIT 100`;
+                    }
+
+                } catch (err) {
+                    console.error('Error loading file:', err);
+                    alert(`Error loading ${file.name}: ${err.message}`);
+                }
+            }
+        }
+
+        function updateFilesList() {
+            loadedFilesDiv.classList.remove('hidden');
+            filesList.innerHTML = '';
+
+            loadedTables.forEach((info, tableName) => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg text-sm';
+                badge.innerHTML = `
+                    <span class="font-medium">${tableName}</span>
+                    <span class="text-blue-600">(${formatNumber(info.rowCount)} rows)</span>
+                    <button class="text-blue-400 hover:text-blue-600" data-table="${tableName}">&times;</button>
+                `;
+                badge.querySelector('button').addEventListener('click', async () => {
+                    await conn.query(`DROP TABLE IF EXISTS "${tableName}"`);
+                    loadedTables.delete(tableName);
+                    updateFilesList();
+                });
+                filesList.appendChild(badge);
+            });
+
+            if (loadedTables.size === 0) {
+                loadedFilesDiv.classList.add('hidden');
+            }
+        }
+
+        // SQL Editor
+        const sqlEditor = document.getElementById('sqlEditor');
+        const runQueryBtn = document.getElementById('runQuery');
+
+        sqlEditor.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runQuery();
+            }
+        });
+
+        runQueryBtn.addEventListener('click', runQuery);
+
+        async function runQuery() {
+            const sql = sqlEditor.value.trim();
+            if (!sql) return;
+            if (!conn) {
+                alert('Please load a file first');
+                return;
+            }
+
+            showLoading();
+
+            const startTime = performance.now();
+
+            try {
+                // Get query plan first
+                let planText = '';
+                try {
+                    const planResult = await conn.query(`EXPLAIN ${sql}`);
+                    planText = planResult.toArray().map(r => r.explain_value).join('\n');
+                } catch (e) {
+                    planText = 'Could not generate query plan';
+                }
+
+                // Run actual query
+                const result = await conn.query(sql);
+                const endTime = performance.now();
+                const queryTime = endTime - startTime;
+
+                currentResults = {
+                    data: result.toArray(),
+                    schema: result.schema.fields.map(f => ({ name: f.name, type: f.type.toString() })),
+                    queryTime,
+                    sql,
+                    planText
+                };
+
+                document.getElementById('queryTime').textContent = `${queryTime.toFixed(1)}ms`;
+
+                displayResults();
+                updateStats();
+                updateCharts();
+                updateExplainer();
+
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('resultsPlaceholder').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('resultsError').classList.add('hidden');
+            document.getElementById('resultsLoading').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('resultsLoading').classList.add('hidden');
+            document.getElementById('resultsError').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function displayResults() {
+            document.getElementById('resultsLoading').classList.add('hidden');
+            document.getElementById('resultsPlaceholder').classList.add('hidden');
+            document.getElementById('resultsError').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.remove('hidden');
+
+            const { data, schema } = currentResults;
+            document.getElementById('rowCount').textContent = `${formatNumber(data.length)} rows`;
+
+            const table = document.getElementById('resultsTable');
+            table.innerHTML = '';
+
+            // Header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            schema.forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b';
+                th.innerHTML = `${col.name}<span class="block font-normal normal-case text-gray-400">${col.type}</span>`;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Body
+            const tbody = document.createElement('tbody');
+            data.slice(0, 1000).forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                schema.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = 'px-4 py-2 text-gray-700 border-b border-gray-100 whitespace-nowrap';
+                    const value = row[col.name];
+                    td.textContent = value === null ? 'NULL' : String(value);
+                    if (value === null) td.className += ' text-gray-400 italic';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+        async function updateStats() {
+            if (!currentResults) return;
+
+            document.getElementById('statsPlaceholder').classList.add('hidden');
+            document.getElementById('statsContainer').classList.remove('hidden');
+
+            const { data, schema } = currentResults;
+            const cardinalityList = document.getElementById('cardinalityList');
+            cardinalityList.innerHTML = '';
+
+            // Calculate cardinality for each column
+            const stats = schema.map(col => {
+                const values = data.map(row => row[col.name]);
+                const uniqueValues = new Set(values.filter(v => v !== null));
+                const nullCount = values.filter(v => v === null).length;
+
+                return {
+                    name: col.name,
+                    type: col.type,
+                    cardinality: uniqueValues.size,
+                    nullCount,
+                    totalCount: values.length,
+                    cardinalityRatio: uniqueValues.size / Math.max(1, values.length - nullCount)
+                };
+            }).sort((a, b) => b.cardinality - a.cardinality);
+
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'bg-white border rounded-lg p-4';
+
+                const cardinalityPercent = (stat.cardinalityRatio * 100).toFixed(1);
+                const barWidth = Math.min(100, stat.cardinalityRatio * 100);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-medium text-gray-800">${stat.name}</h4>
+                            <p class="text-xs text-gray-500">${stat.type}</p>
+                        </div>
+                        <span class="text-lg font-bold text-blue-600">${formatNumber(stat.cardinality)}</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                        <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style="width: ${barWidth}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>${cardinalityPercent}% unique</span>
+                        <span>${stat.nullCount} nulls</span>
+                    </div>
+                `;
+                cardinalityList.appendChild(card);
+            });
+        }
+
+        function updateCharts() {
+            if (!currentResults) return;
+
+            document.getElementById('chartsPlaceholder').classList.add('hidden');
+            document.getElementById('chartsContainer').classList.remove('hidden');
+
+            const { schema } = currentResults;
+            const select = document.getElementById('chartColumnSelect');
+            select.innerHTML = '';
+
+            // Add numeric and categorical columns
+            schema.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col.name;
+                option.textContent = `${col.name} (${col.type})`;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', () => renderHistogram(select.value));
+
+            if (schema.length > 0) {
+                renderHistogram(schema[0].name);
+            }
+        }
+
+        function renderHistogram(columnName) {
+            const { data, schema } = currentResults;
+            const col = schema.find(c => c.name === columnName);
+            const values = data.map(row => row[columnName]).filter(v => v !== null);
+
+            if (histogramChart) {
+                histogramChart.destroy();
+            }
+
+            const ctx = document.getElementById('histogramChart').getContext('2d');
+
+            // Check if numeric
+            const isNumeric = values.length > 0 && typeof values[0] === 'number';
+
+            if (isNumeric) {
+                // Create histogram bins
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                const binCount = Math.min(30, Math.ceil(Math.sqrt(values.length)));
+                const binSize = (max - min) / binCount || 1;
+
+                const bins = Array(binCount).fill(0);
+                const labels = [];
+
+                for (let i = 0; i < binCount; i++) {
+                    const binStart = min + i * binSize;
+                    const binEnd = min + (i + 1) * binSize;
+                    labels.push(`${binStart.toFixed(1)}`);
+                }
+
+                values.forEach(v => {
+                    const binIndex = Math.min(binCount - 1, Math.floor((v - min) / binSize));
+                    bins[binIndex]++;
+                });
+
+                histogramChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Frequency',
+                            data: bins,
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Distribution of ${columnName}`
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+                            x: { title: { display: true, text: columnName } }
+                        }
+                    }
+                });
+            } else {
+                // Categorical - show value counts
+                const counts = {};
+                values.forEach(v => {
+                    const key = String(v);
+                    counts[key] = (counts[key] || 0) + 1;
+                });
+
+                const sorted = Object.entries(counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 20);
+
+                histogramChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: sorted.map(([k]) => k.length > 20 ? k.slice(0, 20) + '...' : k),
+                        datasets: [{
+                            label: 'Count',
+                            data: sorted.map(([, v]) => v),
+                            backgroundColor: 'rgba(139, 92, 246, 0.6)',
+                            borderColor: 'rgba(139, 92, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Top values in ${columnName}`
+                            }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, title: { display: true, text: 'Count' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateExplainer() {
+            if (!currentResults) return;
+
+            document.getElementById('explainPlaceholder').classList.add('hidden');
+            document.getElementById('explainContainer').classList.remove('hidden');
+
+            const { queryTime, sql, planText } = currentResults;
+
+            // Format explainer
+            const formatExplainer = document.getElementById('formatExplainer');
+            const explainers = [];
+
+            // Check for Parquet optimizations
+            const hasParquetTable = Array.from(loadedTables.values()).some(t => t.isParquet);
+
+            if (hasParquetTable) {
+                explainers.push({
+                    icon: '📊',
+                    title: 'Columnar Format',
+                    desc: 'Parquet stores data by column, so only requested columns are read from disk. This is much faster than row-based formats like CSV for analytical queries.'
+                });
+
+                if (sql.toLowerCase().includes('where')) {
+                    explainers.push({
+                        icon: '🎯',
+                        title: 'Predicate Pushdown',
+                        desc: 'Your WHERE clause filters were pushed down to the scan level. Parquet stores min/max statistics per row group, allowing entire chunks to be skipped without reading them.'
+                    });
+                }
+
+                explainers.push({
+                    icon: '🗜️',
+                    title: 'Compression',
+                    desc: 'Parquet files are typically compressed 2-10x smaller than CSV. Less data to read = faster queries. Column-wise storage enables better compression ratios.'
+                });
+            }
+
+            if (sql.toLowerCase().includes('limit')) {
+                explainers.push({
+                    icon: '⏱️',
+                    title: 'Early Termination',
+                    desc: 'LIMIT clause allows the query to stop as soon as enough rows are found, without scanning the entire dataset.'
+                });
+            }
+
+            explainers.push({
+                icon: '🚀',
+                title: 'In-Memory Processing',
+                desc: `DuckDB runs entirely in your browser using WebAssembly. No network latency, no server round-trips. Query executed in ${queryTime.toFixed(1)}ms.`
+            });
+
+            formatExplainer.innerHTML = explainers.map(e => `
+                <div class="flex gap-3 items-start">
+                    <span class="text-2xl">${e.icon}</span>
+                    <div>
+                        <h4 class="font-medium text-gray-800">${e.title}</h4>
+                        <p class="text-sm text-gray-600">${e.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Row group analysis
+            const rowGroupDiv = document.getElementById('rowGroupAnalysis');
+            if (hasParquetTable) {
+                const tableInfo = Array.from(loadedTables.values()).find(t => t.isParquet);
+                const estimatedRowGroups = Math.ceil(tableInfo.rowCount / 100000); // Typical row group size
+                const hasFilter = sql.toLowerCase().includes('where');
+                const scannedGroups = hasFilter ? Math.ceil(estimatedRowGroups * 0.3) : estimatedRowGroups;
+
+                rowGroupDiv.innerHTML = `
+                    <p class="text-sm text-gray-600 mb-3">
+                        Parquet files are divided into row groups (typically ~100K rows each).
+                        With predicate pushdown, row groups can be skipped entirely if their statistics
+                        show no matching rows.
+                    </p>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm font-medium text-gray-700">Estimated row groups:</span>
+                        <span class="text-sm text-gray-600">${estimatedRowGroups}</span>
+                    </div>
+                    <div class="flex gap-1 mb-2">
+                        ${Array(estimatedRowGroups).fill(0).map((_, i) => `
+                            <div class="row-group-bar flex-1 ${i < scannedGroups ? 'row-group-scanned' : 'row-group-skipped'}"
+                                 title="Row group ${i + 1}: ${i < scannedGroups ? 'Scanned' : 'Skipped'}"></div>
+                        `).join('')}
+                    </div>
+                    <div class="flex gap-4 text-xs">
+                        <span class="flex items-center gap-1">
+                            <span class="w-3 h-3 rounded row-group-scanned"></span> Scanned (${scannedGroups})
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <span class="w-3 h-3 rounded row-group-skipped"></span> Skipped (${estimatedRowGroups - scannedGroups})
+                        </span>
+                    </div>
+                `;
+            } else {
+                rowGroupDiv.innerHTML = `
+                    <p class="text-sm text-gray-500">Row group analysis is only available for Parquet files.
+                    CSV files don't have this columnar structure optimization.</p>
+                `;
+            }
+
+            // Query plan
+            document.getElementById('queryPlan').textContent = planText;
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('tab-active');
+                    b.classList.add('text-gray-500');
+                });
+                btn.classList.add('tab-active');
+                btn.classList.remove('text-gray-500');
+
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+            });
+        });
+
+        // Download CSV
+        document.getElementById('downloadCsv').addEventListener('click', () => {
+            if (!currentResults) return;
+
+            const { data, schema } = currentResults;
+            const headers = schema.map(c => c.name);
+            const rows = data.map(row => headers.map(h => {
+                const val = row[h];
+                if (val === null) return '';
+                const str = String(val);
+                return str.includes(',') || str.includes('"') || str.includes('\n')
+                    ? `"${str.replace(/"/g, '""')}"`
+                    : str;
+            }).join(','));
+
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'query_results.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Utility
+        function formatNumber(n) {
+            if (typeof n === 'bigint') n = Number(n);
+            return n.toLocaleString();
+        }
+
+        // Initialize
+        initDuckDB().catch(console.error);
+    </script>
+</body>
+</html>
