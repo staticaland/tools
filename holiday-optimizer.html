@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holiday Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        },
+                        success: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857'
+                        },
+                        amber: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        input:focus, select:focus, button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .calendar-day:hover:not(.outside):not(.weekend-day):not(.holiday-day):not(.pto-day) {
+            background-color: #f3f4f6;
+        }
+        .calendar-day.outside {
+            color: #d1d5db;
+            cursor: default;
+        }
+        .calendar-day.today {
+            font-weight: 600;
+            box-shadow: inset 0 0 0 2px #6366f1;
+        }
+        .calendar-day.weekend-day {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+        }
+        .calendar-day.holiday-day {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+        .calendar-day.pto-day {
+            background-color: #d1fae5;
+            color: #047857;
+        }
+        .calendar-day.company-day {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+        .calendar-day.prebooked-day {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+        .calendar-day.selected {
+            background-color: #6366f1 !important;
+            color: white !important;
+        }
+        .style-option {
+            transition: all 0.15s;
+        }
+        .style-option:hover {
+            border-color: #c7d2fe;
+            background-color: #f5f7ff;
+        }
+        .style-option.selected {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+        }
+    </style>
+</head>
+<body class="font-sans bg-slate-50 min-h-screen text-gray-700 antialiased">
+    <div class="max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Holiday Optimizer</h1>
+            <p class="text-gray-500 text-sm">Maximize your time off by strategically placing PTO around holidays</p>
+        </div>
+
+        <!-- Step 1: Enter Your Days -->
+        <section class="bg-white rounded-2xl mb-4 shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-white">
+                <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-semibold flex items-center justify-center">1</span>
+                    <h2 class="text-primary-700 font-semibold text-base">Enter Your Days</h2>
+                    <span class="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-medium">Required</span>
+                </div>
+                <p class="text-gray-500 text-sm mt-1 ml-9">How many PTO days do you have available?</p>
+            </div>
+            <div class="p-5">
+                <div class="flex items-center gap-3">
+                    <label for="ptoDays" class="text-gray-600 text-sm font-medium">Number of days</label>
+                    <input type="number" id="ptoDays" min="1" max="50" value="25"
+                        class="w-20 h-11 px-3 text-center text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 transition-colors font-semibold">
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Select Your Timeframe -->
+        <section class="bg-white rounded-2xl mb-4 shadow-sm border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('timeframe')" class="w-full px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-white text-left flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-semibold flex items-center justify-center">2</span>
+                    <div>
+                        <h2 class="text-primary-700 font-semibold text-base">Select Your Timeframe</h2>
+                        <p class="text-gray-500 text-sm mt-0.5" id="timeframeSummary">Calendar Year 2025</p>
+                    </div>
+                </div>
+                <svg id="timeframeChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="timeframeContent" class="p-5 space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 transition-colors">
+                    <input type="radio" name="timeframe" value="2025" checked class="w-4 h-4 text-primary-600">
+                    <div>
+                        <div class="font-medium text-gray-800 text-sm">Calendar Year 2025</div>
+                        <div class="text-gray-500 text-xs">Jan 1 – Dec 31, 2025</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 transition-colors">
+                    <input type="radio" name="timeframe" value="2026" class="w-4 h-4 text-primary-600">
+                    <div>
+                        <div class="font-medium text-gray-800 text-sm">Calendar Year 2026</div>
+                        <div class="text-gray-500 text-xs">Jan 1 – Dec 31, 2026</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 transition-colors">
+                    <input type="radio" name="timeframe" value="today" class="w-4 h-4 text-primary-600">
+                    <div>
+                        <div class="font-medium text-gray-800 text-sm">From Today</div>
+                        <div class="text-gray-500 text-xs" id="fromTodayLabel">Through end of year</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-primary-300 hover:bg-primary-50/50 transition-colors">
+                    <input type="radio" name="timeframe" value="custom" class="w-4 h-4 text-primary-600">
+                    <div>
+                        <div class="font-medium text-gray-800 text-sm">12-Month Period</div>
+                        <div class="text-gray-500 text-xs">Choose your own start month/year</div>
+                    </div>
+                </label>
+                <div id="customTimeframeOptions" class="hidden pl-7 pt-2">
+                    <div class="flex items-center gap-2">
+                        <select id="customMonth" class="h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                        <select id="customYear" class="h-10 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer">
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: Choose Your Style -->
+        <section class="bg-white rounded-2xl mb-4 shadow-sm border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('style')" class="w-full px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-white text-left flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-semibold flex items-center justify-center">3</span>
+                    <div>
+                        <h2 class="text-primary-700 font-semibold text-base">Choose Your Style</h2>
+                        <p class="text-gray-500 text-sm mt-0.5" id="styleSummary">Balanced Mix</p>
+                    </div>
+                </div>
+                <svg id="styleChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="styleContent" class="p-5">
+                <p class="text-gray-500 text-sm mb-4">Select how you'd like to distribute your time off throughout the year.</p>
+                <div class="space-y-2">
+                    <div class="style-option selected flex items-start gap-3 p-3 rounded-xl border-2 border-primary-500 bg-primary-50/50 cursor-pointer" data-style="balanced" onclick="selectStyle('balanced')">
+                        <span class="text-xl mt-0.5">⚖️</span>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-gray-800 text-sm">Balanced Mix</span>
+                                <span class="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full font-medium">Recommended</span>
+                            </div>
+                            <p class="text-gray-500 text-xs mt-0.5">A smart blend of short breaks and longer vacations</p>
+                        </div>
+                    </div>
+                    <div class="style-option flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer" data-style="longWeekends" onclick="selectStyle('longWeekends')">
+                        <span class="text-xl mt-0.5">🗓️</span>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800 text-sm">Long Weekends</div>
+                            <p class="text-gray-500 text-xs mt-0.5">More 3-4 day weekends throughout the year</p>
+                        </div>
+                    </div>
+                    <div class="style-option flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer" data-style="miniBreaks" onclick="selectStyle('miniBreaks')">
+                        <span class="text-xl mt-0.5">✨</span>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800 text-sm">Mini Breaks</div>
+                            <p class="text-gray-500 text-xs mt-0.5">Several 5-6 day breaks spread across the year</p>
+                        </div>
+                    </div>
+                    <div class="style-option flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer" data-style="weekLong" onclick="selectStyle('weekLong')">
+                        <span class="text-xl mt-0.5">🏖️</span>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800 text-sm">Week-long Breaks</div>
+                            <p class="text-gray-500 text-xs mt-0.5">Focus on 7-9 day breaks for more substantial time off</p>
+                        </div>
+                    </div>
+                    <div class="style-option flex items-start gap-3 p-3 rounded-xl border-2 border-gray-200 cursor-pointer" data-style="extended" onclick="selectStyle('extended')">
+                        <span class="text-xl mt-0.5">✈️</span>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800 text-sm">Extended Vacations</div>
+                            <p class="text-gray-500 text-xs mt-0.5">Longer 10-15 day vacations for deeper relaxation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4: Public Holidays -->
+        <section class="bg-white rounded-2xl mb-4 shadow-sm border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('holidays')" class="w-full px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-white text-left flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-semibold flex items-center justify-center">4</span>
+                    <div>
+                        <h2 class="text-primary-700 font-semibold text-base">Public Holidays</h2>
+                        <p class="text-gray-500 text-sm mt-0.5" id="holidaysSummary">Select your country</p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-medium">Required</span>
+                </div>
+                <svg id="holidaysChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="holidaysContent" class="p-5">
+                <div class="space-y-4">
+                    <div>
+                        <label for="country" class="block text-gray-600 text-xs font-medium uppercase tracking-wide mb-1.5">Select Country</label>
+                        <select id="country" class="w-full h-11 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-400 cursor-pointer transition-colors">
+                            <option value="">Choose a country...</option>
+                            <option value="NO">Norway</option>
+                            <option value="SE">Sweden</option>
+                            <option value="DK">Denmark</option>
+                            <option value="FI">Finland</option>
+                            <option value="US">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="ES">Spain</option>
+                            <option value="IT">Italy</option>
+                            <option value="NL">Netherlands</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                        </select>
+                    </div>
+                    <div id="holidaysList" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-600 text-xs font-medium uppercase tracking-wide">Detected Holidays</span>
+                            <span id="holidaysCount" class="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full font-medium">0 found</span>
+                        </div>
+                        <div id="holidaysListContent" class="bg-gray-50 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1 text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Options -->
+        <section class="bg-white rounded-2xl mb-4 shadow-sm border border-gray-100 overflow-hidden">
+            <button onclick="toggleSection('advanced')" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50/50 transition-colors">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <h2 class="text-gray-700 font-semibold text-base">Advanced Options</h2>
+                    <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-medium">Optional</span>
+                </div>
+                <svg id="advancedChevron" class="w-5 h-5 text-gray-400 transition-transform duration-200 -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="advancedContent" class="hidden px-5 pb-5 space-y-6">
+                <!-- Pre-Booked Vacation Days -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-amber-500">📅</span>
+                        <h3 class="text-gray-700 font-medium text-sm">Pre-Booked Vacation Days</h3>
+                        <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">Optional</span>
+                    </div>
+                    <p class="text-gray-500 text-xs mb-3">Add any vacation days you've already planned or approved. The optimizer will factor these in.</p>
+                    <div id="prebookedCalendar" class="bg-gray-50 rounded-xl p-3">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+                    <p class="text-gray-400 text-xs mt-2">Click dates to select/deselect pre-booked days</p>
+                    <div id="prebookedDaysList" class="mt-2 text-sm text-gray-600"></div>
+                </div>
+
+                <!-- Company Days Off -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-amber-500">🏢</span>
+                        <h3 class="text-gray-700 font-medium text-sm">Company Days Off</h3>
+                        <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">Optional</span>
+                    </div>
+                    <p class="text-gray-500 text-xs mb-3">Add company-wide days off that aren't public holidays (e.g., company closure days).</p>
+                    <div id="companyCalendar" class="bg-gray-50 rounded-xl p-3">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+                    <p class="text-gray-400 text-xs mt-2">Click dates to select/deselect company days off</p>
+                    <div id="companyDaysList" class="mt-2 text-sm text-gray-600"></div>
+                </div>
+
+                <!-- Customize Weekends -->
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-amber-500">🗓️</span>
+                        <h3 class="text-gray-700 font-medium text-sm">Customize Weekends</h3>
+                    </div>
+                    <p class="text-gray-500 text-xs mb-3">Select the days you normally have off each week.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="0">Sun</button>
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="1">Mon</button>
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="2">Tue</button>
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="3">Wed</button>
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="4">Thu</button>
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="5">Fri</button>
+                        <button class="weekend-btn px-3 py-2 text-sm rounded-lg border-2 border-gray-200 bg-white text-gray-600 transition-colors" data-day="6">Sat</button>
+                    </div>
+                    <p class="text-gray-400 text-xs mt-2">Selected: <span id="weekendSummary">Saturday and Sunday</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Generate Button -->
+        <button onclick="generatePlan()" id="generateBtn" class="w-full h-12 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors active:scale-[0.99] shadow-sm flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            Generate Optimized Plan
+        </button>
+
+        <!-- Results Section -->
+        <section id="results" class="hidden mt-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-success-50 to-white">
+                    <h2 class="text-success-700 font-semibold text-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Your Optimized Plan
+                    </h2>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="p-5 border-b border-gray-100">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="bg-primary-50 rounded-xl p-3 text-center">
+                            <div class="text-2xl font-bold text-primary-700" id="statPtoDays">0</div>
+                            <div class="text-xs text-primary-600">PTO Days</div>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-3 text-center">
+                            <div class="text-2xl font-bold text-blue-700" id="statHolidays">0</div>
+                            <div class="text-xs text-blue-600">Public Holidays</div>
+                        </div>
+                        <div class="bg-gray-100 rounded-xl p-3 text-center">
+                            <div class="text-2xl font-bold text-gray-700" id="statWeekends">0</div>
+                            <div class="text-xs text-gray-600">Weekend Days</div>
+                        </div>
+                        <div class="bg-success-50 rounded-xl p-3 text-center">
+                            <div class="text-2xl font-bold text-success-700" id="statTotalOff">0</div>
+                            <div class="text-xs text-success-600">Total Days Off</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breaks Overview -->
+                <div class="p-5 border-b border-gray-100">
+                    <h3 class="font-semibold text-gray-800 mb-3">Your Breaks</h3>
+                    <div id="breaksOverview" class="space-y-2">
+                        <!-- Breaks will be listed here -->
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="p-5">
+                    <h3 class="font-semibold text-gray-800 mb-3">Calendar View</h3>
+                    <div id="resultsCalendar" class="space-y-4">
+                        <!-- Calendar months will be rendered here -->
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="mt-4 flex flex-wrap gap-3 text-xs">
+                        <div class="flex items-center gap-1">
+                            <span class="w-4 h-4 rounded bg-[#d1fae5]"></span>
+                            <span class="text-gray-600">PTO</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-4 h-4 rounded bg-[#dbeafe]"></span>
+                            <span class="text-gray-600">Public Holiday</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-4 h-4 rounded bg-[#f3f4f6]"></span>
+                            <span class="text-gray-600">Weekend</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-4 h-4 rounded bg-[#fef3c7]"></span>
+                            <span class="text-gray-600">Company Day Off</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-gray-400 text-xs">
+            <p>Holiday Optimizer • Maximize your time off</p>
+        </footer>
+    </div>
+
+    <script>
+        // State
+        let selectedStyle = 'balanced';
+        let weekendDays = [0, 6]; // Sunday and Saturday
+        let prebookedDays = new Set();
+        let companyDays = new Set();
+        let currentCalendarMonth = new Date();
+        let prebookedCalendarMonth = new Date();
+        let companyCalendarMonth = new Date();
+
+        // Public holidays data by country
+        const publicHolidays = {
+            NO: {
+                name: 'Norway',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-04-17', name: 'Maundy Thursday' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-20', name: 'Easter Sunday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-01', name: 'Labour Day' },
+                    { date: '2025-05-17', name: 'Constitution Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-08', name: 'Whit Sunday' },
+                    { date: '2025-06-09', name: 'Whit Monday' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-04-02', name: 'Maundy Thursday' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-05', name: 'Easter Sunday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-01', name: 'Labour Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-17', name: 'Constitution Day' },
+                    { date: '2026-05-24', name: 'Whit Sunday' },
+                    { date: '2026-05-25', name: 'Whit Monday' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'Boxing Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-03-25', name: 'Maundy Thursday' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-28', name: 'Easter Sunday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-05-01', name: 'Labour Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-16', name: 'Whit Sunday' },
+                    { date: '2027-05-17', name: 'Constitution Day / Whit Monday' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'Boxing Day' }
+                ]
+            },
+            SE: {
+                name: 'Sweden',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-01-06', name: 'Epiphany' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-20', name: 'Easter Sunday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-01', name: 'Labour Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-06', name: 'National Day' },
+                    { date: '2025-06-08', name: 'Whit Sunday' },
+                    { date: '2025-06-21', name: 'Midsummer Day' },
+                    { date: '2025-11-01', name: 'All Saints\' Day' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-01-06', name: 'Epiphany' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-05', name: 'Easter Sunday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-01', name: 'Labour Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-24', name: 'Whit Sunday' },
+                    { date: '2026-06-06', name: 'National Day' },
+                    { date: '2026-06-20', name: 'Midsummer Day' },
+                    { date: '2026-10-31', name: 'All Saints\' Day' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'Boxing Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-01-06', name: 'Epiphany' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-28', name: 'Easter Sunday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-05-01', name: 'Labour Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-16', name: 'Whit Sunday' },
+                    { date: '2027-06-06', name: 'National Day' },
+                    { date: '2027-06-26', name: 'Midsummer Day' },
+                    { date: '2027-11-06', name: 'All Saints\' Day' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'Boxing Day' }
+                ]
+            },
+            DK: {
+                name: 'Denmark',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-04-17', name: 'Maundy Thursday' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-20', name: 'Easter Sunday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-16', name: 'General Prayer Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-05', name: 'Constitution Day' },
+                    { date: '2025-06-08', name: 'Whit Sunday' },
+                    { date: '2025-06-09', name: 'Whit Monday' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-04-02', name: 'Maundy Thursday' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-05', name: 'Easter Sunday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-01', name: 'General Prayer Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-24', name: 'Whit Sunday' },
+                    { date: '2026-05-25', name: 'Whit Monday' },
+                    { date: '2026-06-05', name: 'Constitution Day' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'Boxing Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-03-25', name: 'Maundy Thursday' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-28', name: 'Easter Sunday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-04-23', name: 'General Prayer Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-16', name: 'Whit Sunday' },
+                    { date: '2027-05-17', name: 'Whit Monday' },
+                    { date: '2027-06-05', name: 'Constitution Day' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'Boxing Day' }
+                ]
+            },
+            FI: {
+                name: 'Finland',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-01-06', name: 'Epiphany' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-20', name: 'Easter Sunday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-01', name: 'May Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-08', name: 'Whit Sunday' },
+                    { date: '2025-06-21', name: 'Midsummer Day' },
+                    { date: '2025-11-01', name: 'All Saints\' Day' },
+                    { date: '2025-12-06', name: 'Independence Day' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-01-06', name: 'Epiphany' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-05', name: 'Easter Sunday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-01', name: 'May Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-24', name: 'Whit Sunday' },
+                    { date: '2026-06-20', name: 'Midsummer Day' },
+                    { date: '2026-10-31', name: 'All Saints\' Day' },
+                    { date: '2026-12-06', name: 'Independence Day' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'Boxing Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-01-06', name: 'Epiphany' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-28', name: 'Easter Sunday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-05-01', name: 'May Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-16', name: 'Whit Sunday' },
+                    { date: '2027-06-26', name: 'Midsummer Day' },
+                    { date: '2027-11-06', name: 'All Saints\' Day' },
+                    { date: '2027-12-06', name: 'Independence Day' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'Boxing Day' }
+                ]
+            },
+            US: {
+                name: 'United States',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-01-20', name: 'Martin Luther King Jr. Day' },
+                    { date: '2025-02-17', name: 'Presidents\' Day' },
+                    { date: '2025-05-26', name: 'Memorial Day' },
+                    { date: '2025-06-19', name: 'Juneteenth' },
+                    { date: '2025-07-04', name: 'Independence Day' },
+                    { date: '2025-09-01', name: 'Labor Day' },
+                    { date: '2025-10-13', name: 'Columbus Day' },
+                    { date: '2025-11-11', name: 'Veterans Day' },
+                    { date: '2025-11-27', name: 'Thanksgiving' },
+                    { date: '2025-12-25', name: 'Christmas Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-01-19', name: 'Martin Luther King Jr. Day' },
+                    { date: '2026-02-16', name: 'Presidents\' Day' },
+                    { date: '2026-05-25', name: 'Memorial Day' },
+                    { date: '2026-06-19', name: 'Juneteenth' },
+                    { date: '2026-07-03', name: 'Independence Day (Observed)' },
+                    { date: '2026-09-07', name: 'Labor Day' },
+                    { date: '2026-10-12', name: 'Columbus Day' },
+                    { date: '2026-11-11', name: 'Veterans Day' },
+                    { date: '2026-11-26', name: 'Thanksgiving' },
+                    { date: '2026-12-25', name: 'Christmas Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-01-18', name: 'Martin Luther King Jr. Day' },
+                    { date: '2027-02-15', name: 'Presidents\' Day' },
+                    { date: '2027-05-31', name: 'Memorial Day' },
+                    { date: '2027-06-18', name: 'Juneteenth (Observed)' },
+                    { date: '2027-07-05', name: 'Independence Day (Observed)' },
+                    { date: '2027-09-06', name: 'Labor Day' },
+                    { date: '2027-10-11', name: 'Columbus Day' },
+                    { date: '2027-11-11', name: 'Veterans Day' },
+                    { date: '2027-11-25', name: 'Thanksgiving' },
+                    { date: '2027-12-24', name: 'Christmas Day (Observed)' }
+                ]
+            },
+            UK: {
+                name: 'United Kingdom',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-05', name: 'Early May Bank Holiday' },
+                    { date: '2025-05-26', name: 'Spring Bank Holiday' },
+                    { date: '2025-08-25', name: 'Summer Bank Holiday' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-04', name: 'Early May Bank Holiday' },
+                    { date: '2026-05-25', name: 'Spring Bank Holiday' },
+                    { date: '2026-08-31', name: 'Summer Bank Holiday' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-28', name: 'Boxing Day (Observed)' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-05-03', name: 'Early May Bank Holiday' },
+                    { date: '2027-05-31', name: 'Spring Bank Holiday' },
+                    { date: '2027-08-30', name: 'Summer Bank Holiday' },
+                    { date: '2027-12-27', name: 'Christmas Day (Observed)' },
+                    { date: '2027-12-28', name: 'Boxing Day (Observed)' }
+                ]
+            },
+            DE: {
+                name: 'Germany',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-01', name: 'Labour Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-09', name: 'Whit Monday' },
+                    { date: '2025-10-03', name: 'German Unity Day' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-01', name: 'Labour Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-25', name: 'Whit Monday' },
+                    { date: '2026-10-03', name: 'German Unity Day' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'Boxing Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-05-01', name: 'Labour Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-17', name: 'Whit Monday' },
+                    { date: '2027-10-03', name: 'German Unity Day' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'Boxing Day' }
+                ]
+            },
+            FR: {
+                name: 'France',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-05-01', name: 'Labour Day' },
+                    { date: '2025-05-08', name: 'Victory in Europe Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-09', name: 'Whit Monday' },
+                    { date: '2025-07-14', name: 'Bastille Day' },
+                    { date: '2025-08-15', name: 'Assumption of Mary' },
+                    { date: '2025-11-01', name: 'All Saints\' Day' },
+                    { date: '2025-11-11', name: 'Armistice Day' },
+                    { date: '2025-12-25', name: 'Christmas Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-05-01', name: 'Labour Day' },
+                    { date: '2026-05-08', name: 'Victory in Europe Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-25', name: 'Whit Monday' },
+                    { date: '2026-07-14', name: 'Bastille Day' },
+                    { date: '2026-08-15', name: 'Assumption of Mary' },
+                    { date: '2026-11-01', name: 'All Saints\' Day' },
+                    { date: '2026-11-11', name: 'Armistice Day' },
+                    { date: '2026-12-25', name: 'Christmas Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-05-01', name: 'Labour Day' },
+                    { date: '2027-05-08', name: 'Victory in Europe Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-17', name: 'Whit Monday' },
+                    { date: '2027-07-14', name: 'Bastille Day' },
+                    { date: '2027-08-15', name: 'Assumption of Mary' },
+                    { date: '2027-11-01', name: 'All Saints\' Day' },
+                    { date: '2027-11-11', name: 'Armistice Day' },
+                    { date: '2027-12-25', name: 'Christmas Day' }
+                ]
+            },
+            ES: {
+                name: 'Spain',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-01-06', name: 'Epiphany' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-05-01', name: 'Labour Day' },
+                    { date: '2025-08-15', name: 'Assumption of Mary' },
+                    { date: '2025-10-12', name: 'National Day' },
+                    { date: '2025-11-01', name: 'All Saints\' Day' },
+                    { date: '2025-12-06', name: 'Constitution Day' },
+                    { date: '2025-12-08', name: 'Immaculate Conception' },
+                    { date: '2025-12-25', name: 'Christmas Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-01-06', name: 'Epiphany' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-05-01', name: 'Labour Day' },
+                    { date: '2026-08-15', name: 'Assumption of Mary' },
+                    { date: '2026-10-12', name: 'National Day' },
+                    { date: '2026-11-01', name: 'All Saints\' Day' },
+                    { date: '2026-12-06', name: 'Constitution Day' },
+                    { date: '2026-12-08', name: 'Immaculate Conception' },
+                    { date: '2026-12-25', name: 'Christmas Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-01-06', name: 'Epiphany' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-05-01', name: 'Labour Day' },
+                    { date: '2027-08-15', name: 'Assumption of Mary' },
+                    { date: '2027-10-12', name: 'National Day' },
+                    { date: '2027-11-01', name: 'All Saints\' Day' },
+                    { date: '2027-12-06', name: 'Constitution Day' },
+                    { date: '2027-12-08', name: 'Immaculate Conception' },
+                    { date: '2027-12-25', name: 'Christmas Day' }
+                ]
+            },
+            IT: {
+                name: 'Italy',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-01-06', name: 'Epiphany' },
+                    { date: '2025-04-20', name: 'Easter Sunday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-04-25', name: 'Liberation Day' },
+                    { date: '2025-05-01', name: 'Labour Day' },
+                    { date: '2025-06-02', name: 'Republic Day' },
+                    { date: '2025-08-15', name: 'Assumption of Mary' },
+                    { date: '2025-11-01', name: 'All Saints\' Day' },
+                    { date: '2025-12-08', name: 'Immaculate Conception' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'St. Stephen\'s Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-01-06', name: 'Epiphany' },
+                    { date: '2026-04-05', name: 'Easter Sunday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-04-25', name: 'Liberation Day' },
+                    { date: '2026-05-01', name: 'Labour Day' },
+                    { date: '2026-06-02', name: 'Republic Day' },
+                    { date: '2026-08-15', name: 'Assumption of Mary' },
+                    { date: '2026-11-01', name: 'All Saints\' Day' },
+                    { date: '2026-12-08', name: 'Immaculate Conception' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'St. Stephen\'s Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-01-06', name: 'Epiphany' },
+                    { date: '2027-03-28', name: 'Easter Sunday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-04-25', name: 'Liberation Day' },
+                    { date: '2027-05-01', name: 'Labour Day' },
+                    { date: '2027-06-02', name: 'Republic Day' },
+                    { date: '2027-08-15', name: 'Assumption of Mary' },
+                    { date: '2027-11-01', name: 'All Saints\' Day' },
+                    { date: '2027-12-08', name: 'Immaculate Conception' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'St. Stephen\'s Day' }
+                ]
+            },
+            NL: {
+                name: 'Netherlands',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-20', name: 'Easter Sunday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-04-27', name: 'King\'s Day' },
+                    { date: '2025-05-05', name: 'Liberation Day' },
+                    { date: '2025-05-29', name: 'Ascension Day' },
+                    { date: '2025-06-08', name: 'Whit Sunday' },
+                    { date: '2025-06-09', name: 'Whit Monday' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-05', name: 'Easter Sunday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-04-27', name: 'King\'s Day' },
+                    { date: '2026-05-05', name: 'Liberation Day' },
+                    { date: '2026-05-14', name: 'Ascension Day' },
+                    { date: '2026-05-24', name: 'Whit Sunday' },
+                    { date: '2026-05-25', name: 'Whit Monday' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-26', name: 'Boxing Day' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-28', name: 'Easter Sunday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-04-27', name: 'King\'s Day' },
+                    { date: '2027-05-05', name: 'Liberation Day' },
+                    { date: '2027-05-06', name: 'Ascension Day' },
+                    { date: '2027-05-16', name: 'Whit Sunday' },
+                    { date: '2027-05-17', name: 'Whit Monday' },
+                    { date: '2027-12-25', name: 'Christmas Day' },
+                    { date: '2027-12-26', name: 'Boxing Day' }
+                ]
+            },
+            CA: {
+                name: 'Canada',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-02-17', name: 'Family Day' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-05-19', name: 'Victoria Day' },
+                    { date: '2025-07-01', name: 'Canada Day' },
+                    { date: '2025-08-04', name: 'Civic Holiday' },
+                    { date: '2025-09-01', name: 'Labour Day' },
+                    { date: '2025-09-30', name: 'National Day for Truth and Reconciliation' },
+                    { date: '2025-10-13', name: 'Thanksgiving' },
+                    { date: '2025-11-11', name: 'Remembrance Day' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-02-16', name: 'Family Day' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-05-18', name: 'Victoria Day' },
+                    { date: '2026-07-01', name: 'Canada Day' },
+                    { date: '2026-08-03', name: 'Civic Holiday' },
+                    { date: '2026-09-07', name: 'Labour Day' },
+                    { date: '2026-09-30', name: 'National Day for Truth and Reconciliation' },
+                    { date: '2026-10-12', name: 'Thanksgiving' },
+                    { date: '2026-11-11', name: 'Remembrance Day' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-28', name: 'Boxing Day (Observed)' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-02-15', name: 'Family Day' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-05-24', name: 'Victoria Day' },
+                    { date: '2027-07-01', name: 'Canada Day' },
+                    { date: '2027-08-02', name: 'Civic Holiday' },
+                    { date: '2027-09-06', name: 'Labour Day' },
+                    { date: '2027-09-30', name: 'National Day for Truth and Reconciliation' },
+                    { date: '2027-10-11', name: 'Thanksgiving' },
+                    { date: '2027-11-11', name: 'Remembrance Day' },
+                    { date: '2027-12-27', name: 'Christmas Day (Observed)' },
+                    { date: '2027-12-28', name: 'Boxing Day (Observed)' }
+                ]
+            },
+            AU: {
+                name: 'Australia',
+                2025: [
+                    { date: '2025-01-01', name: 'New Year\'s Day' },
+                    { date: '2025-01-27', name: 'Australia Day (Observed)' },
+                    { date: '2025-04-18', name: 'Good Friday' },
+                    { date: '2025-04-19', name: 'Easter Saturday' },
+                    { date: '2025-04-21', name: 'Easter Monday' },
+                    { date: '2025-04-25', name: 'Anzac Day' },
+                    { date: '2025-06-09', name: 'Queen\'s Birthday' },
+                    { date: '2025-12-25', name: 'Christmas Day' },
+                    { date: '2025-12-26', name: 'Boxing Day' }
+                ],
+                2026: [
+                    { date: '2026-01-01', name: 'New Year\'s Day' },
+                    { date: '2026-01-26', name: 'Australia Day' },
+                    { date: '2026-04-03', name: 'Good Friday' },
+                    { date: '2026-04-04', name: 'Easter Saturday' },
+                    { date: '2026-04-06', name: 'Easter Monday' },
+                    { date: '2026-04-25', name: 'Anzac Day' },
+                    { date: '2026-06-08', name: 'Queen\'s Birthday' },
+                    { date: '2026-12-25', name: 'Christmas Day' },
+                    { date: '2026-12-28', name: 'Boxing Day (Observed)' }
+                ],
+                2027: [
+                    { date: '2027-01-01', name: 'New Year\'s Day' },
+                    { date: '2027-01-26', name: 'Australia Day' },
+                    { date: '2027-03-26', name: 'Good Friday' },
+                    { date: '2027-03-27', name: 'Easter Saturday' },
+                    { date: '2027-03-29', name: 'Easter Monday' },
+                    { date: '2027-04-26', name: 'Anzac Day (Observed)' },
+                    { date: '2027-06-14', name: 'Queen\'s Birthday' },
+                    { date: '2027-12-27', name: 'Christmas Day (Observed)' },
+                    { date: '2027-12-28', name: 'Boxing Day (Observed)' }
+                ]
+            }
+        };
+
+        // Utility functions
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function parseDate(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        function isWeekend(date) {
+            return weekendDays.includes(date.getDay());
+        }
+
+        function getTimeframe() {
+            const selected = document.querySelector('input[name="timeframe"]:checked').value;
+            const today = new Date();
+
+            if (selected === '2025') {
+                return { start: new Date(2025, 0, 1), end: new Date(2025, 11, 31) };
+            } else if (selected === '2026') {
+                return { start: new Date(2026, 0, 1), end: new Date(2026, 11, 31) };
+            } else if (selected === 'today') {
+                return { start: today, end: new Date(today.getFullYear(), 11, 31) };
+            } else {
+                const month = parseInt(document.getElementById('customMonth').value);
+                const year = parseInt(document.getElementById('customYear').value);
+                const start = new Date(year, month, 1);
+                const end = new Date(year + 1, month, 0);
+                return { start, end };
+            }
+        }
+
+        function getHolidaysInRange(country, start, end) {
+            if (!publicHolidays[country]) return [];
+
+            const holidays = [];
+            const startYear = start.getFullYear();
+            const endYear = end.getFullYear();
+
+            for (let year = startYear; year <= endYear; year++) {
+                const yearHolidays = publicHolidays[country][year] || [];
+                yearHolidays.forEach(h => {
+                    const date = parseDate(h.date);
+                    if (date >= start && date <= end) {
+                        holidays.push({ ...h, date });
+                    }
+                });
+            }
+
+            return holidays;
+        }
+
+        // Section toggle
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + 'Content');
+            const chevron = document.getElementById(sectionId + 'Chevron');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        // Style selection
+        function selectStyle(style) {
+            selectedStyle = style;
+            document.querySelectorAll('.style-option').forEach(el => {
+                el.classList.remove('selected', 'border-primary-500', 'bg-primary-50/50');
+                el.classList.add('border-gray-200');
+            });
+            const selected = document.querySelector(`.style-option[data-style="${style}"]`);
+            selected.classList.add('selected', 'border-primary-500', 'bg-primary-50/50');
+            selected.classList.remove('border-gray-200');
+
+            const styleNames = {
+                balanced: 'Balanced Mix',
+                longWeekends: 'Long Weekends',
+                miniBreaks: 'Mini Breaks',
+                weekLong: 'Week-long Breaks',
+                extended: 'Extended Vacations'
+            };
+            document.getElementById('styleSummary').textContent = styleNames[style];
+        }
+
+        // Weekend customization
+        function initWeekendButtons() {
+            document.querySelectorAll('.weekend-btn').forEach(btn => {
+                const day = parseInt(btn.dataset.day);
+                if (weekendDays.includes(day)) {
+                    btn.classList.add('bg-primary-500', 'text-white', 'border-primary-500');
+                    btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                }
+
+                btn.addEventListener('click', () => {
+                    const day = parseInt(btn.dataset.day);
+                    if (weekendDays.includes(day)) {
+                        weekendDays = weekendDays.filter(d => d !== day);
+                        btn.classList.remove('bg-primary-500', 'text-white', 'border-primary-500');
+                        btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                    } else {
+                        weekendDays.push(day);
+                        btn.classList.add('bg-primary-500', 'text-white', 'border-primary-500');
+                        btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                    }
+                    updateWeekendSummary();
+                });
+            });
+        }
+
+        function updateWeekendSummary() {
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const selectedDays = weekendDays.sort((a, b) => a - b).map(d => dayNames[d]);
+            document.getElementById('weekendSummary').textContent = selectedDays.length ? selectedDays.join(' and ') : 'None';
+        }
+
+        // Country selection
+        document.getElementById('country').addEventListener('change', function() {
+            const country = this.value;
+            if (!country) {
+                document.getElementById('holidaysList').classList.add('hidden');
+                document.getElementById('holidaysSummary').textContent = 'Select your country';
+                return;
+            }
+
+            const timeframe = getTimeframe();
+            const holidays = getHolidaysInRange(country, timeframe.start, timeframe.end);
+
+            document.getElementById('holidaysCount').textContent = `${holidays.length} found`;
+            document.getElementById('holidaysSummary').textContent = `${publicHolidays[country].name} - ${holidays.length} holidays`;
+
+            const listContent = document.getElementById('holidaysListContent');
+            listContent.innerHTML = holidays.map(h => `
+                <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                    <span class="text-gray-700">${h.name}</span>
+                    <span class="text-gray-400 text-xs">${h.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('holidaysList').classList.remove('hidden');
+        });
+
+        // Timeframe change
+        document.querySelectorAll('input[name="timeframe"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const customOptions = document.getElementById('customTimeframeOptions');
+                if (this.value === 'custom') {
+                    customOptions.classList.remove('hidden');
+                } else {
+                    customOptions.classList.add('hidden');
+                }
+
+                updateTimeframeSummary();
+
+                // Re-trigger country selection to update holidays
+                const countrySelect = document.getElementById('country');
+                if (countrySelect.value) {
+                    countrySelect.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+
+        function updateTimeframeSummary() {
+            const selected = document.querySelector('input[name="timeframe"]:checked').value;
+            const summary = document.getElementById('timeframeSummary');
+
+            if (selected === '2025') {
+                summary.textContent = 'Calendar Year 2025';
+            } else if (selected === '2026') {
+                summary.textContent = 'Calendar Year 2026';
+            } else if (selected === 'today') {
+                const today = new Date();
+                summary.textContent = `From ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to Dec 31`;
+            } else {
+                const month = document.getElementById('customMonth').value;
+                const year = document.getElementById('customYear').value;
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                summary.textContent = `12 months from ${monthNames[month]} ${year}`;
+            }
+        }
+
+        // Calendar rendering
+        function renderMiniCalendar(containerId, month, onDateClick, highlightSet, highlightClass) {
+            const container = document.getElementById(containerId);
+            const year = month.getFullYear();
+            const monthNum = month.getMonth();
+
+            const firstDay = new Date(year, monthNum, 1);
+            const lastDay = new Date(year, monthNum + 1, 0);
+            const startDay = firstDay.getDay();
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+            let html = `
+                <div class="flex items-center justify-between mb-2">
+                    <button onclick="changeCalendarMonth('${containerId}', -1)" class="p-1 hover:bg-gray-200 rounded transition-colors">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span class="text-sm font-medium text-gray-700">${monthNames[monthNum]} ${year}</span>
+                    <button onclick="changeCalendarMonth('${containerId}', 1)" class="p-1 hover:bg-gray-200 rounded transition-colors">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-0.5 text-center mb-1">
+                    <div class="text-xs font-medium text-gray-400 py-1">S</div>
+                    <div class="text-xs font-medium text-gray-400 py-1">M</div>
+                    <div class="text-xs font-medium text-gray-400 py-1">T</div>
+                    <div class="text-xs font-medium text-gray-400 py-1">W</div>
+                    <div class="text-xs font-medium text-gray-400 py-1">T</div>
+                    <div class="text-xs font-medium text-gray-400 py-1">F</div>
+                    <div class="text-xs font-medium text-gray-400 py-1">S</div>
+                </div>
+                <div class="grid grid-cols-7 gap-0.5">
+            `;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Empty cells before first day
+            for (let i = 0; i < startDay; i++) {
+                html += `<div class="calendar-day outside"></div>`;
+            }
+
+            // Days of month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, monthNum, day);
+                const dateStr = formatDate(date);
+                const isToday = date.getTime() === today.getTime();
+                const isSelected = highlightSet.has(dateStr);
+
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (isSelected) classes += ` ${highlightClass}`;
+
+                html += `<div class="${classes}" data-date="${dateStr}" onclick="toggleCalendarDate('${containerId}', '${dateStr}')">${day}</div>`;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function changeCalendarMonth(containerId, delta) {
+            if (containerId === 'prebookedCalendar') {
+                prebookedCalendarMonth.setMonth(prebookedCalendarMonth.getMonth() + delta);
+                renderMiniCalendar('prebookedCalendar', prebookedCalendarMonth, null, prebookedDays, 'prebooked-day');
+            } else if (containerId === 'companyCalendar') {
+                companyCalendarMonth.setMonth(companyCalendarMonth.getMonth() + delta);
+                renderMiniCalendar('companyCalendar', companyCalendarMonth, null, companyDays, 'company-day');
+            }
+        }
+
+        function toggleCalendarDate(containerId, dateStr) {
+            if (containerId === 'prebookedCalendar') {
+                if (prebookedDays.has(dateStr)) {
+                    prebookedDays.delete(dateStr);
+                } else {
+                    prebookedDays.add(dateStr);
+                }
+                renderMiniCalendar('prebookedCalendar', prebookedCalendarMonth, null, prebookedDays, 'prebooked-day');
+                updatePrebookedList();
+            } else if (containerId === 'companyCalendar') {
+                if (companyDays.has(dateStr)) {
+                    companyDays.delete(dateStr);
+                } else {
+                    companyDays.add(dateStr);
+                }
+                renderMiniCalendar('companyCalendar', companyCalendarMonth, null, companyDays, 'company-day');
+                updateCompanyList();
+            }
+        }
+
+        function updatePrebookedList() {
+            const list = document.getElementById('prebookedDaysList');
+            if (prebookedDays.size === 0) {
+                list.innerHTML = '<span class="text-gray-400 text-xs">No pre-booked days selected</span>';
+            } else {
+                const dates = Array.from(prebookedDays).sort().map(d => {
+                    const date = parseDate(d);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+                list.innerHTML = `<span class="text-primary-600 text-xs font-medium">${dates.length} days: ${dates.join(', ')}</span>`;
+            }
+        }
+
+        function updateCompanyList() {
+            const list = document.getElementById('companyDaysList');
+            if (companyDays.size === 0) {
+                list.innerHTML = '<span class="text-gray-400 text-xs">No company days selected</span>';
+            } else {
+                const dates = Array.from(companyDays).sort().map(d => {
+                    const date = parseDate(d);
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                });
+                list.innerHTML = `<span class="text-amber-600 text-xs font-medium">${dates.length} days: ${dates.join(', ')}</span>`;
+            }
+        }
+
+        // Optimization algorithm
+        function generatePlan() {
+            const ptoDays = parseInt(document.getElementById('ptoDays').value) || 0;
+            const country = document.getElementById('country').value;
+
+            if (ptoDays < 1) {
+                alert('Please enter the number of PTO days available.');
+                return;
+            }
+
+            if (!country) {
+                alert('Please select your country to load public holidays.');
+                return;
+            }
+
+            const timeframe = getTimeframe();
+            const holidays = getHolidaysInRange(country, timeframe.start, timeframe.end);
+            const holidayDates = new Set(holidays.map(h => formatDate(h.date)));
+
+            // Get all work days in the timeframe
+            const workDays = [];
+            const allDays = [];
+            const current = new Date(timeframe.start);
+
+            while (current <= timeframe.end) {
+                const dateStr = formatDate(current);
+                allDays.push(dateStr);
+
+                if (!isWeekend(current) && !holidayDates.has(dateStr) && !companyDays.has(dateStr)) {
+                    workDays.push(dateStr);
+                }
+
+                current.setDate(current.getDate() + 1);
+            }
+
+            // Score each potential PTO day based on bridge potential
+            const dayScores = workDays.map(dateStr => {
+                const date = parseDate(dateStr);
+                let score = 0;
+
+                // Check surrounding days for holidays/weekends
+                for (let offset = -3; offset <= 3; offset++) {
+                    if (offset === 0) continue;
+                    const checkDate = new Date(date);
+                    checkDate.setDate(checkDate.getDate() + offset);
+                    const checkStr = formatDate(checkDate);
+
+                    if (isWeekend(checkDate) || holidayDates.has(checkStr) || companyDays.has(checkStr)) {
+                        score += Math.max(0, 4 - Math.abs(offset));
+                    }
+                }
+
+                return { date: dateStr, score };
+            });
+
+            // Sort by score descending
+            dayScores.sort((a, b) => b.score - a.score);
+
+            // Adjust selection based on style
+            let selectedPTO = new Set(prebookedDays);
+            let remainingDays = ptoDays - prebookedDays.size;
+
+            if (remainingDays > 0) {
+                // Style-based selection
+                if (selectedStyle === 'balanced' || selectedStyle === 'longWeekends') {
+                    // Prefer high-scoring individual days
+                    for (const day of dayScores) {
+                        if (remainingDays <= 0) break;
+                        if (!selectedPTO.has(day.date)) {
+                            selectedPTO.add(day.date);
+                            remainingDays--;
+                        }
+                    }
+                } else if (selectedStyle === 'miniBreaks' || selectedStyle === 'weekLong' || selectedStyle === 'extended') {
+                    // Prefer consecutive days
+                    const targetLength = selectedStyle === 'miniBreaks' ? 3 :
+                                        selectedStyle === 'weekLong' ? 5 : 7;
+
+                    // Find clusters around holidays
+                    const clusterStarts = [];
+                    for (const holiday of holidays) {
+                        const holidayDate = holiday.date;
+                        // Look for work days before and after
+                        for (let offset = -targetLength; offset <= targetLength; offset++) {
+                            const startDate = new Date(holidayDate);
+                            startDate.setDate(startDate.getDate() + offset);
+                            const startStr = formatDate(startDate);
+                            if (workDays.includes(startStr) && !selectedPTO.has(startStr)) {
+                                const cluster = { start: startStr, days: [], score: 0 };
+                                let current = new Date(startDate);
+                                for (let i = 0; i < targetLength && remainingDays > cluster.days.length; i++) {
+                                    const currentStr = formatDate(current);
+                                    if (workDays.includes(currentStr) && !selectedPTO.has(currentStr)) {
+                                        cluster.days.push(currentStr);
+                                        cluster.score += dayScores.find(d => d.date === currentStr)?.score || 0;
+                                    }
+                                    current.setDate(current.getDate() + 1);
+                                }
+                                if (cluster.days.length > 0) {
+                                    clusterStarts.push(cluster);
+                                }
+                            }
+                        }
+                    }
+
+                    // Sort clusters by score and add
+                    clusterStarts.sort((a, b) => b.score - a.score);
+                    for (const cluster of clusterStarts) {
+                        if (remainingDays <= 0) break;
+                        for (const day of cluster.days) {
+                            if (remainingDays <= 0) break;
+                            if (!selectedPTO.has(day)) {
+                                selectedPTO.add(day);
+                                remainingDays--;
+                            }
+                        }
+                    }
+
+                    // Fill remaining with high-scoring days
+                    for (const day of dayScores) {
+                        if (remainingDays <= 0) break;
+                        if (!selectedPTO.has(day.date)) {
+                            selectedPTO.add(day.date);
+                            remainingDays--;
+                        }
+                    }
+                }
+            }
+
+            // Calculate breaks (consecutive days off)
+            const breaks = calculateBreaks(timeframe, selectedPTO, holidayDates);
+
+            // Calculate stats
+            let weekendCount = 0;
+            const current2 = new Date(timeframe.start);
+            while (current2 <= timeframe.end) {
+                if (isWeekend(current2)) weekendCount++;
+                current2.setDate(current2.getDate() + 1);
+            }
+
+            const totalOff = selectedPTO.size + holidays.length + weekendCount + companyDays.size;
+
+            // Update stats
+            document.getElementById('statPtoDays').textContent = selectedPTO.size;
+            document.getElementById('statHolidays').textContent = holidays.length;
+            document.getElementById('statWeekends').textContent = weekendCount;
+            document.getElementById('statTotalOff').textContent = totalOff;
+
+            // Render breaks overview
+            renderBreaksOverview(breaks);
+
+            // Render calendar
+            renderResultsCalendar(timeframe, selectedPTO, holidayDates, companyDays);
+
+            // Show results
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function calculateBreaks(timeframe, ptoDays, holidayDates) {
+            const breaks = [];
+            let currentBreak = null;
+
+            const current = new Date(timeframe.start);
+            while (current <= timeframe.end) {
+                const dateStr = formatDate(current);
+                const isOff = isWeekend(current) || ptoDays.has(dateStr) || holidayDates.has(dateStr) || companyDays.has(dateStr);
+
+                if (isOff) {
+                    if (!currentBreak) {
+                        currentBreak = { start: new Date(current), end: new Date(current), days: 1 };
+                    } else {
+                        currentBreak.end = new Date(current);
+                        currentBreak.days++;
+                    }
+                } else {
+                    if (currentBreak && currentBreak.days >= 3) {
+                        breaks.push(currentBreak);
+                    }
+                    currentBreak = null;
+                }
+
+                current.setDate(current.getDate() + 1);
+            }
+
+            // Don't forget the last break
+            if (currentBreak && currentBreak.days >= 3) {
+                breaks.push(currentBreak);
+            }
+
+            return breaks;
+        }
+
+        function renderBreaksOverview(breaks) {
+            const container = document.getElementById('breaksOverview');
+
+            if (breaks.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No significant breaks (3+ days) found.</p>';
+                return;
+            }
+
+            container.innerHTML = breaks.map((b, i) => {
+                const startStr = b.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const endStr = b.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-success-100 text-success-700 text-sm font-semibold flex items-center justify-center">${i + 1}</span>
+                            <div>
+                                <div class="font-medium text-gray-800 text-sm">${startStr} - ${endStr}</div>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-success-100 text-success-700 rounded-full text-sm font-semibold">${b.days} days</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderResultsCalendar(timeframe, ptoDays, holidayDates, companyDaysSet) {
+            const container = document.getElementById('resultsCalendar');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+            let html = '';
+            const current = new Date(timeframe.start.getFullYear(), timeframe.start.getMonth(), 1);
+            const endMonth = new Date(timeframe.end.getFullYear(), timeframe.end.getMonth(), 1);
+
+            while (current <= endMonth) {
+                const year = current.getFullYear();
+                const month = current.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDay = firstDay.getDay();
+
+                html += `
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <div class="text-sm font-semibold text-gray-700 mb-2 text-center">${monthNames[month]} ${year}</div>
+                        <div class="grid grid-cols-7 gap-0.5 text-center mb-1">
+                            <div class="text-xs font-medium text-gray-400">S</div>
+                            <div class="text-xs font-medium text-gray-400">M</div>
+                            <div class="text-xs font-medium text-gray-400">T</div>
+                            <div class="text-xs font-medium text-gray-400">W</div>
+                            <div class="text-xs font-medium text-gray-400">T</div>
+                            <div class="text-xs font-medium text-gray-400">F</div>
+                            <div class="text-xs font-medium text-gray-400">S</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-0.5">
+                `;
+
+                // Empty cells
+                for (let i = 0; i < startDay; i++) {
+                    html += '<div class="calendar-day outside"></div>';
+                }
+
+                // Days
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const date = new Date(year, month, day);
+                    const dateStr = formatDate(date);
+
+                    let classes = 'calendar-day';
+                    if (ptoDays.has(dateStr)) {
+                        classes += ' pto-day';
+                    } else if (holidayDates.has(dateStr)) {
+                        classes += ' holiday-day';
+                    } else if (companyDaysSet.has(dateStr)) {
+                        classes += ' company-day';
+                    } else if (isWeekend(date)) {
+                        classes += ' weekend-day';
+                    }
+
+                    html += `<div class="${classes}">${day}</div>`;
+                }
+
+                html += '</div></div>';
+                current.setMonth(current.getMonth() + 1);
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initWeekendButtons();
+            updateWeekendSummary();
+
+            // Set "From Today" label
+            const today = new Date();
+            document.getElementById('fromTodayLabel').textContent = `${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} through end of year`;
+
+            // Initialize calendars
+            renderMiniCalendar('prebookedCalendar', prebookedCalendarMonth, null, prebookedDays, 'prebooked-day');
+            renderMiniCalendar('companyCalendar', companyCalendarMonth, null, companyDays, 'company-day');
+            updatePrebookedList();
+            updateCompanyList();
+
+            // Custom timeframe listeners
+            document.getElementById('customMonth').addEventListener('change', updateTimeframeSummary);
+            document.getElementById('customYear').addEventListener('change', updateTimeframeSummary);
+        });
+    </script>
+</body>
+</html>
