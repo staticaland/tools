@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Snow Globe Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Georgia', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #a0d2db;
+            text-align: center;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .snow-globe-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .snow-globe {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+                        linear-gradient(180deg, #1e3a5f 0%, #0d2137 100%);
+            border: 8px solid #8b7355;
+            box-shadow:
+                inset 0 0 50px rgba(255,255,255,0.1),
+                0 10px 30px rgba(0,0,0,0.5),
+                0 0 60px rgba(100, 200, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+            transition: transform 0.1s;
+        }
+
+        .snow-globe:active {
+            cursor: grabbing;
+        }
+
+        .snow-globe.shaking {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            20% { transform: translateX(-10px) rotate(-5deg); }
+            40% { transform: translateX(10px) rotate(5deg); }
+            60% { transform: translateX(-10px) rotate(-3deg); }
+            80% { transform: translateX(10px) rotate(3deg); }
+        }
+
+        .globe-base {
+            width: 200px;
+            height: 60px;
+            background: linear-gradient(180deg, #8b4513 0%, #654321 50%, #3d2914 100%);
+            border-radius: 10px 10px 20px 20px;
+            margin: -20px auto 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .base-decoration {
+            color: #ffd700;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 10px;
+            pointer-events: none;
+            opacity: 0.8;
+            text-shadow: 0 0 5px white;
+        }
+
+        .tree {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 80px solid #228b22;
+        }
+
+        .tree::before {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 60px solid #1e7b1e;
+        }
+
+        .tree::after {
+            content: '⭐';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+        }
+
+        .trunk {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 25px;
+            background: #8b4513;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+            border-radius: 0 0 50% 50%;
+        }
+
+        .letter-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 30px 0;
+            max-width: 600px;
+        }
+
+        .letter-box {
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(180deg, #2d5a3d 0%, #1e3d28 100%);
+            border: 3px solid #ffd700;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.5s;
+        }
+
+        .letter-box.revealed {
+            background: linear-gradient(180deg, #c41e3a 0%, #8b0000 100%);
+            animation: revealPop 0.5s ease-out;
+        }
+
+        .letter-box.space {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            width: 20px;
+        }
+
+        @keyframes revealPop {
+            0% { transform: scale(1.5) rotate(10deg); }
+            50% { transform: scale(1.2) rotate(-5deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        .challenges-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .challenges-title {
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, #2d5a3d 0%, #1e3d28 100%);
+            border: 2px solid #4a7c59;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .challenge-card.completed {
+            background: linear-gradient(135deg, #1e3d28 0%, #0f1f14 100%);
+            border-color: #2d5a3d;
+            opacity: 0.6;
+        }
+
+        .challenge-card.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .challenge-number {
+            color: #ffd700;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .challenge-question {
+            color: #e0e0e0;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .challenge-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #4a7c59;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .challenge-input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .challenge-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-btn {
+            background: linear-gradient(180deg, #c41e3a 0%, #8b0000 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(196, 30, 58, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .feedback.correct {
+            background: rgba(34, 139, 34, 0.3);
+            color: #90ee90;
+        }
+
+        .feedback.incorrect {
+            background: rgba(220, 20, 60, 0.3);
+            color: #ffb6c1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 5px;
+            transition: width 0.5s ease-out;
+        }
+
+        .progress-text {
+            color: #a0d2db;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .shake-hint {
+            color: #a0d2db;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .celebration {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 1s;
+        }
+
+        .celebration.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .celebration-content {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .celebration h2 {
+            color: #ffd700;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        .gift-reveal {
+            color: white;
+            font-size: 2rem;
+            margin: 30px 0;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border-radius: 15px;
+            border: 3px solid #ffd700;
+            animation: giftPulse 1s infinite;
+        }
+
+        @keyframes giftPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 215, 0, 0.8); }
+        }
+
+        .celebration-emoji {
+            font-size: 4rem;
+            margin: 20px;
+        }
+
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-width: 500px;
+        }
+
+        .instructions p {
+            color: #a0d2db;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .snow-globe {
+                width: 250px;
+                height: 250px;
+            }
+
+            .letter-box {
+                width: 32px;
+                height: 42px;
+                font-size: 1.2rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ Magic Snow Globe ✨</h1>
+    <p class="subtitle">Solve the challenges to reveal your Christmas gift!</p>
+
+    <div class="instructions">
+        <p>Complete each challenge below. For every correct answer, shake the snow globe to reveal a letter of your special gift!</p>
+    </div>
+
+    <div class="snow-globe-container">
+        <div class="snow-globe" id="snowGlobe">
+            <div class="ground"></div>
+            <div class="trunk"></div>
+            <div class="tree"></div>
+        </div>
+        <div class="globe-base">
+            <span class="base-decoration">❄️ 2024 ❄️</span>
+        </div>
+    </div>
+
+    <p class="shake-hint" id="shakeHint" style="display: none;">🎄 Click the globe to shake and reveal a letter! 🎄</p>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+    <p class="progress-text" id="progressText">0 of 22 letters revealed</p>
+
+    <div class="letter-display" id="letterDisplay"></div>
+
+    <div class="challenges-section">
+        <h2 class="challenges-title">🎁 Christmas Challenges 🎁</h2>
+        <div id="challengesList"></div>
+    </div>
+
+    <div class="celebration" id="celebration">
+        <div class="celebration-content">
+            <div class="celebration-emoji">🎄🎁🎅</div>
+            <h2>Merry Christmas!</h2>
+            <p style="color: #a0d2db; font-size: 1.2rem; margin-bottom: 20px;">Your special gift is...</p>
+            <div class="gift-reveal">💇 A Day at the Hairdresser! 💇</div>
+            <div class="celebration-emoji">✨💖✨</div>
+            <p style="color: #ffd700; margin-top: 20px; font-size: 1.1rem;">Enjoy your pampering session!</p>
+        </div>
+    </div>
+
+    <script>
+        const SECRET_MESSAGE = "A DAY AT THE HAIRDRESSER";
+
+        const challenges = [
+            {
+                question: "What do you hang on the door at Christmas? (Hint: It's round and made of evergreen)",
+                answer: "wreath",
+                hints: ["It starts with 'W'", "People decorate it with ribbons and bows"]
+            },
+            {
+                question: "Finish the carol: 'Jingle _____, jingle all the way'",
+                answer: "bells",
+                hints: ["They make a ringing sound", "Santa's sleigh has them"]
+            },
+            {
+                question: "What color is Rudolph's famous nose?",
+                answer: "red",
+                hints: ["It's a primary color", "It glows very bright"]
+            },
+            {
+                question: "What sweet treat do children leave out for Santa?",
+                answer: "cookies",
+                hints: ["Often paired with milk", "Baked in an oven"]
+            },
+            {
+                question: "What falls from the sky in winter and makes everything white?",
+                answer: "snow",
+                hints: ["You can make a snowman with it", "Each flake is unique"]
+            },
+            {
+                question: "What do you put on top of the Christmas tree?",
+                answer: "star",
+                hints: ["It shines bright", "Or sometimes an angel"]
+            },
+            {
+                question: "Where does Santa live? (Hint: It's very cold there)",
+                answer: "north pole",
+                hints: ["It's one of the poles", "Not the South one!"]
+            },
+            {
+                question: "What do you stuff in Christmas stockings?",
+                answer: "gifts",
+                hints: ["Also called presents", "Wrapped surprises"]
+            },
+            {
+                question: "What green plant with red berries is used for kissing under?",
+                answer: "mistletoe",
+                hints: ["Tradition says you kiss beneath it", "It grows on trees"]
+            },
+            {
+                question: "What do snowmen have for a nose? (Hint: It's orange)",
+                answer: "carrot",
+                hints: ["It's a vegetable", "Rabbits love to eat them"]
+            },
+            {
+                question: "What is the day after Christmas called in some countries? (Hint: ___ Day)",
+                answer: "boxing",
+                hints: ["Not the sport", "It's on December 26th"]
+            }
+        ];
+
+        let revealedCount = 0;
+        let pendingReveals = 0;
+        let completedChallenges = new Set();
+        let snowflakes = [];
+
+        function initLetterDisplay() {
+            const display = document.getElementById('letterDisplay');
+            display.innerHTML = '';
+
+            for (let i = 0; i < SECRET_MESSAGE.length; i++) {
+                const box = document.createElement('div');
+                box.className = 'letter-box' + (SECRET_MESSAGE[i] === ' ' ? ' space' : '');
+                box.dataset.index = i;
+                box.textContent = SECRET_MESSAGE[i] === ' ' ? '' : '?';
+                display.appendChild(box);
+            }
+        }
+
+        function initChallenges() {
+            const list = document.getElementById('challengesList');
+            list.innerHTML = '';
+
+            challenges.forEach((challenge, index) => {
+                const card = document.createElement('div');
+                card.className = 'challenge-card' + (index === 0 ? ' active' : '');
+                card.id = `challenge-${index}`;
+                card.innerHTML = `
+                    <div class="challenge-number">Challenge ${index + 1} of ${challenges.length}</div>
+                    <div class="challenge-question">${challenge.question}</div>
+                    <input type="text" class="challenge-input" id="input-${index}"
+                           placeholder="Your answer..." ${index !== 0 ? 'disabled' : ''}>
+                    <button class="submit-btn" id="btn-${index}"
+                            onclick="checkAnswer(${index})" ${index !== 0 ? 'disabled' : ''}>
+                        Submit Answer
+                    </button>
+                    <div class="feedback" id="feedback-${index}"></div>
+                `;
+                list.appendChild(card);
+            });
+
+            // Add enter key support
+            challenges.forEach((_, index) => {
+                document.getElementById(`input-${index}`).addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        checkAnswer(index);
+                    }
+                });
+            });
+        }
+
+        function checkAnswer(index) {
+            const input = document.getElementById(`input-${index}`);
+            const feedback = document.getElementById(`feedback-${index}`);
+            const card = document.getElementById(`challenge-${index}`);
+            const userAnswer = input.value.trim().toLowerCase();
+            const correctAnswer = challenges[index].answer.toLowerCase();
+
+            if (userAnswer === correctAnswer) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = '🎉 Correct! Shake the snow globe!';
+                card.classList.remove('active');
+                card.classList.add('completed');
+                input.disabled = true;
+                document.getElementById(`btn-${index}`).disabled = true;
+                completedChallenges.add(index);
+
+                // Calculate letters to reveal (2 letters per challenge to reach 22)
+                pendingReveals += 2;
+                document.getElementById('shakeHint').style.display = 'block';
+
+                // Activate next challenge
+                if (index + 1 < challenges.length) {
+                    const nextCard = document.getElementById(`challenge-${index + 1}`);
+                    nextCard.classList.add('active');
+                    document.getElementById(`input-${index + 1}`).disabled = false;
+                    document.getElementById(`btn-${index + 1}`).disabled = false;
+                }
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '❌ Not quite! Try again...';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function revealNextLetter() {
+            if (revealedCount >= SECRET_MESSAGE.length) return false;
+
+            // Find next non-space letter to reveal
+            let index = revealedCount;
+            while (index < SECRET_MESSAGE.length && SECRET_MESSAGE[index] === ' ') {
+                const box = document.querySelector(`[data-index="${index}"]`);
+                box.classList.add('revealed');
+                index++;
+            }
+
+            if (index < SECRET_MESSAGE.length) {
+                const box = document.querySelector(`[data-index="${index}"]`);
+                box.textContent = SECRET_MESSAGE[index];
+                box.classList.add('revealed');
+                index++;
+            }
+
+            revealedCount = index;
+            updateProgress();
+            return true;
+        }
+
+        function updateProgress() {
+            const actualLetters = SECRET_MESSAGE.replace(/ /g, '').length;
+            const revealedLetters = revealedCount - (SECRET_MESSAGE.substring(0, revealedCount).split(' ').length - 1);
+            const percent = (revealedCount / SECRET_MESSAGE.length) * 100;
+
+            document.getElementById('progressFill').style.width = `${percent}%`;
+            document.getElementById('progressText').textContent =
+                `${revealedCount} of ${SECRET_MESSAGE.length} letters revealed`;
+
+            if (revealedCount >= SECRET_MESSAGE.length) {
+                setTimeout(() => {
+                    document.getElementById('celebration').classList.add('show');
+                    createConfetti();
+                }, 1000);
+            }
+        }
+
+        function createSnowflakes() {
+            const globe = document.getElementById('snowGlobe');
+            for (let i = 0; i < 30; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.textContent = '❄';
+                flake.style.left = Math.random() * 280 + 'px';
+                flake.style.top = Math.random() * 280 + 'px';
+                flake.style.fontSize = (Math.random() * 10 + 6) + 'px';
+                flake.style.opacity = Math.random() * 0.5 + 0.3;
+                globe.appendChild(flake);
+                snowflakes.push({
+                    element: flake,
+                    x: parseFloat(flake.style.left),
+                    y: parseFloat(flake.style.top),
+                    vx: 0,
+                    vy: 0,
+                    size: parseFloat(flake.style.fontSize)
+                });
+            }
+        }
+
+        function shakeGlobe() {
+            const globe = document.getElementById('snowGlobe');
+
+            if (pendingReveals > 0) {
+                globe.classList.add('shaking');
+
+                // Animate snowflakes
+                snowflakes.forEach(flake => {
+                    flake.vx = (Math.random() - 0.5) * 20;
+                    flake.vy = (Math.random() - 0.5) * 20;
+                });
+
+                setTimeout(() => {
+                    globe.classList.remove('shaking');
+                    revealNextLetter();
+                    pendingReveals--;
+
+                    if (pendingReveals <= 0) {
+                        document.getElementById('shakeHint').style.display = 'none';
+                    }
+                }, 500);
+            } else {
+                // Just shake for fun
+                globe.classList.add('shaking');
+                snowflakes.forEach(flake => {
+                    flake.vx = (Math.random() - 0.5) * 15;
+                    flake.vy = (Math.random() - 0.5) * 15;
+                });
+                setTimeout(() => globe.classList.remove('shaking'), 500);
+            }
+        }
+
+        function animateSnowflakes() {
+            snowflakes.forEach(flake => {
+                flake.vy += 0.1; // gravity
+                flake.vx *= 0.98; // friction
+                flake.vy *= 0.98;
+
+                flake.x += flake.vx;
+                flake.y += flake.vy;
+
+                // Boundaries
+                if (flake.x < 10) { flake.x = 10; flake.vx *= -0.5; }
+                if (flake.x > 270) { flake.x = 270; flake.vx *= -0.5; }
+                if (flake.y < 10) { flake.y = 10; flake.vy *= -0.5; }
+                if (flake.y > 250) { flake.y = 250; flake.vy *= -0.3; }
+
+                flake.element.style.left = flake.x + 'px';
+                flake.element.style.top = flake.y + 'px';
+            });
+
+            requestAnimationFrame(animateSnowflakes);
+        }
+
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ff69b4'];
+
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.top = '-20px';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    document.body.appendChild(confetti);
+
+                    let y = -20;
+                    let x = parseFloat(confetti.style.left);
+                    let vy = Math.random() * 3 + 2;
+                    let vx = (Math.random() - 0.5) * 4;
+                    let rotation = 0;
+
+                    const fall = () => {
+                        y += vy;
+                        x += vx;
+                        rotation += 5;
+                        vy += 0.1;
+
+                        confetti.style.top = y + 'px';
+                        confetti.style.left = x + 'px';
+                        confetti.style.transform = `rotate(${rotation}deg)`;
+
+                        if (y < window.innerHeight) {
+                            requestAnimationFrame(fall);
+                        } else {
+                            confetti.remove();
+                        }
+                    };
+
+                    requestAnimationFrame(fall);
+                }, i * 30);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initLetterDisplay();
+            initChallenges();
+            createSnowflakes();
+            animateSnowflakes();
+
+            document.getElementById('snowGlobe').addEventListener('click', shakeGlobe);
+        });
+    </script>
+</body>
+</html>
