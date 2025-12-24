@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Julespill - Fang gavene!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: white;
+            opacity: 0.6;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .score, .timer {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77);
+            transition: width 0.3s ease;
+        }
+
+        .gift {
+            position: absolute;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+            animation: float 3s ease-in-out forwards;
+            z-index: 10;
+        }
+
+        .gift:active {
+            transform: scale(1.3);
+        }
+
+        @keyframes float {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(calc(100vh + 50px));
+                opacity: 0.5;
+            }
+        }
+
+        .gift.caught {
+            animation: caught 0.3s ease-out forwards !important;
+        }
+
+        @keyframes caught {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        .bad-item {
+            position: absolute;
+            font-size: 2.5rem;
+            cursor: pointer;
+            animation: float 2.5s ease-in-out forwards;
+            z-index: 10;
+        }
+
+        .start-screen, .end-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ffd93d;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        .instructions {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            max-width: 300px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255,107,107,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 10px rgba(255,107,107,0.4);
+        }
+
+        .gift-reveal {
+            background: linear-gradient(135deg, #ffd93d, #ffb347);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px;
+            max-width: 350px;
+            box-shadow: 0 10px 40px rgba(255,217,61,0.3);
+        }
+
+        .gift-reveal h2 {
+            color: #1a1a2e;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .gift-reveal p {
+            color: #333;
+            font-size: 1.3rem;
+            line-height: 1.5;
+        }
+
+        .gift-emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .sparkles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .sparkle {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        .combo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #ffd93d;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: combo 0.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        @keyframes combo {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .hearts {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            z-index: 100;
+        }
+
+        .heart {
+            transition: opacity 0.3s;
+        }
+
+        .heart.lost {
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="game">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <h1>Fang Julegavene!</h1>
+            <div class="instructions">
+                Trykk på gavene for å fange dem!<br><br>
+                Unngå snøballene - de tar liv!<br><br>
+                Fang nok gaver for å avsløre din overraskelse!
+            </div>
+            <button class="start-btn" id="startBtn">START</button>
+        </div>
+
+        <!-- Game UI -->
+        <div class="header hidden" id="header">
+            <div class="score">Poeng: <span id="score">0</span></div>
+            <div class="timer" id="timer">60</div>
+        </div>
+
+        <div class="hearts hidden" id="hearts">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+        </div>
+
+        <div class="progress-bar hidden" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- End Screen -->
+        <div class="end-screen hidden" id="endScreen">
+            <div class="sparkles" id="sparkles"></div>
+            <div class="gift-emoji">💇‍♀️</div>
+            <div class="gift-reveal">
+                <h2>Gratulerer!</h2>
+                <p>Din gave er en <strong>frisørtime</strong> på en dag du velger selv!</p>
+            </div>
+            <button class="start-btn" onclick="location.reload()">Spill igjen</button>
+        </div>
+    </div>
+
+    <script>
+        const game = document.getElementById('game');
+        const startScreen = document.getElementById('startScreen');
+        const endScreen = document.getElementById('endScreen');
+        const header = document.getElementById('header');
+        const heartsContainer = document.getElementById('hearts');
+        const progressBar = document.getElementById('progressBar');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const progressFill = document.getElementById('progressFill');
+        const startBtn = document.getElementById('startBtn');
+
+        let score = 0;
+        let lives = 3;
+        let timeLeft = 60;
+        let gameInterval;
+        let spawnInterval;
+        let timerInterval;
+        let isGameRunning = false;
+        const targetScore = 30;
+
+        const giftEmojis = ['🎁', '🎄', '⭐', '🔔', '🍪', '🎅', '🦌', '❄️'];
+        const badEmojis = ['🧊'];
+
+        // Create background snowflakes
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.textContent = '❄';
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            snowflake.style.fontSize = (Math.random() * 15 + 10) + 'px';
+            snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            game.appendChild(snowflake);
+
+            setTimeout(() => snowflake.remove(), 10000);
+        }
+
+        setInterval(createSnowflake, 300);
+
+        function createGift() {
+            if (!isGameRunning) return;
+
+            const gift = document.createElement('div');
+            gift.className = 'gift';
+            gift.textContent = giftEmojis[Math.floor(Math.random() * giftEmojis.length)];
+            gift.style.left = (Math.random() * 80 + 10) + 'vw';
+            gift.style.top = '-60px';
+
+            const duration = Math.random() * 1.5 + 2;
+            gift.style.animationDuration = duration + 's';
+
+            gift.addEventListener('touchstart', (e) => catchGift(e, gift), { passive: true });
+            gift.addEventListener('click', (e) => catchGift(e, gift));
+
+            game.appendChild(gift);
+
+            setTimeout(() => {
+                if (gift.parentNode) gift.remove();
+            }, duration * 1000);
+        }
+
+        function createBadItem() {
+            if (!isGameRunning) return;
+
+            const bad = document.createElement('div');
+            bad.className = 'bad-item';
+            bad.textContent = badEmojis[0];
+            bad.style.left = (Math.random() * 80 + 10) + 'vw';
+            bad.style.top = '-60px';
+
+            const duration = Math.random() * 1 + 2;
+            bad.style.animationDuration = duration + 's';
+
+            bad.addEventListener('touchstart', (e) => hitBadItem(e, bad), { passive: true });
+            bad.addEventListener('click', (e) => hitBadItem(e, bad));
+
+            game.appendChild(bad);
+
+            setTimeout(() => {
+                if (bad.parentNode) bad.remove();
+            }, duration * 1000);
+        }
+
+        function catchGift(e, gift) {
+            if (gift.classList.contains('caught')) return;
+
+            gift.classList.add('caught');
+            score++;
+            scoreDisplay.textContent = score;
+            updateProgress();
+
+            // Show combo text occasionally
+            if (score % 5 === 0) {
+                showCombo('Flott! +5');
+            }
+
+            setTimeout(() => gift.remove(), 300);
+
+            if (score >= targetScore) {
+                endGame(true);
+            }
+        }
+
+        function hitBadItem(e, bad) {
+            if (bad.classList.contains('caught')) return;
+
+            bad.classList.add('caught');
+            lives--;
+            updateHearts();
+
+            showCombo('Au! -1 ❤️');
+
+            if (lives <= 0) {
+                endGame(false);
+            }
+
+            setTimeout(() => bad.remove(), 300);
+        }
+
+        function showCombo(text) {
+            const combo = document.createElement('div');
+            combo.className = 'combo';
+            combo.textContent = text;
+            game.appendChild(combo);
+            setTimeout(() => combo.remove(), 500);
+        }
+
+        function updateHearts() {
+            const hearts = heartsContainer.querySelectorAll('.heart');
+            hearts.forEach((heart, i) => {
+                if (i >= lives) {
+                    heart.classList.add('lost');
+                }
+            });
+        }
+
+        function updateProgress() {
+            const progress = Math.min((score / targetScore) * 100, 100);
+            progressFill.style.width = progress + '%';
+        }
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            header.classList.remove('hidden');
+            heartsContainer.classList.remove('hidden');
+            progressBar.classList.remove('hidden');
+
+            isGameRunning = true;
+            score = 0;
+            lives = 3;
+            timeLeft = 60;
+
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+            updateProgress();
+            updateHearts();
+
+            // Spawn gifts
+            spawnInterval = setInterval(() => {
+                createGift();
+                if (Math.random() < 0.25) {
+                    createBadItem();
+                }
+            }, 600);
+
+            // Timer
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame(score >= targetScore);
+                }
+            }, 1000);
+        }
+
+        function endGame(won) {
+            isGameRunning = false;
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+
+            // Remove all gifts and bad items
+            document.querySelectorAll('.gift, .bad-item').forEach(el => el.remove());
+
+            header.classList.add('hidden');
+            heartsContainer.classList.add('hidden');
+            progressBar.classList.add('hidden');
+
+            // Always show the gift (it's a gift after all!)
+            endScreen.classList.remove('hidden');
+            createSparkles();
+        }
+
+        function createSparkles() {
+            const sparkles = document.getElementById('sparkles');
+            const sparkleEmojis = ['✨', '⭐', '🌟', '💫'];
+
+            for (let i = 0; i < 20; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.textContent = sparkleEmojis[Math.floor(Math.random() * sparkleEmojis.length)];
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.top = Math.random() * 100 + '%';
+                sparkle.style.animationDelay = Math.random() * 2 + 's';
+                sparkles.appendChild(sparkle);
+            }
+        }
+
+        startBtn.addEventListener('click', startGame);
+        startBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startGame();
+        }, { passive: false });
+
+        // Prevent zooming on double tap
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+    </script>
+</body>
+</html>
