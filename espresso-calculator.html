@@ -175,7 +175,8 @@
           <span class="text-lg">☕</span>
           <div class="flex-1">
             <div id="roastTipTitle" class="font-semibold text-sm text-amber-900"></div>
-            <div id="roastTipText" class="text-xs text-amber-800 mt-1 leading-relaxed"></div>
+            <div id="roastTipRatios" class="flex flex-wrap items-center gap-2 mt-2"></div>
+            <div id="roastTipText" class="text-xs text-amber-800 mt-2 leading-relaxed"></div>
           </div>
         </div>
       </div>
@@ -827,16 +828,30 @@
     // Roast tips (Lance Hedrick style)
     const roastTips = {
       light: {
-        title: "Light Roast → Try 1:2.5 to 1:3 ratio",
-        text: "Light roasts are denser and less soluble—they need more water to fully extract. I'd start at a 1:2.5 ratio and push to 1:3 if you're getting sourness. Higher temps (94-96°C) and longer contact time help unlock those delicate florals and fruit notes without the astringency."
+        title: "Light Roast",
+        ratios: [
+          { value: 2.5, label: "1:2.5", desc: "Start here" },
+          { value: 3, label: "1:3", desc: "If sour" }
+        ],
+        text: "Light roasts are denser and less soluble—they need more water to fully extract. Higher temps (94-96°C) and longer contact time help unlock those delicate florals and fruit notes without the astringency."
       },
       medium: {
-        title: "Medium Roast → The classic 1:2 ratio",
-        text: "Medium roasts hit the sweet spot of solubility. A 1:2 ratio at 92-94°C is your baseline—it balances sweetness, body, and clarity beautifully. You have room to dial shorter for more body or longer for more brightness. This is where espresso is most forgiving."
+        title: "Medium Roast",
+        ratios: [
+          { value: 1.8, label: "1:1.8", desc: "More body" },
+          { value: 2, label: "1:2", desc: "Classic" },
+          { value: 2.2, label: "1:2.2", desc: "Brighter" }
+        ],
+        text: "Medium roasts hit the sweet spot of solubility. A 1:2 ratio at 92-94°C is your baseline—it balances sweetness, body, and clarity beautifully. This is where espresso is most forgiving."
       },
       dark: {
-        title: "Dark Roast → Pull shorter at 1:1.5 to 1:2",
-        text: "Dark roasts are highly soluble and extract quickly—go too long and you'll hit bitter, ashy notes. I recommend starting at 1:1.5 or 1:1.75 with lower temps (90-92°C). The goal is syrupy body and chocolate notes without over-extracting those roasty compounds."
+        title: "Dark Roast",
+        ratios: [
+          { value: 1.5, label: "1:1.5", desc: "Syrupy" },
+          { value: 1.75, label: "1:1.75", desc: "Balanced" },
+          { value: 2, label: "1:2", desc: "Max" }
+        ],
+        text: "Dark roasts are highly soluble and extract quickly—go too long and you'll hit bitter, ashy notes. Lower temps (90-92°C) help achieve syrupy body and chocolate notes without over-extracting."
       }
     };
 
@@ -854,6 +869,30 @@
         if (tip) {
           document.getElementById('roastTipTitle').textContent = tip.title;
           document.getElementById('roastTipText').textContent = tip.text;
+
+          // Render clickable ratio pills
+          const ratiosContainer = document.getElementById('roastTipRatios');
+          ratiosContainer.innerHTML = `
+            <span class="text-xs text-amber-700 mr-1 self-center">Try:</span>
+            ${tip.ratios.map(r => `
+              <button class="tip-ratio-btn group flex flex-col items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 text-white hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1 transition-all shadow-sm hover:shadow-md cursor-pointer" data-ratio="${r.value}">
+                <span class="text-sm">${r.label}</span>
+                <span class="text-[10px] font-normal opacity-80">${r.desc}</span>
+              </button>
+            `).join('')}
+          `;
+
+          // Add click handlers for ratio pills
+          ratiosContainer.querySelectorAll('.tip-ratio-btn').forEach(pillBtn => {
+            pillBtn.addEventListener('click', () => {
+              const ratio = parseFloat(pillBtn.dataset.ratio);
+              const dose = parseFloat(doseInput.value) || 18;
+              doseInput.value = dose;
+              yieldInput.value = (dose * ratio).toFixed(1);
+              calculate();
+            });
+          });
+
           document.getElementById('roastTip').classList.remove('hidden');
         }
       });
