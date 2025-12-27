@@ -5,6 +5,7 @@
   <title>Espresso Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <style>
     /* Mobile optimizations */
     html {
@@ -83,6 +84,17 @@
     .ratio-pill.selected {
       outline: 3px solid #f59e0b;
       outline-offset: 1px;
+    }
+
+    /* Rating stars */
+    .rating-star {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Recipe item hover effects */
+    .recipe-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
@@ -405,7 +417,71 @@
       </div>
     </div>
 
-    <!-- 6. REFERENCE GUIDE -->
+    <!-- 6. SAVED RECIPES -->
+    <div class="bg-white rounded-2xl shadow-lg mb-3 sm:mb-4 border border-amber-200 overflow-hidden">
+      <div class="px-4 sm:px-5 py-4 flex items-center justify-between border-b border-amber-100">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">My Recipes</h2>
+          <p class="text-xs text-gray-500">Save and load your dialed-in recipes</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="shareRecipeBtn" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Share via URL">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+            </svg>
+          </button>
+          <button id="exportRecipesBtn" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Export recipes to file">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+          </button>
+          <button id="importRecipesBtn" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Import recipes from file">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+          </button>
+          <input type="file" id="importFileInput" accept=".json" class="hidden" />
+        </div>
+      </div>
+
+      <!-- Save Current Recipe -->
+      <div class="p-4 sm:p-5 border-b border-amber-100 bg-amber-50/50">
+        <div class="flex gap-2">
+          <input type="text" id="recipeNameInput" placeholder="Name this recipe (e.g., 'Ethiopian Light Roast')"
+            class="flex-1 px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500" />
+          <button id="saveRecipeBtn" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 whitespace-nowrap">
+            Save Recipe
+          </button>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+          <span class="text-xs text-gray-500">Rating:</span>
+          <div id="ratingStars" class="flex gap-1">
+            <button data-rating="1" class="rating-star text-xl text-gray-300 hover:text-amber-400 transition-colors">★</button>
+            <button data-rating="2" class="rating-star text-xl text-gray-300 hover:text-amber-400 transition-colors">★</button>
+            <button data-rating="3" class="rating-star text-xl text-gray-300 hover:text-amber-400 transition-colors">★</button>
+            <button data-rating="4" class="rating-star text-xl text-gray-300 hover:text-amber-400 transition-colors">★</button>
+            <button data-rating="5" class="rating-star text-xl text-gray-300 hover:text-amber-400 transition-colors">★</button>
+          </div>
+          <span id="ratingText" class="text-xs text-gray-400">Click to rate</span>
+        </div>
+      </div>
+
+      <!-- Recipe List -->
+      <div id="recipeList" class="max-h-80 overflow-y-auto">
+        <div id="emptyRecipeState" class="p-8 text-center text-gray-400">
+          <div class="text-3xl mb-2">📋</div>
+          <div class="text-sm">No saved recipes yet</div>
+          <div class="text-xs mt-1">Save your first dialed-in recipe above</div>
+        </div>
+      </div>
+
+      <!-- URL Import Notification -->
+      <div id="urlImportNotice" class="hidden p-3 bg-green-50 border-t border-green-200 text-center">
+        <span class="text-sm text-green-700">✓ Recipe loaded from shared link</span>
+      </div>
+    </div>
+
+    <!-- 7. REFERENCE GUIDE -->
     <details class="bg-white rounded-2xl shadow-lg mb-3 sm:mb-4 border border-amber-200">
       <summary class="px-4 sm:px-5 py-4 cursor-pointer text-lg font-semibold text-gray-800 hover:bg-amber-50 transition-colors">
         Reference Guide
@@ -1043,12 +1119,519 @@
       document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
     }
 
+    // ==========================================
+    // RECIPE SAVE/LOAD SYSTEM
+    // ==========================================
+
+    // LocalStorage keys
+    const STORAGE_KEYS = {
+      settings: 'espressoCalculatorSettings',
+      recipes: 'espressoCalculatorRecipes'
+    };
+
+    // Recipe rating state
+    let currentRating = 0;
+
+    // DOM Elements for recipes
+    const recipeNameInput = document.getElementById('recipeNameInput');
+    const saveRecipeBtn = document.getElementById('saveRecipeBtn');
+    const recipeList = document.getElementById('recipeList');
+    const emptyRecipeState = document.getElementById('emptyRecipeState');
+    const shareRecipeBtn = document.getElementById('shareRecipeBtn');
+    const exportRecipesBtn = document.getElementById('exportRecipesBtn');
+    const importRecipesBtn = document.getElementById('importRecipesBtn');
+    const importFileInput = document.getElementById('importFileInput');
+    const urlImportNotice = document.getElementById('urlImportNotice');
+    const ratingStars = document.querySelectorAll('.rating-star');
+    const ratingText = document.getElementById('ratingText');
+    const wdtCheckbox = document.getElementById('wdt');
+    const rdtCheckbox = document.getElementById('rdt');
+
+    // Get current state from form inputs
+    function getCurrentState() {
+      return {
+        roast: selectedRoast,
+        daysRoasted: daysRoastedInput.value,
+        dose: doseInput.value,
+        ratio: selectedRatio,
+        temperature: temperatureInput.value,
+        grindSetting: grindSettingInput.value,
+        wdt: wdtCheckbox.checked,
+        rdt: rdtCheckbox.checked,
+        yield: yieldInput.value,
+        time: timeInput.value
+      };
+    }
+
+    // Apply state to form inputs
+    function applyState(state) {
+      if (state.roast) {
+        const roastBtn = document.querySelector(`.roast-btn[data-roast="${state.roast}"]`);
+        if (roastBtn) roastBtn.click();
+      }
+      if (state.daysRoasted) daysRoastedInput.value = state.daysRoasted;
+      if (state.dose) doseInput.value = state.dose;
+      if (state.ratio) selectRatio(parseFloat(state.ratio));
+      if (state.temperature) temperatureInput.value = state.temperature;
+      if (state.grindSetting) grindSettingInput.value = state.grindSetting;
+      if (state.wdt !== undefined) wdtCheckbox.checked = state.wdt;
+      if (state.rdt !== undefined) rdtCheckbox.checked = state.rdt;
+      if (state.yield) yieldInput.value = state.yield;
+      if (state.time) timeInput.value = state.time;
+
+      updateFreshnessHint();
+      updateYieldTarget();
+      calculate();
+    }
+
+    // Save current settings to localStorage
+    function saveSettings() {
+      try {
+        const settings = getCurrentState();
+        localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
+      } catch (e) {
+        console.warn('Could not save settings:', e);
+      }
+    }
+
+    // Load settings from localStorage
+    function loadSettings() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.settings);
+        if (saved) {
+          const settings = JSON.parse(saved);
+          applyState(settings);
+          return true;
+        }
+      } catch (e) {
+        console.warn('Could not load settings:', e);
+      }
+      return false;
+    }
+
+    // Auto-save on any input change
+    function setupAutoSave() {
+      const inputs = [doseInput, yieldInput, timeInput, temperatureInput, grindSettingInput, daysRoastedInput, wdtCheckbox, rdtCheckbox];
+      inputs.forEach(input => {
+        input.addEventListener('change', saveSettings);
+        if (input.type !== 'checkbox') {
+          input.addEventListener('input', saveSettings);
+        }
+      });
+    }
+
+    // Get saved recipes from localStorage
+    function getRecipes() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.recipes);
+        return saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        console.warn('Could not load recipes:', e);
+        return [];
+      }
+    }
+
+    // Save recipes to localStorage
+    function saveRecipes(recipes) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.recipes, JSON.stringify(recipes));
+      } catch (e) {
+        console.warn('Could not save recipes:', e);
+      }
+    }
+
+    // Create a new recipe from current state
+    function createRecipe(name, rating) {
+      const state = getCurrentState();
+      return {
+        id: Date.now(),
+        name: name.trim(),
+        rating: rating,
+        createdAt: new Date().toISOString(),
+        ...state
+      };
+    }
+
+    // Render the recipe list
+    function renderRecipes() {
+      const recipes = getRecipes();
+
+      if (recipes.length === 0) {
+        emptyRecipeState.classList.remove('hidden');
+        return;
+      }
+
+      emptyRecipeState.classList.add('hidden');
+
+      // Sort by rating (descending), then by date (newest first)
+      recipes.sort((a, b) => {
+        if (b.rating !== a.rating) return b.rating - a.rating;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      const recipesHtml = recipes.map(recipe => {
+        const stars = '★'.repeat(recipe.rating) + '☆'.repeat(5 - recipe.rating);
+        const roastEmoji = { light: '☀️', medium: '⚖️', dark: '🌙' }[recipe.roast] || '';
+        const date = new Date(recipe.createdAt).toLocaleDateString();
+
+        return `
+          <div class="recipe-item p-3 border-b border-gray-100 hover:bg-amber-50/50 transition-colors" data-id="${recipe.id}">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-gray-800 truncate">${escapeHtml(recipe.name)}</span>
+                  <span class="text-amber-400 text-sm">${stars}</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                  <span>${roastEmoji} ${recipe.roast || '—'}</span>
+                  <span>${recipe.dose || '—'}g → ${recipe.yield || '—'}g</span>
+                  <span>1:${recipe.ratio || '—'}</span>
+                  <span>${recipe.time || '—'}s</span>
+                  ${recipe.temperature ? `<span>${recipe.temperature}°C</span>` : ''}
+                  ${recipe.grindSetting ? `<span>Grind: ${recipe.grindSetting}</span>` : ''}
+                </div>
+                <div class="text-xs text-gray-400 mt-1">${date}</div>
+              </div>
+              <div class="flex gap-1 flex-shrink-0">
+                <button class="load-recipe-btn p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors" title="Load recipe">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                  </svg>
+                </button>
+                <button class="delete-recipe-btn p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors" title="Delete recipe">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Only replace the recipe items, keep the empty state element
+      const existingItems = recipeList.querySelectorAll('.recipe-item');
+      existingItems.forEach(item => item.remove());
+      recipeList.insertAdjacentHTML('beforeend', recipesHtml);
+
+      // Add event listeners to new buttons
+      recipeList.querySelectorAll('.load-recipe-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt(e.target.closest('.recipe-item').dataset.id);
+          loadRecipe(id);
+        });
+      });
+
+      recipeList.querySelectorAll('.delete-recipe-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt(e.target.closest('.recipe-item').dataset.id);
+          deleteRecipe(id);
+        });
+      });
+    }
+
+    // Load a recipe by ID
+    function loadRecipe(id) {
+      const recipes = getRecipes();
+      const recipe = recipes.find(r => r.id === id);
+      if (recipe) {
+        applyState(recipe);
+        saveSettings();
+        showToast(`Loaded "${recipe.name}"`);
+      }
+    }
+
+    // Delete a recipe by ID
+    function deleteRecipe(id) {
+      const recipes = getRecipes();
+      const recipe = recipes.find(r => r.id === id);
+      if (recipe && confirm(`Delete "${recipe.name}"?`)) {
+        const filtered = recipes.filter(r => r.id !== id);
+        saveRecipes(filtered);
+        renderRecipes();
+        showToast('Recipe deleted');
+      }
+    }
+
+    // Rating star interaction
+    function updateRatingDisplay(rating) {
+      ratingStars.forEach((star, index) => {
+        if (index < rating) {
+          star.classList.remove('text-gray-300');
+          star.classList.add('text-amber-400');
+        } else {
+          star.classList.add('text-gray-300');
+          star.classList.remove('text-amber-400');
+        }
+      });
+      ratingText.textContent = rating > 0 ? `${rating} star${rating > 1 ? 's' : ''}` : 'Click to rate';
+    }
+
+    ratingStars.forEach(star => {
+      star.addEventListener('click', () => {
+        currentRating = parseInt(star.dataset.rating);
+        updateRatingDisplay(currentRating);
+      });
+      star.addEventListener('mouseenter', () => {
+        updateRatingDisplay(parseInt(star.dataset.rating));
+      });
+    });
+
+    document.getElementById('ratingStars').addEventListener('mouseleave', () => {
+      updateRatingDisplay(currentRating);
+    });
+
+    // Save recipe button
+    saveRecipeBtn.addEventListener('click', () => {
+      const name = recipeNameInput.value.trim();
+      if (!name) {
+        recipeNameInput.focus();
+        recipeNameInput.classList.add('border-red-400');
+        setTimeout(() => recipeNameInput.classList.remove('border-red-400'), 2000);
+        showToast('Please enter a recipe name');
+        return;
+      }
+
+      const recipe = createRecipe(name, currentRating);
+      const recipes = getRecipes();
+      recipes.push(recipe);
+      saveRecipes(recipes);
+      renderRecipes();
+
+      // Reset form
+      recipeNameInput.value = '';
+      currentRating = 0;
+      updateRatingDisplay(0);
+
+      showToast(`Saved "${name}"`);
+    });
+
+    // Escape HTML for safe rendering
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Simple toast notification
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm z-50 transition-opacity duration-300';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+
+    // ==========================================
+    // URL SHARING
+    // ==========================================
+
+    function encodeStateToURL() {
+      const state = getCurrentState();
+      // Use short keys for compression
+      const compact = {
+        r: state.roast ? state.roast[0] : '',  // l, m, d
+        d: state.daysRoasted,
+        o: state.dose,
+        a: state.ratio,
+        t: state.temperature,
+        g: state.grindSetting,
+        w: state.wdt ? 1 : 0,
+        x: state.rdt ? 1 : 0,
+        y: state.yield,
+        i: state.time
+      };
+      const json = JSON.stringify(compact);
+      return LZString.compressToEncodedURIComponent(json);
+    }
+
+    function decodeStateFromURL(encoded) {
+      try {
+        const json = LZString.decompressFromEncodedURIComponent(encoded);
+        if (!json) return null;
+        const compact = JSON.parse(json);
+        const roastMap = { l: 'light', m: 'medium', d: 'dark' };
+        return {
+          roast: roastMap[compact.r] || null,
+          daysRoasted: compact.d,
+          dose: compact.o,
+          ratio: compact.a,
+          temperature: compact.t,
+          grindSetting: compact.g,
+          wdt: compact.w === 1,
+          rdt: compact.x === 1,
+          yield: compact.y,
+          time: compact.i
+        };
+      } catch (e) {
+        console.warn('Could not decode URL state:', e);
+        return null;
+      }
+    }
+
+    function loadFromURL() {
+      const hash = window.location.hash.slice(1);
+      if (!hash) return false;
+
+      const state = decodeStateFromURL(hash);
+      if (state) {
+        applyState(state);
+        saveSettings();
+        urlImportNotice.classList.remove('hidden');
+        setTimeout(() => urlImportNotice.classList.add('hidden'), 3000);
+        // Clear the hash without reloading
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        return true;
+      }
+      return false;
+    }
+
+    shareRecipeBtn.addEventListener('click', async () => {
+      const encoded = encodeStateToURL();
+      const url = window.location.origin + window.location.pathname + '#' + encoded;
+
+      if (url.length > 2000) {
+        showToast('URL is too long. Try simplifying the recipe.');
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Share URL copied to clipboard!');
+      } catch (e) {
+        // Fallback for older browsers
+        const input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('Share URL copied to clipboard!');
+      }
+    });
+
+    // ==========================================
+    // JSON EXPORT/IMPORT
+    // ==========================================
+
+    function exportToJSON() {
+      const data = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        currentSettings: getCurrentState(),
+        recipes: getRecipes()
+      };
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `espresso-recipes-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('Recipes exported!');
+    }
+
+    function importFromJSON(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+
+          // Validate structure
+          if (!data.version || !Array.isArray(data.recipes)) {
+            throw new Error('Invalid file format');
+          }
+
+          // Import recipes
+          const existingRecipes = getRecipes();
+          const existingIds = new Set(existingRecipes.map(r => r.id));
+
+          let imported = 0;
+          data.recipes.forEach(recipe => {
+            // Skip duplicates by ID
+            if (!existingIds.has(recipe.id)) {
+              existingRecipes.push(recipe);
+              imported++;
+            }
+          });
+
+          saveRecipes(existingRecipes);
+          renderRecipes();
+
+          // Optionally load current settings
+          if (data.currentSettings && confirm('Also load the current recipe settings?')) {
+            applyState(data.currentSettings);
+            saveSettings();
+          }
+
+          showToast(`Imported ${imported} recipe${imported !== 1 ? 's' : ''}`);
+        } catch (err) {
+          console.error('Import error:', err);
+          showToast('Could not import file. Please check the format.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    exportRecipesBtn.addEventListener('click', exportToJSON);
+
+    importRecipesBtn.addEventListener('click', () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        importFromJSON(file);
+        e.target.value = ''; // Reset for next import
+      }
+    });
+
+    // ==========================================
+    // INITIALIZATION
+    // ==========================================
+
     // Initialize
     window.addEventListener('load', () => {
+      // Set defaults first
       doseInput.value = '18';
       yieldInput.value = '36';
       timeInput.value = '30';
       selectedRatio = 2;
+
+      // Load state: URL takes priority, then localStorage
+      const loadedFromURL = loadFromURL();
+      if (!loadedFromURL) {
+        loadSettings();
+      }
+
+      // Set up auto-save for future changes
+      setupAutoSave();
+
+      // Also save when roast buttons are clicked
+      document.querySelectorAll('.roast-btn').forEach(btn => {
+        btn.addEventListener('click', () => setTimeout(saveSettings, 0));
+      });
+
+      // Also save when ratio pills are clicked
+      document.querySelectorAll('.ratio-pill').forEach(pill => {
+        pill.addEventListener('click', () => setTimeout(saveSettings, 0));
+      });
+
+      // Render saved recipes
+      renderRecipes();
+
+      // Final UI updates
       updateYieldTarget();
       calculate();
       displayRandomQuote();
