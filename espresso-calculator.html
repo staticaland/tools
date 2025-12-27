@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Espresso Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Mobile optimizations */
+    html {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+      padding-top: max(1rem, env(safe-area-inset-top));
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+      overflow-x: hidden;
+    }
+
+    /* Ensure inputs don't zoom on iOS */
+    input[type="number"],
+    input[type="text"],
+    select {
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    /* Custom select dropdown styling */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23374151' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 12px;
+      padding-right: 2.5rem !important;
+    }
+
+    /* Remove number input spinners */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Better touch targets on mobile */
+    @media (max-width: 640px) {
+      button,
+      input,
+      select {
+        min-height: 44px;
+      }
+    }
+
+    /* Radio button styling */
+    .radio-option {
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .radio-option:hover {
+      background-color: #f3f4f6;
+    }
+    .radio-option.selected {
+      background-color: #dbeafe;
+      border-color: #3b82f6;
+    }
+  </style>
+</head>
+<body class="bg-amber-50 text-gray-900 p-4 sm:p-6 font-sans min-h-screen">
+  <div class="max-w-lg mx-auto pb-8">
+    <h1 class="text-2xl sm:text-3xl font-bold text-amber-900 mb-2 text-center">Espresso Calculator</h1>
+    <p class="text-sm text-amber-700 mb-6 text-center">Dial in your perfect shot</p>
+
+    <!-- Recipe Input Card -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-amber-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Your Recipe</h2>
+
+      <div class="grid grid-cols-3 gap-3 mb-4">
+        <!-- Dose -->
+        <div>
+          <label for="dose" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Dose (g)</label>
+          <input id="dose" type="number" step="0.1" min="0" placeholder="18"
+            class="w-full px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center" />
+        </div>
+
+        <!-- Yield -->
+        <div>
+          <label for="yield" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Yield (g)</label>
+          <input id="yield" type="number" step="0.1" min="0" placeholder="36"
+            class="w-full px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center" />
+        </div>
+
+        <!-- Time -->
+        <div>
+          <label for="time" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Time (s)</label>
+          <input id="time" type="number" step="1" min="0" placeholder="30"
+            class="w-full px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-center" />
+        </div>
+      </div>
+
+      <!-- Quick Ratio Presets -->
+      <div class="mb-4">
+        <label class="block text-xs sm:text-sm mb-2 text-gray-600 font-medium">Quick Ratios</label>
+        <div class="flex flex-wrap gap-2">
+          <button data-ratio="1" class="ratio-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500">1:1 Ristretto</button>
+          <button data-ratio="1.5" class="ratio-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500">1:1.5</button>
+          <button data-ratio="2" class="ratio-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500">1:2 Standard</button>
+          <button data-ratio="2.5" class="ratio-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500">1:2.5</button>
+          <button data-ratio="3" class="ratio-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500">1:3 Lungo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculated Results Card -->
+    <div id="resultsCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-amber-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-3">Shot Analysis</h2>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="bg-amber-50 rounded-xl p-3 border border-amber-200">
+          <div class="text-xs text-amber-700 mb-1">Ratio</div>
+          <div id="ratioDisplay" class="text-xl font-bold text-amber-900">1 : --</div>
+        </div>
+        <div class="bg-amber-50 rounded-xl p-3 border border-amber-200">
+          <div class="text-xs text-amber-700 mb-1">Flow Rate</div>
+          <div id="flowRateDisplay" class="text-xl font-bold text-amber-900">-- g/s</div>
+        </div>
+      </div>
+
+      <div id="shotType" class="text-center py-2 px-4 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium mb-3">
+        Enter your recipe above
+      </div>
+
+      <!-- Extraction Indicator -->
+      <div id="extractionIndicator" class="hidden">
+        <div class="text-xs text-gray-600 mb-2">Extraction Estimate</div>
+        <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div id="extractionBar" class="h-full transition-all duration-300" style="width: 50%; background: linear-gradient(to right, #fbbf24, #22c55e, #22c55e, #ef4444);"></div>
+        </div>
+        <div class="flex justify-between text-xs text-gray-500 mt-1">
+          <span>Under</span>
+          <span>Sweet Spot</span>
+          <span>Over</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post-Brew Questionnaire -->
+    <div class="bg-white rounded-2xl shadow-lg mb-3 sm:mb-4 border border-amber-200 overflow-hidden">
+      <button id="questionnaireToggle" class="w-full px-4 sm:px-5 py-4 flex items-center justify-between text-left focus:outline-none hover:bg-amber-50 transition-colors">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">Taste Feedback</h2>
+          <p class="text-xs text-gray-500">Dial in your next shot</p>
+        </div>
+        <svg id="toggleArrow" class="w-5 h-5 text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      <div id="questionnaireContent" class="hidden border-t border-amber-100">
+        <div class="p-4 sm:p-5 space-y-5">
+          <!-- Overall Taste -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">How did it taste overall?</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="taste" value="sour" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">🍋</div>
+                  <div class="text-xs font-medium text-gray-700">Sour/Acidic</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="taste" value="balanced" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">✨</div>
+                  <div class="text-xs font-medium text-gray-700">Balanced</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="taste" value="bitter" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">😖</div>
+                  <div class="text-xs font-medium text-gray-700">Bitter/Harsh</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Body/Texture -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">How was the body/texture?</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="body" value="thin" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">💧</div>
+                  <div class="text-xs font-medium text-gray-700">Thin/Watery</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="body" value="good" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">👌</div>
+                  <div class="text-xs font-medium text-gray-700">Good</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="body" value="thick" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">🍯</div>
+                  <div class="text-xs font-medium text-gray-700">Heavy/Muddy</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Flow Observation -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">How did the shot flow?</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="flow" value="fast" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">💨</div>
+                  <div class="text-xs font-medium text-gray-700">Too Fast</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="flow" value="good" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">🎯</div>
+                  <div class="text-xs font-medium text-gray-700">Just Right</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="flow" value="slow" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">🐌</div>
+                  <div class="text-xs font-medium text-gray-700">Too Slow</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Channeling -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Did you notice channeling?</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="channel" value="no" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">✅</div>
+                  <div class="text-xs font-medium text-gray-700">Even extraction</div>
+                </div>
+              </label>
+              <label class="radio-option flex items-center justify-center p-3 rounded-lg border-2 border-gray-200 text-center">
+                <input type="radio" name="channel" value="yes" class="sr-only" />
+                <div>
+                  <div class="text-lg mb-1">💦</div>
+                  <div class="text-xs font-medium text-gray-700">Yes, spurting</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <button id="getRecommendations" class="w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
+            Get Recommendations
+          </button>
+        </div>
+
+        <!-- Recommendations -->
+        <div id="recommendations" class="hidden border-t border-amber-100 p-4 sm:p-5 bg-amber-50">
+          <h3 class="text-sm font-semibold text-amber-900 mb-3">Adjustments for Next Shot</h3>
+          <div id="recommendationsList" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Guide -->
+    <details class="bg-white rounded-2xl shadow-lg mb-3 sm:mb-4 border border-amber-200">
+      <summary class="px-4 sm:px-5 py-4 cursor-pointer text-lg font-semibold text-gray-800 hover:bg-amber-50 transition-colors">
+        Reference Guide
+      </summary>
+      <div class="px-4 sm:px-5 pb-4 space-y-4 border-t border-amber-100 pt-4">
+        <!-- Standard Ranges -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2">Standard Espresso Parameters</h4>
+          <div class="text-xs text-gray-600 space-y-1.5">
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span>Dose</span>
+              <span class="font-medium">14-22g (18g typical)</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span>Ratio</span>
+              <span class="font-medium">1:1.5 to 1:2.5</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span>Time</span>
+              <span class="font-medium">25-35 seconds</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span>Yield</span>
+              <span class="font-medium">Dose × Ratio</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shot Types -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2">Shot Types by Ratio</h4>
+          <div class="text-xs text-gray-600 space-y-1.5">
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span>Ristretto</span>
+              <span class="font-medium">1:1 to 1:1.5</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span>Normale</span>
+              <span class="font-medium">1:1.5 to 1:2.5</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span>Lungo</span>
+              <span class="font-medium">1:3 to 1:4</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diagnosis -->
+        <div>
+          <h4 class="text-sm font-semibold text-gray-700 mb-2">Quick Diagnosis</h4>
+          <div class="text-xs text-gray-600 space-y-2">
+            <div class="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div class="font-semibold text-yellow-800">Sour + Fast + Thin</div>
+              <div class="text-yellow-700">Under-extracted. Grind finer or increase dose.</div>
+            </div>
+            <div class="p-2 bg-red-50 rounded-lg border border-red-200">
+              <div class="font-semibold text-red-800">Bitter + Slow + Heavy</div>
+              <div class="text-red-700">Over-extracted. Grind coarser or decrease dose.</div>
+            </div>
+            <div class="p-2 bg-green-50 rounded-lg border border-green-200">
+              <div class="font-semibold text-green-800">Sweet + Balanced</div>
+              <div class="text-green-700">Well extracted. Keep this recipe!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credits -->
+        <div class="pt-2 text-xs text-gray-500">
+          <p>Based on principles from James Hoffmann, Scott Rao, and the Barista Hustle team. The key insight: adjust one variable at a time.</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- Coffee Quote -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-amber-200">
+      <div id="quote" class="text-sm sm:text-base text-gray-700 italic"></div>
+      <div id="quoteAuthor" class="text-xs sm:text-sm text-gray-500 mt-2"></div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const doseInput = document.getElementById('dose');
+    const yieldInput = document.getElementById('yield');
+    const timeInput = document.getElementById('time');
+    const ratioDisplay = document.getElementById('ratioDisplay');
+    const flowRateDisplay = document.getElementById('flowRateDisplay');
+    const shotType = document.getElementById('shotType');
+    const extractionIndicator = document.getElementById('extractionIndicator');
+    const extractionBar = document.getElementById('extractionBar');
+    const questionnaireToggle = document.getElementById('questionnaireToggle');
+    const questionnaireContent = document.getElementById('questionnaireContent');
+    const toggleArrow = document.getElementById('toggleArrow');
+    const getRecommendationsBtn = document.getElementById('getRecommendations');
+    const recommendations = document.getElementById('recommendations');
+    const recommendationsList = document.getElementById('recommendationsList');
+
+    // Calculate and display results
+    function calculate() {
+      const dose = parseFloat(doseInput.value);
+      const yieldVal = parseFloat(yieldInput.value);
+      const time = parseFloat(timeInput.value);
+
+      // Reset displays if inputs invalid
+      if (!dose || dose <= 0) {
+        ratioDisplay.textContent = '1 : --';
+        flowRateDisplay.textContent = '-- g/s';
+        shotType.textContent = 'Enter your recipe above';
+        shotType.className = 'text-center py-2 px-4 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium mb-3';
+        extractionIndicator.classList.add('hidden');
+        return;
+      }
+
+      // Calculate ratio
+      if (yieldVal && yieldVal > 0) {
+        const ratio = yieldVal / dose;
+        ratioDisplay.textContent = `1 : ${ratio.toFixed(2)}`;
+
+        // Determine shot type
+        let typeText = '';
+        let typeClass = '';
+        if (ratio < 1.2) {
+          typeText = 'Ristretto - Intense, syrupy, concentrated';
+          typeClass = 'bg-amber-100 text-amber-800 border border-amber-300';
+        } else if (ratio < 1.8) {
+          typeText = 'Short Normale - Rich and full-bodied';
+          typeClass = 'bg-amber-100 text-amber-800 border border-amber-300';
+        } else if (ratio < 2.3) {
+          typeText = 'Normale - Classic espresso balance';
+          typeClass = 'bg-green-100 text-green-800 border border-green-300';
+        } else if (ratio < 2.8) {
+          typeText = 'Long Normale - Brighter, more clarity';
+          typeClass = 'bg-blue-100 text-blue-800 border border-blue-300';
+        } else {
+          typeText = 'Lungo - Light body, higher extraction';
+          typeClass = 'bg-purple-100 text-purple-800 border border-purple-300';
+        }
+        shotType.textContent = typeText;
+        shotType.className = `text-center py-2 px-4 rounded-lg ${typeClass} text-sm font-medium mb-3`;
+      } else {
+        ratioDisplay.textContent = '1 : --';
+        shotType.textContent = 'Enter yield to see shot type';
+        shotType.className = 'text-center py-2 px-4 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium mb-3';
+      }
+
+      // Calculate flow rate
+      if (yieldVal && yieldVal > 0 && time && time > 0) {
+        const flowRate = yieldVal / time;
+        flowRateDisplay.textContent = `${flowRate.toFixed(2)} g/s`;
+
+        // Show extraction indicator
+        extractionIndicator.classList.remove('hidden');
+
+        // Estimate extraction based on flow rate and ratio
+        // Ideal: ~1.0-1.3 g/s for standard espresso
+        // This is a simplified model based on common guidelines
+        const ratio = yieldVal / dose;
+        let extractionScore = 50; // Start at middle
+
+        // Adjust based on flow rate (ideal ~1.0-1.3 g/s)
+        if (flowRate < 0.7) {
+          extractionScore += 25; // Over-extracted territory
+        } else if (flowRate < 1.0) {
+          extractionScore += 10;
+        } else if (flowRate > 1.8) {
+          extractionScore -= 25; // Under-extracted territory
+        } else if (flowRate > 1.4) {
+          extractionScore -= 10;
+        }
+
+        // Adjust based on time
+        if (time < 20) {
+          extractionScore -= 15; // Too fast, under-extracted
+        } else if (time < 25) {
+          extractionScore -= 5;
+        } else if (time > 40) {
+          extractionScore += 15; // Too slow, over-extracted
+        } else if (time > 35) {
+          extractionScore += 5;
+        }
+
+        // Clamp between 0-100
+        extractionScore = Math.max(0, Math.min(100, extractionScore));
+
+        // Position indicator
+        extractionBar.style.width = `${extractionScore}%`;
+
+        // Color the indicator based on position
+        if (extractionScore < 35) {
+          extractionBar.style.background = '#fbbf24'; // Yellow - under
+        } else if (extractionScore > 65) {
+          extractionBar.style.background = '#ef4444'; // Red - over
+        } else {
+          extractionBar.style.background = '#22c55e'; // Green - good
+        }
+      } else {
+        flowRateDisplay.textContent = '-- g/s';
+        extractionIndicator.classList.add('hidden');
+      }
+    }
+
+    // Quick ratio buttons
+    document.querySelectorAll('.ratio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ratio = parseFloat(btn.dataset.ratio);
+        const dose = parseFloat(doseInput.value) || 18;
+        doseInput.value = dose;
+        yieldInput.value = (dose * ratio).toFixed(1);
+        calculate();
+      });
+    });
+
+    // Radio button selection
+    document.querySelectorAll('.radio-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const input = option.querySelector('input');
+        const name = input.name;
+
+        // Deselect others in same group
+        document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+          radio.closest('.radio-option').classList.remove('selected');
+        });
+
+        // Select this one
+        input.checked = true;
+        option.classList.add('selected');
+      });
+    });
+
+    // Questionnaire toggle
+    questionnaireToggle.addEventListener('click', () => {
+      questionnaireContent.classList.toggle('hidden');
+      toggleArrow.classList.toggle('rotate-180');
+    });
+
+    // Generate recommendations based on feedback
+    getRecommendationsBtn.addEventListener('click', () => {
+      const taste = document.querySelector('input[name="taste"]:checked')?.value;
+      const body = document.querySelector('input[name="body"]:checked')?.value;
+      const flow = document.querySelector('input[name="flow"]:checked')?.value;
+      const channel = document.querySelector('input[name="channel"]:checked')?.value;
+
+      const recs = [];
+
+      // Channeling first - it masks other problems
+      if (channel === 'yes') {
+        recs.push({
+          priority: 'high',
+          title: 'Fix channeling first',
+          desc: 'Channeling causes uneven extraction. Focus on puck prep: distribute grounds evenly, use WDT tool, ensure level tamp with consistent pressure (~15kg).',
+          source: 'Scott Rao'
+        });
+      }
+
+      // Taste-based recommendations
+      if (taste === 'sour') {
+        if (flow === 'fast') {
+          recs.push({
+            priority: 'high',
+            title: 'Grind finer',
+            desc: 'Sour + fast = under-extraction. Grind finer to slow flow and increase extraction. Make small adjustments.',
+            source: 'James Hoffmann'
+          });
+        } else if (flow === 'slow') {
+          recs.push({
+            priority: 'medium',
+            title: 'Increase ratio',
+            desc: 'Slow but sour suggests you need more water through the puck. Try a longer ratio (e.g., 1:2.5 instead of 1:2).',
+            source: 'Barista Hustle'
+          });
+        } else {
+          recs.push({
+            priority: 'medium',
+            title: 'Slightly finer grind',
+            desc: 'Sourness indicates under-extraction. Try a slightly finer grind to increase contact time.',
+            source: 'James Hoffmann'
+          });
+        }
+      } else if (taste === 'bitter') {
+        if (flow === 'slow') {
+          recs.push({
+            priority: 'high',
+            title: 'Grind coarser',
+            desc: 'Bitter + slow = over-extraction. Grind coarser to speed up flow and reduce extraction.',
+            source: 'Scott Rao'
+          });
+        } else if (flow === 'fast') {
+          recs.push({
+            priority: 'medium',
+            title: 'Reduce dose',
+            desc: 'Fast but bitter can indicate channeling or poor distribution. Try reducing dose slightly and focus on puck prep.',
+            source: 'Barista Hustle'
+          });
+        } else {
+          recs.push({
+            priority: 'medium',
+            title: 'Shorten ratio',
+            desc: 'Try a shorter ratio (e.g., 1:1.8 instead of 1:2) to reduce extraction.',
+            source: 'James Hoffmann'
+          });
+        }
+      } else if (taste === 'balanced') {
+        recs.push({
+          priority: 'low',
+          title: 'Great shot!',
+          desc: 'You found a good balance. Note this recipe and use it as your baseline.',
+          source: 'General'
+        });
+      }
+
+      // Body recommendations
+      if (body === 'thin' && taste !== 'sour') {
+        recs.push({
+          priority: 'medium',
+          title: 'Increase dose or shorten ratio',
+          desc: 'For more body: try +1g dose, or pull a shorter ratio. Both will concentrate flavors.',
+          source: 'Scott Rao'
+        });
+      } else if (body === 'thick' && taste !== 'bitter') {
+        recs.push({
+          priority: 'medium',
+          title: 'Decrease dose or lengthen ratio',
+          desc: 'For less heaviness: try -1g dose, or pull a longer ratio. This will open up clarity.',
+          source: 'James Hoffmann'
+        });
+      }
+
+      // Flow-only recommendations if not already addressed
+      if (flow === 'fast' && taste === 'balanced') {
+        recs.push({
+          priority: 'low',
+          title: 'Consider finer grind',
+          desc: 'Shot is tasty but fast. You might get even better results grinding slightly finer to hit 25-30s.',
+          source: 'General'
+        });
+      } else if (flow === 'slow' && taste === 'balanced') {
+        recs.push({
+          priority: 'low',
+          title: 'Consider coarser grind',
+          desc: 'Shot is tasty but slow. You might reduce harshness by grinding slightly coarser.',
+          source: 'General'
+        });
+      }
+
+      // No feedback given
+      if (recs.length === 0) {
+        recs.push({
+          priority: 'info',
+          title: 'Select your feedback above',
+          desc: 'Answer the questions to get personalized recommendations for your next shot.',
+          source: ''
+        });
+      }
+
+      // Render recommendations
+      recommendationsList.innerHTML = recs.map(rec => {
+        let priorityColor = 'bg-gray-100 border-gray-300';
+        let priorityIcon = '💡';
+        if (rec.priority === 'high') {
+          priorityColor = 'bg-red-50 border-red-300';
+          priorityIcon = '🎯';
+        } else if (rec.priority === 'medium') {
+          priorityColor = 'bg-yellow-50 border-yellow-300';
+          priorityIcon = '⚡';
+        } else if (rec.priority === 'low') {
+          priorityColor = 'bg-green-50 border-green-300';
+          priorityIcon = '✨';
+        }
+
+        return `
+          <div class="p-3 rounded-lg border ${priorityColor}">
+            <div class="flex items-start gap-2">
+              <span class="text-lg">${priorityIcon}</span>
+              <div class="flex-1">
+                <div class="font-semibold text-sm text-gray-800">${rec.title}</div>
+                <div class="text-xs text-gray-600 mt-1">${rec.desc}</div>
+                ${rec.source ? `<div class="text-xs text-gray-400 mt-1">— ${rec.source}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      recommendations.classList.remove('hidden');
+    });
+
+    // Input event listeners
+    doseInput.addEventListener('input', calculate);
+    yieldInput.addEventListener('input', calculate);
+    timeInput.addEventListener('input', calculate);
+
+    // Coffee quotes
+    const quotes = [
+      { text: "The goal of espresso is to extract the good stuff and leave the bad stuff behind. Grind size is your primary tool.", author: "James Hoffmann" },
+      { text: "Temperature affects extraction speed. Hotter water extracts faster. If you're stuck between settings, try adjusting temperature.", author: "Scott Rao" },
+      { text: "Channeling is the enemy of good espresso. No amount of grind adjustment can fix poor puck prep.", author: "Scott Rao" },
+      { text: "The first drops tell you everything. Pale and fast means under-extracted. Dark and slow means over-extracted.", author: "Traditional Italian wisdom" },
+      { text: "Ratio is your recipe. Time is your feedback. Grind is your adjustment.", author: "Barista Hustle" },
+      { text: "Weigh your input and output. Guessing is the enemy of consistency.", author: "James Hoffmann" },
+      { text: "Fresh coffee needs coarser grinds. As beans age, grind finer to compensate for lost CO2.", author: "Scott Rao" },
+      { text: "The best espresso is one that you enjoy drinking. Rules are guidelines, not laws.", author: "Coffee philosophy" },
+      { text: "If it tastes sour, it's under-extracted. If it tastes bitter, it's over-extracted. If it tastes balanced, you nailed it.", author: "The extraction equation" },
+      { text: "A 1:2 ratio in 25-30 seconds is a starting point, not a destination. Every coffee is different.", author: "Modern espresso theory" },
+      { text: "Distribution and leveling before tamping matters more than tamp pressure. 15kg is enough.", author: "Scott Rao" },
+      { text: "The puck doesn't lie. If you see channeling, fix your prep before adjusting grind.", author: "Barista Hustle" }
+    ];
+
+    function displayRandomQuote() {
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      const quote = quotes[randomIndex];
+      document.getElementById('quote').textContent = `"${quote.text}"`;
+      document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      doseInput.value = '18';
+      yieldInput.value = '36';
+      timeInput.value = '30';
+      calculate();
+      displayRandomQuote();
+    });
+  </script>
+</body>
+</html>
