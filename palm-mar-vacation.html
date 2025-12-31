@@ -843,6 +843,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://unpkg.com/leaflet-geosearch@4.0.0/dist/bundle.min.js"></script>
     <script>
         // Tab functionality
         document.querySelectorAll('.tab').forEach(tab => {
@@ -854,6 +855,60 @@
                 document.getElementById(tab.dataset.tab).classList.add('active');
             });
         });
+
+        // Geosearch provider for address validation (runs client-side)
+        const provider = new GeoSearch.OpenStreetMapProvider();
+
+        /**
+         * Geocode an address with fallback to existing coordinates
+         * @param {string} address - Address to geocode
+         * @param {[number, number]} fallbackCoords - [lat, lng] to use if geocoding fails
+         * @returns {Promise<{coords: [number, number], geocoded: boolean, address?: string}>}
+         */
+        async function geocodeWithFallback(address, fallbackCoords) {
+            try {
+                // Append Tenerife context for better results
+                const searchQuery = address.includes('Tenerife') ? address : `${address}, Tenerife, Spain`;
+                const results = await provider.search({ query: searchQuery });
+
+                if (results && results.length > 0) {
+                    const result = results[0];
+                    return {
+                        coords: [result.y, result.x], // Nominatim returns x=lng, y=lat
+                        geocoded: true,
+                        address: result.label
+                    };
+                }
+            } catch (error) {
+                console.warn(`Geocoding failed for "${address}":`, error.message);
+            }
+
+            // Fallback to provided coordinates
+            return {
+                coords: fallbackCoords,
+                geocoded: false
+            };
+        }
+
+        /**
+         * Batch geocode POIs with rate limiting (be nice to OSM servers)
+         * @param {Array} pois - Array of POI objects with address and coords properties
+         * @param {number} delayMs - Delay between requests (default 1000ms per Nominatim policy)
+         */
+        async function geocodePOIs(pois, delayMs = 1000) {
+            const results = [];
+            for (const poi of pois) {
+                if (poi.address) {
+                    const result = await geocodeWithFallback(poi.address, poi.coords);
+                    results.push({ ...poi, ...result });
+                    // Rate limit: wait between requests
+                    await new Promise(resolve => setTimeout(resolve, delayMs));
+                } else {
+                    results.push({ ...poi, geocoded: false });
+                }
+            }
+            return results;
+        }
 
         // Initialize map centered on Palm-Mar area (not exact address)
         const palmMarCoords = [28.022, -16.699];
@@ -895,12 +950,14 @@
             .openPopup();
 
         // Add points of interest with descriptions
+        // Each POI has optional 'address' field for geocoding verification
         const pois = [
             {
                 coords: [28.020, -16.705],
                 name: 'Playa de Palm-Mar',
                 icon: '🏖️',
                 category: 'beach',
+                address: 'Playa de Palm-Mar, Palm-Mar',
                 description: 'Peaceful volcanic sand beach with crystal clear waters. Great for swimming and snorkeling. Beach bars nearby.'
             },
             {
@@ -908,6 +965,7 @@
                 name: 'Montaña Amarilla',
                 icon: '🏔️',
                 category: 'nature',
+                address: 'Montaña Amarilla, Arona',
                 description: 'Striking yellow volcanic tuff cone. Easy coastal walk with beautiful rock formations and tide pools.'
             },
             {
@@ -915,6 +973,7 @@
                 name: 'Las Galletas',
                 icon: '🏘️',
                 category: 'village',
+                address: 'Las Galletas, Arona',
                 description: 'Nearby fishing village with authentic local restaurants, supermarkets, and diving centers.'
             },
             {
@@ -922,6 +981,7 @@
                 name: 'La Rasca Nature Reserve',
                 icon: '🌿',
                 category: 'nature',
+                address: 'Reserva Natural Especial de la Rasca',
                 description: 'Protected coastal area with natural volcanic rock pools, hiking trails, and diverse flora.'
             },
             {
@@ -929,6 +989,7 @@
                 name: 'Hospital del Sur',
                 icon: '🏥',
                 category: 'medical',
+                address: 'Hospital del Sur, Carretera de Arona, El Mojón, Arona',
                 description: 'Public hospital with 24/7 Urgencias (ER). Tel: 922 17 48 66. ~10 km from Palm-Mar.'
             },
             {
@@ -936,6 +997,7 @@
                 name: 'Hospiten Sur',
                 icon: '🏥',
                 category: 'medical',
+                address: 'Hospiten Sur, Los Cristianos',
                 description: 'Private hospital in Los Cristianos with 24/7 emergency services. Tel: 922 750 022.'
             },
             {
@@ -943,6 +1005,7 @@
                 name: 'Farmacia Palm Mar',
                 icon: '💊',
                 category: 'medical',
+                address: 'Avenida Palm Mar, 66, Palm-Mar',
                 description: 'Local pharmacy. Hours: Mon-Fri 09:00-14:00 & 16:30-19:30, Sat 09:00-14:00. Tel: 922 748 010.'
             },
             {
@@ -950,6 +1013,7 @@
                 name: 'Centro de Salud El Fraile',
                 icon: '🩺',
                 category: 'medical',
+                address: 'Calle San Sebastián de La Gomera, 76, El Fraile',
                 description: 'Health centre for urgent primary care. Mon-Fri 08:00-20:00. Tel: 922 923 187.'
             },
             {
@@ -957,6 +1021,7 @@
                 name: 'Centro de Salud Las Galletas',
                 icon: '🩺',
                 category: 'medical',
+                address: 'Avenida Príncipe Felipe, 13, Las Galletas',
                 description: 'Health centre for urgent primary care. Tel: 822 171 561.'
             }
         ];
@@ -1005,6 +1070,50 @@
         }
 
         initChecklist();
+
+        // Developer utility: Verify POI coordinates against geocoded addresses
+        // Usage: Open browser console and run verifyPOICoordinates()
+        window.verifyPOICoordinates = async function() {
+            console.log('Verifying POI coordinates against geocoded addresses...');
+            console.log('This may take a while due to rate limiting (1 request/sec).\n');
+
+            for (const poi of pois) {
+                if (!poi.address) {
+                    console.log(`⏭️ ${poi.name}: No address to verify`);
+                    continue;
+                }
+
+                const result = await geocodeWithFallback(poi.address, poi.coords);
+
+                if (result.geocoded) {
+                    const [geoLat, geoLng] = result.coords;
+                    const [origLat, origLng] = poi.coords;
+                    const latDiff = Math.abs(geoLat - origLat);
+                    const lngDiff = Math.abs(geoLng - origLng);
+
+                    // Consider >0.01 degrees (~1km) as significant difference
+                    if (latDiff > 0.01 || lngDiff > 0.01) {
+                        console.warn(`⚠️ ${poi.name}:`);
+                        console.warn(`   Address: ${poi.address}`);
+                        console.warn(`   Original: [${origLat}, ${origLng}]`);
+                        console.warn(`   Geocoded: [${geoLat.toFixed(6)}, ${geoLng.toFixed(6)}]`);
+                        console.warn(`   Resolved: ${result.address}`);
+                    } else {
+                        console.log(`✅ ${poi.name}: Coordinates match`);
+                    }
+                } else {
+                    console.log(`❌ ${poi.name}: Geocoding failed, using fallback coords`);
+                }
+
+                // Rate limit
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            console.log('\nVerification complete!');
+        };
+
+        // Example one-off geocode usage:
+        // geocodeWithFallback('Farmacia Palm Mar, Tenerife', [0, 0]).then(console.log)
     </script>
 </body>
 </html>
