@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palm-Mar Vacation Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .header .location-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover, .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card p {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        .card .distance {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #0984e3;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+        }
+
+        .card .category {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-widget {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-widget .temp {
+            font-size: 4rem;
+            font-weight: 300;
+        }
+
+        .weather-widget .desc {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .weather-day {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .checklist input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .checklist label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .checklist .checked {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+
+        .emergency-card {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .emergency-card h3 {
+            color: white;
+        }
+
+        .emergency-card a {
+            color: white;
+            font-weight: bold;
+        }
+
+        .phrase-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+        }
+
+        .phrase-card .spanish {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .phrase-card .english {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .activity-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .activity-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 1.5rem;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+        }
+
+        .timeline-item h4 {
+            color: #2c3e50;
+        }
+
+        .timeline-item p {
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .tabs {
+                gap: 0.25rem;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Palm-Mar Vacation</h1>
+        <p class="subtitle">Your guide to South Tenerife's hidden gem</p>
+        <span class="location-badge">Canary Islands, Spain</span>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="overview">Overview</button>
+            <button class="tab" data-tab="beaches">Beaches</button>
+            <button class="tab" data-tab="dining">Dining</button>
+            <button class="tab" data-tab="activities">Activities</button>
+            <button class="tab" data-tab="daytrips">Day Trips</button>
+            <button class="tab" data-tab="practical">Practical Info</button>
+            <button class="tab" data-tab="packing">Packing List</button>
+        </div>
+
+        <div class="content">
+            <!-- Overview Section -->
+            <div class="section active" id="overview">
+                <h2>Welcome to Palm-Mar</h2>
+
+                <div class="weather-widget">
+                    <div class="temp">22°C</div>
+                    <div class="desc">Typical year-round temperature</div>
+                    <div class="weather-grid">
+                        <div class="weather-day">
+                            <div>Winter</div>
+                            <div>18-22°C</div>
+                        </div>
+                        <div class="weather-day">
+                            <div>Spring</div>
+                            <div>20-24°C</div>
+                        </div>
+                        <div class="weather-day">
+                            <div>Summer</div>
+                            <div>24-28°C</div>
+                        </div>
+                        <div class="weather-day">
+                            <div>Autumn</div>
+                            <div>22-26°C</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="map"></div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>About Palm-Mar</h3>
+                        <p>A peaceful coastal village in southern Tenerife, Palm-Mar offers a relaxed atmosphere away from the tourist crowds. Known for its authentic Canarian charm, excellent seafood restaurants, and beautiful natural beach.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Best Time to Visit</h3>
+                        <p>Tenerife enjoys eternal spring weather. Palm-Mar is pleasant year-round, with slightly fewer visitors from September to November and April to June.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Getting Around</h3>
+                        <p>The village is very walkable. For exploring further, rent a car or use the local bus service. Tenerife South Airport (TFS) is just 15 minutes away.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beaches Section -->
+            <div class="section" id="beaches">
+                <h2>Beaches & Swimming</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <span class="category">Natural Beach</span>
+                        <h3>Playa de Palm-Mar</h3>
+                        <p>The local beach with dark volcanic sand, crystal clear waters, and a peaceful atmosphere. Great for swimming and snorkeling. Several beach bars nearby.</p>
+                        <span class="distance">Walking distance</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Natural Pool</span>
+                        <h3>La Rasca Natural Pools</h3>
+                        <p>Natural volcanic rock pools perfect for a unique swimming experience. Located within the Montaña Amarilla nature reserve.</p>
+                        <span class="distance">10 min walk</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Popular Beach</span>
+                        <h3>Playa de la Tejita</h3>
+                        <p>One of Tenerife's longest natural beaches with golden sand. Backed by the impressive Montaña Roja volcanic cone. Popular with windsurfers.</p>
+                        <span class="distance">10 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Beach Resort</span>
+                        <h3>Playa del Duque</h3>
+                        <p>Upscale beach in Costa Adeje with imported golden sand, calm waters, and luxury beach clubs. Great for a more resort-style day.</p>
+                        <span class="distance">15 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Snorkeling</span>
+                        <h3>Abades Bay</h3>
+                        <p>Excellent snorkeling spot with abundant marine life. The abandoned sanatorium nearby adds a mysterious atmosphere.</p>
+                        <span class="distance">20 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Hidden Gem</span>
+                        <h3>Diego Hernández Beach</h3>
+                        <p>Secluded cove accessible by hiking trail or boat. Pristine turquoise waters and dramatic cliff backdrop. Bring supplies as there are no facilities.</p>
+                        <span class="distance">20 min drive + hike</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dining Section -->
+            <div class="section" id="dining">
+                <h2>Where to Eat & Drink</h2>
+                <div class="info-box">
+                    <strong>Tip:</strong> Many restaurants close between lunch and dinner (3-7pm). Dinner typically starts around 8pm in Spain.
+                </div>
+                <div class="card-grid">
+                    <div class="card">
+                        <span class="category">Seafood</span>
+                        <h3>La Tejita</h3>
+                        <p>Fresh fish and traditional Canarian dishes. Try the "pescado a la espalda" (butterflied fish) and papas arrugadas with mojo.</p>
+                        <span class="distance">In Palm-Mar</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Beach Bar</span>
+                        <h3>Aqua Beach Club</h3>
+                        <p>Relaxed beachfront dining with great sunset views. Good for cocktails and light meals.</p>
+                        <span class="distance">In Palm-Mar</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Traditional</span>
+                        <h3>El Rincón del Arroz</h3>
+                        <p>Known for excellent rice dishes and paella. Great for a hearty lunch.</p>
+                        <span class="distance">In Palm-Mar</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Fine Dining</span>
+                        <h3>El Rincón de Juan Carlos</h3>
+                        <p>Michelin-starred restaurant in Los Gigantes. Modern Canarian cuisine with stunning views. Book well in advance.</p>
+                        <span class="distance">45 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Market</span>
+                        <h3>Mercado del Agricultor</h3>
+                        <p>Local farmers market in nearby Arona. Fresh fruits, vegetables, cheese, and wine. Open weekends.</p>
+                        <span class="distance">10 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Must Try</span>
+                        <h3>Local Specialties</h3>
+                        <p>Don't miss: Papas arrugadas (wrinkled potatoes), Mojo sauces, Gofio, Fresh goat cheese, Canarian wines, and Barraquito coffee.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activities Section -->
+            <div class="section" id="activities">
+                <h2>Things to Do</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <span class="category">Nature</span>
+                        <h3>Montaña Amarilla Walk</h3>
+                        <p>Easy coastal walk to the striking yellow mountain (volcanic tuff cone). Beautiful rock formations and tide pools along the way.</p>
+                        <span class="distance">Starts from Palm-Mar</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Wildlife</span>
+                        <h3>Whale & Dolphin Watching</h3>
+                        <p>Tenerife has resident pilot whales and dolphins. Book an eco-certified boat tour from Los Cristianos or Puerto Colón.</p>
+                        <span class="distance">15 min to port</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Adventure</span>
+                        <h3>Kayaking & Paddleboarding</h3>
+                        <p>Rent equipment at nearby beaches or join guided tours. Excellent for exploring sea caves and spotting turtles.</p>
+                        <span class="distance">Various locations</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Diving</span>
+                        <h3>Scuba Diving</h3>
+                        <p>Several dive centers nearby offer courses and guided dives. Popular sites include Las Galletas reef and the wrecks off Los Cristianos.</p>
+                        <span class="distance">5-15 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Golf</span>
+                        <h3>Golf del Sur / Amarilla Golf</h3>
+                        <p>Multiple championship courses nearby. Golf del Sur offers ocean views and challenging winds.</p>
+                        <span class="distance">15 min drive</span>
+                    </div>
+                    <div class="card">
+                        <span class="category">Relaxation</span>
+                        <h3>Spa Day</h3>
+                        <p>Several luxury hotels in Costa Adeje offer day spa packages. Thai Botanico Spa and the spas at Bahía del Duque are excellent choices.</p>
+                        <span class="distance">15-20 min drive</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day Trips Section -->
+            <div class="section" id="daytrips">
+                <h2>Day Trip Ideas</h2>
+                <div class="activity-timeline">
+                    <div class="timeline-item">
+                        <h4>Teide National Park</h4>
+                        <p>Spain's highest peak and a UNESCO World Heritage Site. Take the cable car for stunning views or hike to the summit (permit required). The lunar landscapes are otherworldly. Don't miss sunset or stargazing!</p>
+                        <span class="distance">1 hour drive</span>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Los Gigantes Cliffs</h4>
+                        <p>Dramatic 600m cliffs on the west coast. Take a boat trip to see them from the water or visit the charming town. Great for whale watching too.</p>
+                        <span class="distance">45 min drive</span>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Masca Village & Gorge</h4>
+                        <p>Picturesque mountain village with stunning gorge hike (if open). The winding mountain road is an adventure itself. Get there early to avoid crowds.</p>
+                        <span class="distance">1 hour drive</span>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>La Laguna</h4>
+                        <p>UNESCO World Heritage colonial town. Colorful streets, historic architecture, great restaurants, and a more authentic Canarian atmosphere than the south.</p>
+                        <span class="distance">45 min drive</span>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>Anaga Rural Park</h4>
+                        <p>Ancient laurel forests, dramatic peaks, and isolated villages. Excellent hiking trails and incredible views. A completely different Tenerife experience.</p>
+                        <span class="distance">1 hour drive</span>
+                    </div>
+                    <div class="timeline-item">
+                        <h4>La Gomera Island</h4>
+                        <p>Take the ferry from Los Cristianos for a day trip to this unspoiled island. Visit Garajonay National Park (cloud forest) and try the local almogrote cheese spread.</p>
+                        <span class="distance">50 min ferry</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Practical Info Section -->
+            <div class="section" id="practical">
+                <h2>Practical Information</h2>
+
+                <div class="emergency-card">
+                    <h3>Emergency Numbers</h3>
+                    <p><strong>General Emergency:</strong> <a href="tel:112">112</a></p>
+                    <p><strong>Police:</strong> <a href="tel:091">091</a></p>
+                    <p><strong>Medical:</strong> <a href="tel:061">061</a></p>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Currency & Payments</h3>
+                        <p>Euro (€). Cards widely accepted but carry some cash for small bars and markets. ATMs available in Palm-Mar and nearby towns.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Language</h3>
+                        <p>Spanish is the official language. English is widely spoken in tourist areas. Learning a few Spanish phrases is appreciated!</p>
+                    </div>
+                    <div class="card">
+                        <h3>Timezone</h3>
+                        <p>Western European Time (WET). Same as UK/Portugal, 1 hour behind mainland Spain.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Electricity</h3>
+                        <p>230V, European Type C/F plugs. UK visitors need an adapter.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Water</h3>
+                        <p>Tap water is safe but tastes of desalination. Bottled water is recommended and inexpensive.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Supermarkets</h3>
+                        <p>Small shops in Palm-Mar. Larger supermarkets (Mercadona, Lidl, Alcampo) in nearby Los Cristianos and Las Galletas.</p>
+                    </div>
+                </div>
+
+                <h3 style="margin: 2rem 0 1rem;">Useful Spanish Phrases</h3>
+                <div class="phrase-card">
+                    <div class="spanish">Hola / Buenos días</div>
+                    <div class="english">Hello / Good morning</div>
+                </div>
+                <div class="phrase-card">
+                    <div class="spanish">Por favor / Gracias</div>
+                    <div class="english">Please / Thank you</div>
+                </div>
+                <div class="phrase-card">
+                    <div class="spanish">La cuenta, por favor</div>
+                    <div class="english">The bill, please</div>
+                </div>
+                <div class="phrase-card">
+                    <div class="spanish">¿Dónde está...?</div>
+                    <div class="english">Where is...?</div>
+                </div>
+                <div class="phrase-card">
+                    <div class="spanish">Una cerveza / Un vino tinto</div>
+                    <div class="english">A beer / A red wine</div>
+                </div>
+                <div class="phrase-card">
+                    <div class="spanish">¿Tiene mesa para dos?</div>
+                    <div class="english">Do you have a table for two?</div>
+                </div>
+            </div>
+
+            <!-- Packing List Section -->
+            <div class="section" id="packing">
+                <h2>Packing Checklist</h2>
+                <div class="info-box">
+                    <strong>Tip:</strong> The weather is warm year-round, but evenings can be cool. Layers are key, especially for Teide visits!
+                </div>
+
+                <h3 style="margin: 1.5rem 0 1rem;">Essentials</h3>
+                <ul class="checklist" id="essentials-list">
+                    <li><input type="checkbox" id="e1"><label for="e1">Passport / ID</label></li>
+                    <li><input type="checkbox" id="e2"><label for="e2">Travel insurance documents</label></li>
+                    <li><input type="checkbox" id="e3"><label for="e3">Phone & charger</label></li>
+                    <li><input type="checkbox" id="e4"><label for="e4">EU adapter plug (if needed)</label></li>
+                    <li><input type="checkbox" id="e5"><label for="e5">Credit/debit cards</label></li>
+                    <li><input type="checkbox" id="e6"><label for="e6">Some cash (Euros)</label></li>
+                    <li><input type="checkbox" id="e7"><label for="e7">Driving license (if renting car)</label></li>
+                </ul>
+
+                <h3 style="margin: 1.5rem 0 1rem;">Beach & Sun</h3>
+                <ul class="checklist" id="beach-list">
+                    <li><input type="checkbox" id="b1"><label for="b1">Swimwear</label></li>
+                    <li><input type="checkbox" id="b2"><label for="b2">Sunscreen (SPF 30+)</label></li>
+                    <li><input type="checkbox" id="b3"><label for="b3">Sunglasses</label></li>
+                    <li><input type="checkbox" id="b4"><label for="b4">Sun hat</label></li>
+                    <li><input type="checkbox" id="b5"><label for="b5">Beach towel</label></li>
+                    <li><input type="checkbox" id="b6"><label for="b6">Snorkel & mask</label></li>
+                    <li><input type="checkbox" id="b7"><label for="b7">Reef-safe sunscreen</label></li>
+                    <li><input type="checkbox" id="b8"><label for="b8">Water shoes (for rocky beaches)</label></li>
+                </ul>
+
+                <h3 style="margin: 1.5rem 0 1rem;">Clothing</h3>
+                <ul class="checklist" id="clothing-list">
+                    <li><input type="checkbox" id="c1"><label for="c1">Light summer clothes</label></li>
+                    <li><input type="checkbox" id="c2"><label for="c2">Light jacket or cardigan (for evenings)</label></li>
+                    <li><input type="checkbox" id="c3"><label for="c3">Warm layer (for Teide - it's cold up there!)</label></li>
+                    <li><input type="checkbox" id="c4"><label for="c4">Comfortable walking shoes</label></li>
+                    <li><input type="checkbox" id="c5"><label for="c5">Sandals / flip-flops</label></li>
+                    <li><input type="checkbox" id="c6"><label for="c6">Smart casual outfit (for nicer restaurants)</label></li>
+                </ul>
+
+                <h3 style="margin: 1.5rem 0 1rem;">Optional</h3>
+                <ul class="checklist" id="optional-list">
+                    <li><input type="checkbox" id="o1"><label for="o1">Camera</label></li>
+                    <li><input type="checkbox" id="o2"><label for="o2">Binoculars (for whale watching)</label></li>
+                    <li><input type="checkbox" id="o3"><label for="o3">Hiking boots</label></li>
+                    <li><input type="checkbox" id="o4"><label for="o4">Daypack / backpack</label></li>
+                    <li><input type="checkbox" id="o5"><label for="o5">Reusable water bottle</label></li>
+                    <li><input type="checkbox" id="o6"><label for="o6">Book / Kindle</label></li>
+                    <li><input type="checkbox" id="o7"><label for="o7">Spanish phrasebook</label></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Initialize map centered on Palm-Mar area (not exact address)
+        const map = L.map('map').setView([28.0425, -16.7120], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add marker for Palm-Mar village center (public location)
+        L.marker([28.0425, -16.7120])
+            .addTo(map)
+            .bindPopup('<strong>Palm-Mar</strong><br>Your vacation destination')
+            .openPopup();
+
+        // Add points of interest
+        const pois = [
+            { coords: [28.0390, -16.7180], name: 'Playa de Palm-Mar', icon: '🏖️' },
+            { coords: [28.0350, -16.7250], name: 'Montaña Amarilla', icon: '🏔️' },
+            { coords: [28.0550, -16.6890], name: 'Las Galletas', icon: '🏘️' },
+            { coords: [28.0520, -16.7190], name: 'La Rasca Nature Reserve', icon: '🌿' }
+        ];
+
+        pois.forEach(poi => {
+            L.marker(poi.coords)
+                .addTo(map)
+                .bindPopup(`<strong>${poi.name}</strong>`);
+        });
+
+        // Checklist functionality with localStorage
+        function initChecklist() {
+            const saved = JSON.parse(localStorage.getItem('palmmar-packing') || '{}');
+
+            document.querySelectorAll('.checklist input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = saved[checkbox.id] || false;
+                updateLabel(checkbox);
+
+                checkbox.addEventListener('change', () => {
+                    saved[checkbox.id] = checkbox.checked;
+                    localStorage.setItem('palmmar-packing', JSON.stringify(saved));
+                    updateLabel(checkbox);
+                });
+            });
+        }
+
+        function updateLabel(checkbox) {
+            const label = checkbox.nextElementSibling;
+            if (checkbox.checked) {
+                label.classList.add('checked');
+            } else {
+                label.classList.remove('checked');
+            }
+        }
+
+        initChecklist();
+    </script>
+</body>
+</html>
