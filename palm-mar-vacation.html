@@ -150,10 +150,41 @@
             margin-bottom: 0.75rem;
         }
 
+        .map-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
         #map {
             height: 400px;
             border-radius: 15px;
-            margin-bottom: 1.5rem;
+            transition: height 0.3s ease;
+        }
+
+        #map.expanded {
+            height: 70vh;
+        }
+
+        .map-toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .map-toggle-btn:hover {
+            background: #f0f0f0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .weather-widget {
@@ -372,7 +403,10 @@
                     </div>
                 </div>
 
-                <div id="map"></div>
+                <div class="map-container">
+                    <button class="map-toggle-btn" id="mapToggle">Expand Map</button>
+                    <div id="map"></div>
+                </div>
 
                 <div class="card-grid">
                     <div class="card">
@@ -736,7 +770,7 @@
         // Add marker for TFS Airport
         L.marker(tfsAirportCoords)
             .addTo(map)
-            .bindPopup('<strong>✈️ Tenerife South Airport (TFS)</strong><br>~15 min drive to Palm-Mar');
+            .bindPopup('<strong>✈️ Tenerife South Airport (TFS)</strong><br><span style="color:#666;font-size:0.9em;">Main airport for southern Tenerife. ~15 min drive to Palm-Mar. Taxi apps: PIDAxi, TAXI Tenerife. Bus lines 111 & 467.</span>');
 
         // Add line from airport to Palm-Mar
         L.polyline([tfsAirportCoords, palmMarCoords], {
@@ -749,21 +783,53 @@
         // Add marker for Palm-Mar village center (public location)
         L.marker(palmMarCoords)
             .addTo(map)
-            .bindPopup('<strong>Palm-Mar</strong><br>Your vacation destination')
+            .bindPopup('<strong>📍 Palm-Mar</strong><br><span style="color:#666;font-size:0.9em;">Peaceful coastal village with authentic Canarian charm. Excellent seafood restaurants, natural beach, and easy access to nature reserves.</span>')
             .openPopup();
 
-        // Add points of interest
+        // Add points of interest with descriptions
         const pois = [
-            { coords: [28.020, -16.705], name: 'Playa de Palm-Mar', icon: '🏖️' },
-            { coords: [28.010, -16.637], name: 'Montaña Amarilla', icon: '🏔️' },
-            { coords: [28.008, -16.656], name: 'Las Galletas', icon: '🏘️' },
-            { coords: [28.001, -16.694], name: 'La Rasca Nature Reserve', icon: '🌿' }
+            {
+                coords: [28.020, -16.705],
+                name: 'Playa de Palm-Mar',
+                icon: '🏖️',
+                description: 'Peaceful volcanic sand beach with crystal clear waters. Great for swimming and snorkeling. Beach bars nearby.'
+            },
+            {
+                coords: [28.010, -16.637],
+                name: 'Montaña Amarilla',
+                icon: '🏔️',
+                description: 'Striking yellow volcanic tuff cone. Easy coastal walk with beautiful rock formations and tide pools.'
+            },
+            {
+                coords: [28.008, -16.656],
+                name: 'Las Galletas',
+                icon: '🏘️',
+                description: 'Nearby fishing village with authentic local restaurants, supermarkets, and diving centers.'
+            },
+            {
+                coords: [28.001, -16.694],
+                name: 'La Rasca Nature Reserve',
+                icon: '🌿',
+                description: 'Protected coastal area with natural volcanic rock pools, hiking trails, and diverse flora.'
+            }
         ];
 
         pois.forEach(poi => {
             L.marker(poi.coords)
                 .addTo(map)
-                .bindPopup(`<strong>${poi.name}</strong>`);
+                .bindPopup(`<strong>${poi.icon} ${poi.name}</strong><br><span style="color:#666;font-size:0.9em;">${poi.description}</span>`);
+        });
+
+        // Map expand/collapse functionality
+        const mapToggle = document.getElementById('mapToggle');
+        const mapEl = document.getElementById('map');
+
+        mapToggle.addEventListener('click', () => {
+            mapEl.classList.toggle('expanded');
+            const isExpanded = mapEl.classList.contains('expanded');
+            mapToggle.textContent = isExpanded ? 'Collapse Map' : 'Expand Map';
+            // Invalidate map size so Leaflet redraws correctly
+            setTimeout(() => map.invalidateSize(), 300);
         });
 
         // Checklist functionality with localStorage
