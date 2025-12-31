@@ -165,6 +165,53 @@
             height: 70vh;
         }
 
+        /* Custom map markers */
+        .custom-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .custom-marker span {
+            transform: rotate(45deg);
+            font-size: 14px;
+        }
+
+        .marker-medical {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: 2px solid #a93226;
+        }
+
+        .marker-beach {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: 2px solid #1f6dad;
+        }
+
+        .marker-nature {
+            background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+            border: 2px solid #196f3d;
+        }
+
+        .marker-village {
+            background: linear-gradient(135deg, #9b59b6 0%, #7d3c98 100%);
+            border: 2px solid #6c3483;
+        }
+
+        .marker-airport {
+            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+            border: 2px solid #b9770e;
+        }
+
+        .marker-home {
+            background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+            border: 2px solid #ad1457;
+        }
+
         .map-toggle-btn {
             position: absolute;
             top: 10px;
@@ -817,8 +864,19 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
+        // Helper function to create custom colored markers
+        function createMarkerIcon(category, emoji) {
+            return L.divIcon({
+                className: 'custom-marker-wrapper',
+                html: `<div class="custom-marker marker-${category}"><span>${emoji}</span></div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+            });
+        }
+
         // Add marker for TFS Airport
-        L.marker(tfsAirportCoords)
+        L.marker(tfsAirportCoords, { icon: createMarkerIcon('airport', '✈️') })
             .addTo(map)
             .bindPopup('<strong>✈️ Tenerife South Airport (TFS)</strong><br><span style="color:#666;font-size:0.9em;">Main airport for southern Tenerife. ~15 min drive to Palm-Mar. Taxi apps: PIDAxi, TAXI Tenerife. Bus lines 111 & 467.</span>');
 
@@ -831,7 +889,7 @@
         }).addTo(map);
 
         // Add marker for Palm-Mar village center (public location)
-        L.marker(palmMarCoords)
+        L.marker(palmMarCoords, { icon: createMarkerIcon('home', '📍') })
             .addTo(map)
             .bindPopup('<strong>📍 Palm-Mar</strong><br><span style="color:#666;font-size:0.9em;">Peaceful coastal village with authentic Canarian charm. Excellent seafood restaurants, natural beach, and easy access to nature reserves.</span>')
             .openPopup();
@@ -842,60 +900,69 @@
                 coords: [28.020, -16.705],
                 name: 'Playa de Palm-Mar',
                 icon: '🏖️',
+                category: 'beach',
                 description: 'Peaceful volcanic sand beach with crystal clear waters. Great for swimming and snorkeling. Beach bars nearby.'
             },
             {
                 coords: [28.010, -16.637],
                 name: 'Montaña Amarilla',
                 icon: '🏔️',
+                category: 'nature',
                 description: 'Striking yellow volcanic tuff cone. Easy coastal walk with beautiful rock formations and tide pools.'
             },
             {
                 coords: [28.008, -16.656],
                 name: 'Las Galletas',
                 icon: '🏘️',
+                category: 'village',
                 description: 'Nearby fishing village with authentic local restaurants, supermarkets, and diving centers.'
             },
             {
                 coords: [28.001, -16.694],
                 name: 'La Rasca Nature Reserve',
                 icon: '🌿',
+                category: 'nature',
                 description: 'Protected coastal area with natural volcanic rock pools, hiking trails, and diverse flora.'
             },
             {
                 coords: [28.088, -16.669],
                 name: 'Hospital del Sur',
                 icon: '🏥',
+                category: 'medical',
                 description: 'Public hospital with 24/7 Urgencias (ER). Tel: 922 17 48 66. ~10 km from Palm-Mar.'
             },
             {
                 coords: [28.052, -16.719],
                 name: 'Hospiten Sur',
                 icon: '🏥',
+                category: 'medical',
                 description: 'Private hospital in Los Cristianos with 24/7 emergency services. Tel: 922 750 022.'
             },
             {
                 coords: [28.023, -16.697],
                 name: 'Farmacia Palm Mar',
                 icon: '💊',
+                category: 'medical',
                 description: 'Local pharmacy. Hours: Mon-Fri 09:00-14:00 & 16:30-19:30, Sat 09:00-14:00. Tel: 922 748 010.'
             },
             {
                 coords: [28.015, -16.645],
                 name: 'Centro de Salud El Fraile',
                 icon: '🩺',
+                category: 'medical',
                 description: 'Health centre for urgent primary care. Mon-Fri 08:00-20:00. Tel: 922 923 187.'
             },
             {
                 coords: [28.007, -16.654],
                 name: 'Centro de Salud Las Galletas',
                 icon: '🩺',
+                category: 'medical',
                 description: 'Health centre for urgent primary care. Tel: 822 171 561.'
             }
         ];
 
         pois.forEach(poi => {
-            L.marker(poi.coords)
+            L.marker(poi.coords, { icon: createMarkerIcon(poi.category, poi.icon) })
                 .addTo(map)
                 .bindPopup(`<strong>${poi.icon} ${poi.name}</strong><br><span style="color:#666;font-size:0.9em;">${poi.description}</span>`);
         });
