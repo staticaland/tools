@@ -725,24 +725,39 @@
         });
 
         // Initialize map centered on Palm-Mar area (not exact address)
-        const map = L.map('map').setView([28.0425, -16.7120], 14);
+        const palmMarCoords = [28.022, -16.699];
+        const tfsAirportCoords = [28.0445, -16.5725];
+        const map = L.map('map').setView([28.025, -16.635], 12);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
+        // Add marker for TFS Airport
+        L.marker(tfsAirportCoords)
+            .addTo(map)
+            .bindPopup('<strong>✈️ Tenerife South Airport (TFS)</strong><br>~15 min drive to Palm-Mar');
+
+        // Add line from airport to Palm-Mar
+        L.polyline([tfsAirportCoords, palmMarCoords], {
+            color: '#3b82f6',
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '10, 10'
+        }).addTo(map);
+
         // Add marker for Palm-Mar village center (public location)
-        L.marker([28.0425, -16.7120])
+        L.marker(palmMarCoords)
             .addTo(map)
             .bindPopup('<strong>Palm-Mar</strong><br>Your vacation destination')
             .openPopup();
 
         // Add points of interest
         const pois = [
-            { coords: [28.0390, -16.7180], name: 'Playa de Palm-Mar', icon: '🏖️' },
-            { coords: [28.0350, -16.7250], name: 'Montaña Amarilla', icon: '🏔️' },
-            { coords: [28.0550, -16.6890], name: 'Las Galletas', icon: '🏘️' },
-            { coords: [28.0520, -16.7190], name: 'La Rasca Nature Reserve', icon: '🌿' }
+            { coords: [28.020, -16.705], name: 'Playa de Palm-Mar', icon: '🏖️' },
+            { coords: [28.010, -16.637], name: 'Montaña Amarilla', icon: '🏔️' },
+            { coords: [28.008, -16.656], name: 'Las Galletas', icon: '🏘️' },
+            { coords: [28.001, -16.694], name: 'La Rasca Nature Reserve', icon: '🌿' }
         ];
 
         pois.forEach(poi => {
