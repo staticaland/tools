@@ -41,7 +41,7 @@
             --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
             --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
 
-            --nav-height: 72px;
+            --nav-height: 56px;
             --header-height: 180px;
         }
 
@@ -62,7 +62,7 @@
             color: var(--volcanic);
             min-height: 100vh;
             min-height: 100dvh;
-            padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-xs));
+            padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 4px);
             line-height: 1.6;
             overflow-x: hidden;
         }
@@ -631,7 +631,7 @@
             min-height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
             background: var(--white);
             border-top: 1px solid var(--sand-dark);
-            padding: var(--space-xs) 0 calc(var(--space-xs) + env(safe-area-inset-bottom, 0px));
+            padding: 4px 0 calc(4px + env(safe-area-inset-bottom, 0px));
             z-index: 1000;
             display: flex;
             justify-content: center;
@@ -653,8 +653,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: var(--space-sm);
+            gap: 2px;
+            padding: 6px 8px;
             background: none;
             border: none;
             font-family: var(--font-body);
@@ -676,7 +676,7 @@
         }
 
         .nav-icon {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             line-height: 1;
             transition: transform 0.2s;
         }
