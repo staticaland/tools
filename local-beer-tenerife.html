@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Local Beer Guide - Tenerife & Canary Islands</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --amber: #D4A84B;
+            --amber-light: #F5E6C8;
+            --amber-dark: #B8860B;
+            --stout: #2D1810;
+            --stout-light: #4A3228;
+            --foam: #FDF8E8;
+            --sand: #F5ECD7;
+            --sand-dark: #D4C5A9;
+            --volcanic: #2D2D2D;
+            --volcanic-light: #4A4A4A;
+            --white: #FEFEFE;
+            --ocean: #1B6B93;
+
+            --font-display: 'Fraunces', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+
+            --space-xs: 0.5rem;
+            --space-sm: 0.75rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-full: 9999px;
+
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--sand);
+            color: var(--volcanic);
+            min-height: 100vh;
+            min-height: 100dvh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Subtle grain texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--stout) 0%, var(--stout-light) 100%);
+            padding: var(--space-xl) var(--space-md);
+            padding-top: calc(var(--space-xl) + env(safe-area-inset-top, 0px));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(212, 168, 75, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 40'%3E%3Cpath fill='%23F5ECD7' d='M0,20 C360,40 720,0 1080,20 C1260,30 1350,35 1440,30 L1440,40 L0,40 Z'/%3E%3C/svg%3E");
+            background-size: cover;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 8vw, 3rem);
+            font-weight: 700;
+            color: var(--amber);
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-xs);
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: var(--amber-light);
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .location-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            background: rgba(212, 168, 75, 0.2);
+            backdrop-filter: blur(10px);
+            color: var(--amber);
+            padding: var(--space-xs) var(--space-md);
+            border-radius: var(--radius-full);
+            margin-top: var(--space-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid rgba(212, 168, 75, 0.3);
+        }
+
+        /* Main content */
+        .main {
+            padding: var(--space-lg) var(--space-md);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Section */
+        .section-header {
+            margin-bottom: var(--space-lg);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--volcanic);
+            margin-bottom: var(--space-xs);
+        }
+
+        .section-subtitle {
+            color: var(--volcanic-light);
+            font-size: 0.9375rem;
+        }
+
+        /* Cards */
+        .card-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:active {
+            transform: scale(0.99);
+        }
+
+        .card-category {
+            display: inline-block;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--stout);
+            background: var(--amber-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            margin-bottom: var(--space-sm);
+        }
+
+        .card-category.lager { background: #FEF3C7; color: #92400E; }
+        .card-category.craft { background: #DBEAFE; color: #1E40AF; }
+        .card-category.location { background: #D1FAE5; color: #065F46; }
+        .card-category.tip { background: #F3E8FF; color: #6B21A8; }
+
+        .card h3 {
+            font-family: var(--font-display);
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--volcanic);
+            margin-bottom: var(--space-xs);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .card p {
+            color: var(--volcanic-light);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+
+        .card p + p {
+            margin-top: var(--space-sm);
+        }
+
+        .card a {
+            color: var(--ocean);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card a:hover {
+            text-decoration: underline;
+        }
+
+        /* Beer stats */
+        .beer-stats {
+            display: flex;
+            gap: var(--space-md);
+            margin-top: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .beer-stat {
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-sm) var(--space-md);
+            background: var(--foam);
+            border-radius: var(--radius-sm);
+            min-width: 80px;
+        }
+
+        .beer-stat-label {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--volcanic-light);
+        }
+
+        .beer-stat-value {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--stout);
+        }
+
+        /* Info box */
+        .info-box {
+            background: linear-gradient(135deg, rgba(212, 168, 75, 0.15) 0%, rgba(212, 168, 75, 0.05) 100%);
+            border-left: 4px solid var(--amber);
+            padding: var(--space-md);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin-bottom: var(--space-lg);
+        }
+
+        .info-box strong {
+            color: var(--amber-dark);
+        }
+
+        /* Subsection headers */
+        .subsection-header {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--volcanic);
+            margin: var(--space-xl) 0 var(--space-lg);
+            padding-bottom: var(--space-sm);
+            border-bottom: 2px solid var(--sand-dark);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .subsection-header:first-of-type {
+            margin-top: 0;
+        }
+
+        /* Featured beer */
+        .featured-beer {
+            background: linear-gradient(135deg, var(--stout) 0%, var(--stout-light) 100%);
+            color: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .featured-beer::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(212, 168, 75, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .featured-beer h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--amber);
+            margin-bottom: var(--space-xs);
+        }
+
+        .featured-beer .tagline {
+            font-style: italic;
+            color: var(--amber-light);
+            margin-bottom: var(--space-md);
+        }
+
+        .featured-beer p {
+            color: rgba(255,255,255,0.9);
+            position: relative;
+            z-index: 1;
+        }
+
+        .featured-beer .beer-stats {
+            background: rgba(255,255,255,0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+        }
+
+        .featured-beer .beer-stat {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .featured-beer .beer-stat-label {
+            color: var(--amber-light);
+        }
+
+        .featured-beer .beer-stat-value {
+            color: var(--white);
+        }
+
+        /* Rivalry section */
+        .rivalry {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: var(--space-md);
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .rivalry-team {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .rivalry-team h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+            justify-content: center;
+        }
+
+        .rivalry-team p {
+            font-size: 0.875rem;
+            color: var(--volcanic-light);
+        }
+
+        .rivalry-vs {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--amber);
+        }
+
+        @media (max-width: 600px) {
+            .rivalry {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .rivalry-vs {
+                padding: var(--space-sm) 0;
+            }
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            color: var(--ocean);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            padding: var(--space-sm) 0;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: var(--space-xl) var(--space-md);
+            color: var(--volcanic-light);
+            font-size: 0.875rem;
+        }
+
+        /* Desktop enhancements */
+        @media (min-width: 768px) {
+            .main {
+                padding: var(--space-2xl);
+            }
+
+            .header {
+                padding: var(--space-2xl);
+            }
+
+            .card-stack {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Cervezas Canarias</h1>
+            <p class="subtitle">A guide to local beers of the Canary Islands</p>
+            <span class="location-badge">Tenerife, Canary Islands</span>
+        </div>
+    </header>
+
+    <main class="main">
+        <a href="palm-mar-vacation.html" class="back-link">&larr; Back to Palm-Mar Guide</a>
+
+        <div class="section-header">
+            <h2 class="section-title">The Island's Brews</h2>
+            <p class="section-subtitle">From historic lagers to craft newcomers</p>
+        </div>
+
+        <div class="info-box">
+            <strong>Did you know?</strong> The Canary Islands have been brewing beer since 1924, and today the islands produce some of Spain's most refreshing lagers, perfectly suited to the subtropical climate.
+        </div>
+
+        <!-- Featured Beer -->
+        <div class="featured-beer">
+            <h2>Dorada Especial</h2>
+            <p class="tagline">"La Original" - Extra Maduración</p>
+            <p>The flagship beer of Tenerife and arguably the most iconic Canarian brew. Dorada Especial is a premium lager with an extended maturation process, resulting in a smooth, balanced taste. Look for the distinctive Teide volcano silhouette on every bottle.</p>
+            <p>Brewed by Compañía Cervecera de Canarias (CCC) in Santa Cruz de Tenerife since 1939, it's the beer you'll find in every local bar, restaurant, and chiringuito across the island.</p>
+            <div class="beer-stats">
+                <div class="beer-stat">
+                    <span class="beer-stat-label">Style</span>
+                    <span class="beer-stat-value">Lager</span>
+                </div>
+                <div class="beer-stat">
+                    <span class="beer-stat-label">ABV</span>
+                    <span class="beer-stat-value">5.0%</span>
+                </div>
+                <div class="beer-stat">
+                    <span class="beer-stat-label">Origin</span>
+                    <span class="beer-stat-value">Tenerife</span>
+                </div>
+                <div class="beer-stat">
+                    <span class="beer-stat-label">Since</span>
+                    <span class="beer-stat-value">1939</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- The Great Rivalry -->
+        <h3 class="subsection-header">The Great Canarian Beer Rivalry</h3>
+
+        <div class="rivalry">
+            <div class="rivalry-team">
+                <h3>Dorada</h3>
+                <p>Tenerife's Pride</p>
+                <p style="margin-top: var(--space-sm); font-size: 0.8rem;">Western Islands (Tenerife, La Gomera, El Hierro, La Palma)</p>
+            </div>
+            <div class="rivalry-vs">VS</div>
+            <div class="rivalry-team">
+                <h3>Tropical</h3>
+                <p>Gran Canaria's Favorite</p>
+                <p style="margin-top: var(--space-sm); font-size: 0.8rem;">Eastern Islands (Gran Canaria, Lanzarote, Fuerteventura)</p>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>Local Loyalty:</strong> Ask a Tinerfeño if they prefer Dorada or Tropical and you'll get a passionate answer! This friendly rivalry has existed since both breweries were founded in the 1920s. Both are now owned by the same company, but the island allegiances remain strong.
+        </div>
+
+        <!-- Dorada Range -->
+        <h3 class="subsection-header">The Dorada Family</h3>
+        <div class="card-stack">
+            <div class="card">
+                <span class="card-category lager">Flagship</span>
+                <h3>Dorada Especial</h3>
+                <p>The classic. A smooth, easy-drinking lager with subtle malt sweetness. The "Extra Maduración" (extra maturation) gives it a refined character.</p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">ABV</span>
+                        <span class="beer-stat-value">5.0%</span>
+                    </div>
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Style</span>
+                        <span class="beer-stat-value">Lager</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <span class="card-category lager">Premium</span>
+                <h3>Dorada Sin</h3>
+                <p>Non-alcoholic version that doesn't compromise on taste. Perfect for driving days or beach afternoons when you want to pace yourself.</p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">ABV</span>
+                        <span class="beer-stat-value">0.0%</span>
+                    </div>
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Style</span>
+                        <span class="beer-stat-value">Alcohol-Free</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <span class="card-category lager">Refreshing</span>
+                <h3>Dorada Pilsen</h3>
+                <p>A crisper, more hop-forward take on the classic. Slightly lighter body with more pronounced bitterness.</p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">ABV</span>
+                        <span class="beer-stat-value">4.7%</span>
+                    </div>
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Style</span>
+                        <span class="beer-stat-value">Pilsner</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tropical Range -->
+        <h3 class="subsection-header">Tropical - The Eastern Islands' Choice</h3>
+        <div class="card-stack">
+            <div class="card">
+                <span class="card-category lager">Classic</span>
+                <h3>Tropical</h3>
+                <p>Gran Canaria's answer to Dorada. A light, refreshing lager that's been quenching island thirst since 1924. Slightly lighter and crisper than Dorada.</p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">ABV</span>
+                        <span class="beer-stat-value">4.7%</span>
+                    </div>
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Since</span>
+                        <span class="beer-stat-value">1924</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <span class="card-category lager">Premium</span>
+                <h3>Tropical Premium</h3>
+                <p>A step up from the original with more body and character. Longer maturation for a smoother finish.</p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">ABV</span>
+                        <span class="beer-stat-value">5.4%</span>
+                    </div>
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Style</span>
+                        <span class="beer-stat-value">Premium Lager</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Craft Scene -->
+        <h3 class="subsection-header">Craft Beer Scene</h3>
+
+        <div class="info-box">
+            <strong>Growing Scene:</strong> While the big two dominate, Tenerife has a small but passionate craft beer movement. Here are some local favorites worth seeking out.
+        </div>
+
+        <div class="card-stack">
+            <div class="card">
+                <span class="card-category craft">Craft Brewery</span>
+                <h3>Tacoa Cerveza Artesana</h3>
+                <p>Tenerife's most established craft brewery, based in El Sauzal. They brew a range of styles from IPAs to stouts, with some beers featuring local ingredients.</p>
+                <p><a href="https://www.tacoa.es" target="_blank">Visit website &rarr;</a></p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Location</span>
+                        <span class="beer-stat-value">El Sauzal</span>
+                    </div>
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Styles</span>
+                        <span class="beer-stat-value">6+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <span class="card-category craft">Craft Brewery</span>
+                <h3>Nao Cervecería</h3>
+                <p>A newer addition to the Tenerife craft scene, producing small-batch beers with creative flavors. Look for them at local craft beer bars.</p>
+                <div class="beer-stats">
+                    <div class="beer-stat">
+                        <span class="beer-stat-label">Style</span>
+                        <span class="beer-stat-value">Various</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <span class="card-category craft">Microbrewery</span>
+                <h3>La Quince (Limited)</h3>
+                <p>While based in Madrid, this acclaimed Spanish craft brewery occasionally collaborates with Canarian brewers. Worth trying if you spot it.</p>
+            </div>
+        </div>
+
+        <!-- Where to Find -->
+        <h3 class="subsection-header">Where to Find Local Beer</h3>
+        <div class="card-stack">
+            <div class="card">
+                <span class="card-category location">Bar</span>
+                <h3>Any Local Chiringuito</h3>
+                <p>Beach bars across the island serve ice-cold Dorada. Order "una Dorada" and enjoy it with some papas arrugadas.</p>
+            </div>
+            <div class="card">
+                <span class="card-category location">Palm-Mar</span>
+                <h3>Moon Palm-Mar</h3>
+                <p>While known for Belgian beers (~40 varieties), they also stock local options. Great for comparing Canarian vs European styles.</p>
+                <p><a href="https://www.goodmorningtenerife.com/moon-palm-mar-restaurante-lounge-bar/" target="_blank">More info &rarr;</a></p>
+            </div>
+            <div class="card">
+                <span class="card-category location">Los Cristianos</span>
+                <h3>The Vault Bar</h3>
+                <p>Good selection of craft beers including local options. Live music and cocktails too.</p>
+            </div>
+            <div class="card">
+                <span class="card-category location">Supermarket</span>
+                <h3>HiperDino / Mercadona</h3>
+                <p>All major supermarkets stock Dorada and Tropical at very reasonable prices. Pick up a pack for the apartment!</p>
+            </div>
+        </div>
+
+        <!-- Ordering Tips -->
+        <h3 class="subsection-header">How to Order Like a Local</h3>
+        <div class="card-stack">
+            <div class="card">
+                <span class="card-category tip">Phrase</span>
+                <h3>"Una caña, por favor"</h3>
+                <p>Orders a small draft beer (~200ml). The most common way to order - keeps it cold and fresh in the heat.</p>
+            </div>
+            <div class="card">
+                <span class="card-category tip">Phrase</span>
+                <h3>"Una Dorada"</h3>
+                <p>Specifically asks for Dorada. In Tenerife, if you just say "una cerveza" you'll likely get Dorada anyway!</p>
+            </div>
+            <div class="card">
+                <span class="card-category tip">Phrase</span>
+                <h3>"Un tercio"</h3>
+                <p>Orders a 330ml bottle. Good for when you want a bit more than a caña.</p>
+            </div>
+            <div class="card">
+                <span class="card-category tip">Phrase</span>
+                <h3>"Una jarra"</h3>
+                <p>Orders a large mug of draft beer (~500ml). For when you're really thirsty!</p>
+            </div>
+        </div>
+
+        <!-- Fun Facts -->
+        <h3 class="subsection-header">Fun Facts</h3>
+        <div class="card-stack">
+            <div class="card">
+                <h3>The Teide Connection</h3>
+                <p>Dorada's logo features Mount Teide, Spain's highest peak. The brewery is proud of its Tenerife roots and the mountain symbolizes that local identity.</p>
+            </div>
+            <div class="card">
+                <h3>Water Matters</h3>
+                <p>Both Dorada and Tropical are brewed with local water, which contributes to their distinctive taste. The volcanic filtration gives the water unique mineral properties.</p>
+            </div>
+            <div class="card">
+                <h3>Island-Specific</h3>
+                <p>You'll notice different beers dominate different islands. In Tenerife, it's Dorada. Cross to Gran Canaria and suddenly everyone drinks Tropical. The loyalty is real!</p>
+            </div>
+            <div class="card">
+                <h3>Perfect Pairing</h3>
+                <p>The locals' favorite combination: A cold Dorada with papas arrugadas (wrinkled potatoes) and mojo sauce. Simple perfection.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Drink responsibly. Must be 18+ to purchase alcohol in Spain.</p>
+    </footer>
+</body>
+</html>
