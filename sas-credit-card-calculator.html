@@ -107,6 +107,14 @@
       transition: width 0.5s ease-out;
     }
 
+    /* Tier cards */
+    .tier-card {
+      transition: all 0.3s ease;
+    }
+    .tier-card.achievable {
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+    }
+
     /* Multi-card toggle */
     .toggle-switch {
       position: relative;
@@ -349,75 +357,104 @@
       </div>
     </div>
 
-    <!-- Results -->
+    <!-- Narrative Results -->
+    <div id="narrativeResults" class="bg-gradient-to-br from-sas-blue to-blue-800 rounded-2xl p-5 sm:p-6 shadow-lg mb-3 sm:mb-4 text-white">
+      <div id="narrativeContent" class="space-y-4">
+        <p class="text-lg leading-relaxed opacity-90">Enter your monthly spending above to see your rewards journey.</p>
+      </div>
+    </div>
+
+    <!-- Points Summary -->
     <div id="resultsCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-800 mb-4">Time to Reach Each Status</h2>
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Your Points Earnings</h2>
 
       <!-- Summary Stats -->
       <div class="grid grid-cols-2 gap-3 mb-4">
         <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
-          <div class="text-xs text-gray-500 mb-1">Monthly Level Points</div>
+          <div class="text-xs text-gray-500 mb-1">Level Points / month</div>
           <div id="monthlyPoints" class="text-xl font-bold text-sas-blue">0</div>
+          <div class="text-xs text-gray-400 mt-1">For status qualification</div>
         </div>
         <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
-          <div class="text-xs text-gray-500 mb-1">Yearly Level Points</div>
+          <div class="text-xs text-gray-500 mb-1">Level Points / year</div>
           <div id="yearlyPoints" class="text-xl font-bold text-sas-blue">0</div>
+          <div class="text-xs text-gray-400 mt-1">12-month period</div>
         </div>
       </div>
 
+      <!-- Bonus Points -->
+      <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200 mb-4">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+          <span class="font-semibold text-amber-800">EuroBonus Points Earned</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <div class="text-2xl font-bold text-amber-700" id="monthlyBonusPoints">0</div>
+            <div class="text-xs text-amber-600">per month</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-amber-700" id="yearlyBonusPoints">0</div>
+            <div class="text-xs text-amber-600">per year</div>
+          </div>
+        </div>
+        <div id="redemptionHint" class="mt-3 pt-3 border-t border-amber-200 text-sm text-amber-700"></div>
+      </div>
+
+      <h3 class="text-base font-semibold text-gray-800 mb-3">Status Progress</h3>
+
       <!-- Tier Progress -->
-      <div class="space-y-4">
+      <div class="space-y-3">
         <!-- Silver -->
-        <div class="p-4 rounded-xl bg-gradient-to-r from-slate-50 to-gray-100 border border-gray-200">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="tier-badge tier-silver w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow">S</span>
-              <span class="font-semibold text-gray-800">Silver</span>
+        <div id="silverCard" class="tier-card p-4 rounded-xl bg-gradient-to-r from-slate-50 to-gray-100 border border-gray-200 transition-all">
+          <div class="flex items-center gap-3">
+            <span class="tier-badge tier-silver w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow flex-shrink-0">S</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-gray-800">Silver</span>
+                <span class="text-xs text-gray-500">20,000 pts</span>
+              </div>
+              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden my-1.5">
+                <div id="silverProgress" class="progress-fill h-full bg-gradient-to-r from-gray-400 to-gray-500 rounded-full" style="width: 0%"></div>
+              </div>
+              <div id="silverStatus" class="text-sm text-gray-600">Enter spending to calculate</div>
             </div>
-            <span class="text-sm text-gray-600">20,000 pts</span>
-          </div>
-          <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-            <div id="silverProgress" class="progress-fill h-full bg-gradient-to-r from-gray-400 to-gray-500 rounded-full" style="width: 0%"></div>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span id="silverTime" class="font-medium text-gray-700">--</span>
-            <span id="silverSpending" class="text-gray-500">--</span>
           </div>
         </div>
 
         <!-- Gold -->
-        <div class="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="tier-badge tier-gold w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow">G</span>
-              <span class="font-semibold text-gray-800">Gold</span>
+        <div id="goldCard" class="tier-card p-4 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 transition-all">
+          <div class="flex items-center gap-3">
+            <span class="tier-badge tier-gold w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow flex-shrink-0">G</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-gray-800">Gold</span>
+                <span class="text-xs text-gray-500">45,000 pts</span>
+              </div>
+              <div class="h-1.5 bg-amber-100 rounded-full overflow-hidden my-1.5">
+                <div id="goldProgress" class="progress-fill h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full" style="width: 0%"></div>
+              </div>
+              <div id="goldStatus" class="text-sm text-gray-600">Enter spending to calculate</div>
             </div>
-            <span class="text-sm text-gray-600">45,000 pts</span>
-          </div>
-          <div class="h-2 bg-amber-100 rounded-full overflow-hidden mb-2">
-            <div id="goldProgress" class="progress-fill h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full" style="width: 0%"></div>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span id="goldTime" class="font-medium text-gray-700">--</span>
-            <span id="goldSpending" class="text-gray-500">--</span>
           </div>
         </div>
 
         <!-- Diamond -->
-        <div class="p-4 rounded-xl bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="tier-badge tier-diamond w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-sas-blue shadow">D</span>
-              <span class="font-semibold text-gray-800">Diamond</span>
+        <div id="diamondCard" class="tier-card p-4 rounded-xl bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 transition-all">
+          <div class="flex items-center gap-3">
+            <span class="tier-badge tier-diamond w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-sas-blue shadow flex-shrink-0">D</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-gray-800">Diamond</span>
+                <span class="text-xs text-gray-500">90,000 pts</span>
+              </div>
+              <div class="h-1.5 bg-sky-100 rounded-full overflow-hidden my-1.5">
+                <div id="diamondProgress" class="progress-fill h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full" style="width: 0%"></div>
+              </div>
+              <div id="diamondStatus" class="text-sm text-gray-600">Enter spending to calculate</div>
             </div>
-            <span class="text-sm text-gray-600">90,000 pts</span>
-          </div>
-          <div class="h-2 bg-sky-100 rounded-full overflow-hidden mb-2">
-            <div id="diamondProgress" class="progress-fill h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full" style="width: 0%"></div>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span id="diamondTime" class="font-medium text-gray-700">--</span>
-            <span id="diamondSpending" class="text-gray-500">--</span>
           </div>
         </div>
       </div>
@@ -664,6 +701,10 @@
     const mcSpendingInput = document.getElementById('mcSpending');
     const monthlyPointsEl = document.getElementById('monthlyPoints');
     const yearlyPointsEl = document.getElementById('yearlyPoints');
+    const monthlyBonusPointsEl = document.getElementById('monthlyBonusPoints');
+    const yearlyBonusPointsEl = document.getElementById('yearlyBonusPoints');
+    const redemptionHintEl = document.getElementById('redemptionHint');
+    const narrativeContentEl = document.getElementById('narrativeContent');
     const multiCardToggle = document.getElementById('multiCardToggle');
     const singleCardSpending = document.getElementById('singleCardSpending');
     const multiCardSpending = document.getElementById('multiCardSpending');
@@ -671,6 +712,17 @@
     const multiCardSelection = document.getElementById('multiCardSelection');
     const totalMultiSpendingEl = document.getElementById('totalMultiSpending');
     const cardSelectionSubtitle = document.getElementById('cardSelectionSubtitle');
+
+    // Redemption examples (approximate SAS values)
+    const REDEMPTIONS = [
+      { points: 10000, description: 'a domestic round-trip flight' },
+      { points: 20000, description: 'a European short-haul round-trip' },
+      { points: 30000, description: 'a European medium-haul round-trip' },
+      { points: 50000, description: 'a transatlantic one-way in economy' },
+      { points: 60000, description: 'a European round-trip in business class' },
+      { points: 100000, description: 'a transatlantic round-trip in economy' },
+      { points: 150000, description: 'a transatlantic round-trip in business' }
+    ];
 
     // Calculate Level Points for a given card and monthly spending
     function calculateLevelPoints(cardKey, monthlySpending) {
@@ -775,6 +827,120 @@
       return new Intl.NumberFormat('nb-NO').format(Math.floor(num));
     }
 
+    // Get best achievable tier
+    function getBestAchievableTier(yearlyLevelPoints) {
+      if (yearlyLevelPoints >= TIERS.diamond.points) return 'diamond';
+      if (yearlyLevelPoints >= TIERS.gold.points) return 'gold';
+      if (yearlyLevelPoints >= TIERS.silver.points) return 'silver';
+      return null;
+    }
+
+    // Get redemption hint based on yearly bonus points
+    function getRedemptionHint(yearlyBonusPoints) {
+      if (yearlyBonusPoints <= 0) return '';
+
+      // Find the best redemption they can afford
+      let bestRedemption = null;
+      for (const r of REDEMPTIONS) {
+        if (yearlyBonusPoints >= r.points) {
+          bestRedemption = r;
+        }
+      }
+
+      if (bestRedemption) {
+        const count = Math.floor(yearlyBonusPoints / bestRedemption.points);
+        if (count >= 2) {
+          return `That's enough for ${count}x ${bestRedemption.description}s per year!`;
+        }
+        return `That's enough for ${bestRedemption.description} each year!`;
+      }
+
+      // Show progress to first redemption
+      const nextRedemption = REDEMPTIONS[0];
+      const monthsToReach = Math.ceil((nextRedemption.points / yearlyBonusPoints) * 12);
+      return `In ${monthsToReach} months, you'll have enough for ${nextRedemption.description}.`;
+    }
+
+    // Generate narrative content
+    function generateNarrative(params) {
+      const {
+        monthlySpending,
+        yearlySpending,
+        cardName,
+        monthlyLevelPoints,
+        yearlyLevelPoints,
+        monthlyBonusPoints,
+        yearlyBonusPoints,
+        isMultiCard,
+        mcCardName
+      } = params;
+
+      if (monthlySpending <= 0) {
+        return '<p class="text-lg leading-relaxed opacity-90">Enter your monthly spending above to see your rewards journey.</p>';
+      }
+
+      const bestTier = getBestAchievableTier(yearlyLevelPoints);
+      const tierNames = { silver: 'Silver', gold: 'Gold', diamond: 'Diamond' };
+
+      let narrative = [];
+
+      // Opening - spending context
+      const cardDesc = isMultiCard
+        ? `your SAS Amex Elite and ${mcCardName} combination`
+        : `your ${cardName}`;
+
+      narrative.push(`<p class="text-lg leading-relaxed">Spending <strong>${formatNOK(monthlySpending)}</strong> per month with ${cardDesc}, you'll earn:</p>`);
+
+      // Points earned summary
+      narrative.push(`
+        <div class="grid grid-cols-2 gap-4 my-4">
+          <div class="bg-white/10 rounded-lg p-3">
+            <div class="text-2xl font-bold">${formatNumber(yearlyLevelPoints)}</div>
+            <div class="text-sm opacity-80">Level Points/year</div>
+          </div>
+          <div class="bg-white/10 rounded-lg p-3">
+            <div class="text-2xl font-bold">${formatNumber(yearlyBonusPoints)}</div>
+            <div class="text-sm opacity-80">Bonus Points/year</div>
+          </div>
+        </div>
+      `);
+
+      // Status achievement
+      if (bestTier) {
+        const tierInfo = TIERS[bestTier];
+        const monthsToTier = (tierInfo.points / yearlyLevelPoints) * 12;
+        const tierEmoji = bestTier === 'diamond' ? '💎' : bestTier === 'gold' ? '🥇' : '🥈';
+
+        if (monthsToTier <= 12) {
+          narrative.push(`<p class="text-lg leading-relaxed">${tierEmoji} You can reach <strong>EuroBonus ${tierNames[bestTier]}</strong> status in <strong>${formatDuration(monthsToTier)}</strong>.</p>`);
+        }
+
+        // What's next?
+        if (bestTier === 'silver' && yearlyLevelPoints < TIERS.gold.points) {
+          const extraNeeded = TIERS.gold.points - yearlyLevelPoints;
+          narrative.push(`<p class="text-sm opacity-80 mt-2">To reach Gold, you'd need ${formatNumber(extraNeeded)} more level points per year (about ${formatNOK(extraNeeded / 0.72)} more monthly spending with Amex Elite).</p>`);
+        } else if (bestTier === 'gold' && yearlyLevelPoints < TIERS.diamond.points) {
+          const extraNeeded = TIERS.diamond.points - yearlyLevelPoints;
+          narrative.push(`<p class="text-sm opacity-80 mt-2">To reach Diamond, you'd need ${formatNumber(extraNeeded)} more level points per year.</p>`);
+        }
+      } else {
+        // Can't reach any tier
+        const pointsNeeded = TIERS.silver.points - yearlyLevelPoints;
+        narrative.push(`<p class="text-lg leading-relaxed">With this spending level, you won't reach Silver status within 12 months. You'd need <strong>${formatNumber(pointsNeeded)}</strong> more level points per year.</p>`);
+
+        // Suggest alternatives
+        if (!isMultiCard) {
+          const selectedCard = getSelectedCard();
+          if (selectedCard !== 'amex-elite') {
+            const amexNeeded = Math.ceil(TIERS.silver.points / 12 / (6/100));
+            narrative.push(`<p class="text-sm opacity-80 mt-2">With SAS Amex Elite, you'd need about ${formatNOK(amexNeeded)}/month to reach Silver.</p>`);
+          }
+        }
+      }
+
+      return narrative.join('');
+    }
+
     // Get selected card (single card mode)
     function getSelectedCard() {
       const selected = document.querySelector('input[name="card"]:checked');
@@ -822,16 +988,18 @@
     // Update tier display
     function updateTierDisplay(tierId, monthlyPoints, tierPoints) {
       const progressEl = document.getElementById(`${tierId}Progress`);
-      const timeEl = document.getElementById(`${tierId}Time`);
-      const spendingEl = document.getElementById(`${tierId}Spending`);
+      const statusEl = document.getElementById(`${tierId}Status`);
+      const cardEl = document.getElementById(`${tierId}Card`);
 
       if (monthlyPoints <= 0) {
         progressEl.style.width = '0%';
-        timeEl.textContent = 'Enter spending amount';
-        spendingEl.textContent = '';
+        statusEl.textContent = 'Enter spending to calculate';
+        statusEl.className = 'text-sm text-gray-600';
+        cardEl.style.opacity = '0.7';
         return;
       }
 
+      cardEl.style.opacity = '1';
       const monthsToReach = tierPoints / monthlyPoints;
       const totalSpending = monthsToReach * parseFloat(monthlySpendingInput.value || 0);
 
@@ -839,16 +1007,14 @@
       const progressPercent = Math.min(100, (12 / monthsToReach) * 100);
       progressEl.style.width = `${progressPercent}%`;
 
-      timeEl.textContent = formatDuration(monthsToReach);
-
       if (monthsToReach > 12) {
-        timeEl.classList.add('text-red-600');
-        timeEl.classList.remove('text-green-600', 'text-gray-700');
-        spendingEl.textContent = 'Not achievable in 12 months';
+        statusEl.innerHTML = `<span class="text-red-600 font-medium">Not achievable</span> in 12 months`;
+        statusEl.className = 'text-sm';
+        cardEl.classList.remove('achievable');
       } else {
-        timeEl.classList.add('text-green-600');
-        timeEl.classList.remove('text-red-600', 'text-gray-700');
-        spendingEl.textContent = `Total: ${formatNOK(totalSpending)}`;
+        statusEl.innerHTML = `<span class="text-green-600 font-medium">${formatDuration(monthsToReach)}</span> &middot; ${formatNOK(totalSpending)} total spending`;
+        statusEl.className = 'text-sm';
+        cardEl.classList.add('achievable');
       }
     }
 
@@ -970,6 +1136,7 @@
     function calculateSingleCardMode() {
       const monthlySpending = parseFloat(monthlySpendingInput.value) || 0;
       const selectedCard = getSelectedCard();
+      const card = CARDS[selectedCard];
 
       let monthlyPoints = calculateLevelPoints(selectedCard, monthlySpending);
       let yearlyPoints = monthlyPoints * 12;
@@ -982,8 +1149,33 @@
         monthlyPoints = yearlyPoints / 12;
       }
 
+      // Calculate bonus points
+      const monthlyBonusPoints = calculateBonusPoints(selectedCard, monthlySpending);
+      const yearlyBonusPoints = monthlyBonusPoints * 12;
+
+      // Update level points display
       monthlyPointsEl.textContent = formatNumber(monthlyPoints);
       yearlyPointsEl.textContent = formatNumber(yearlyPoints);
+
+      // Update bonus points display
+      monthlyBonusPointsEl.textContent = formatNumber(monthlyBonusPoints);
+      yearlyBonusPointsEl.textContent = formatNumber(yearlyBonusPoints);
+
+      // Update redemption hint
+      redemptionHintEl.textContent = getRedemptionHint(yearlyBonusPoints);
+
+      // Generate and display narrative
+      narrativeContentEl.innerHTML = generateNarrative({
+        monthlySpending,
+        yearlySpending: monthlySpending * 12,
+        cardName: card.name,
+        monthlyLevelPoints: monthlyPoints,
+        yearlyLevelPoints: yearlyPoints,
+        monthlyBonusPoints,
+        yearlyBonusPoints,
+        isMultiCard: false,
+        mcCardName: null
+      });
 
       // Update tier displays
       // For DNB SAGA, we need to use yearly points directly since they're threshold-based
@@ -1005,6 +1197,7 @@
       const amexSpending = parseFloat(amexSpendingInput.value) || 0;
       const mcSpending = parseFloat(mcSpendingInput.value) || 0;
       const mcCardKey = getSelectedMultiCardMC();
+      const mcCard = CARDS[mcCardKey];
       const totalSpending = amexSpending + mcSpending;
 
       // Update total spending display
@@ -1015,8 +1208,29 @@
       // For monthly display, show the computed monthly average
       const effectiveMonthlyPoints = results.yearlyLevelPoints / 12;
 
+      // Update level points display
       monthlyPointsEl.textContent = formatNumber(effectiveMonthlyPoints);
       yearlyPointsEl.textContent = formatNumber(results.yearlyLevelPoints);
+
+      // Update bonus points display
+      monthlyBonusPointsEl.textContent = formatNumber(results.monthlyBonusPoints);
+      yearlyBonusPointsEl.textContent = formatNumber(results.yearlyBonusPoints);
+
+      // Update redemption hint
+      redemptionHintEl.textContent = getRedemptionHint(results.yearlyBonusPoints);
+
+      // Generate and display narrative
+      narrativeContentEl.innerHTML = generateNarrative({
+        monthlySpending: totalSpending,
+        yearlySpending: totalSpending * 12,
+        cardName: 'SAS Amex Elite',
+        monthlyLevelPoints: effectiveMonthlyPoints,
+        yearlyLevelPoints: results.yearlyLevelPoints,
+        monthlyBonusPoints: results.monthlyBonusPoints,
+        yearlyBonusPoints: results.yearlyBonusPoints,
+        isMultiCard: true,
+        mcCardName: mcCard.shortName
+      });
 
       // Update tier displays using yearly points
       updateTierDisplayYearly('silver', results.yearlyLevelPoints, TIERS.silver.points, totalSpending);
@@ -1030,15 +1244,18 @@
     // Update tier display using yearly points (for threshold-based cards and multi-card)
     function updateTierDisplayYearly(tierId, yearlyPoints, tierPoints, monthlySpending) {
       const progressEl = document.getElementById(`${tierId}Progress`);
-      const timeEl = document.getElementById(`${tierId}Time`);
-      const spendingEl = document.getElementById(`${tierId}Spending`);
+      const statusEl = document.getElementById(`${tierId}Status`);
+      const cardEl = document.getElementById(`${tierId}Card`);
 
       if (yearlyPoints <= 0 || monthlySpending <= 0) {
         progressEl.style.width = '0%';
-        timeEl.textContent = 'Enter spending amount';
-        spendingEl.textContent = '';
+        statusEl.textContent = 'Enter spending to calculate';
+        statusEl.className = 'text-sm text-gray-600';
+        cardEl.style.opacity = '0.7';
         return;
       }
+
+      cardEl.style.opacity = '1';
 
       // Check if achievable within 12 months
       if (yearlyPoints >= tierPoints) {
@@ -1046,18 +1263,16 @@
         const totalSpending = monthsToReach * monthlySpending;
 
         progressEl.style.width = '100%';
-        timeEl.textContent = formatDuration(monthsToReach);
-        timeEl.classList.add('text-green-600');
-        timeEl.classList.remove('text-red-600', 'text-gray-700');
-        spendingEl.textContent = `Total: ${formatNOK(totalSpending)}`;
+        statusEl.innerHTML = `<span class="text-green-600 font-medium">${formatDuration(monthsToReach)}</span> &middot; ${formatNOK(totalSpending)} total spending`;
+        statusEl.className = 'text-sm';
+        cardEl.classList.add('achievable');
       } else {
         // Not achievable with current yearly earning rate
         const yearsNeeded = tierPoints / yearlyPoints;
         progressEl.style.width = `${Math.min(100, (yearlyPoints / tierPoints) * 100)}%`;
-        timeEl.textContent = `${yearsNeeded.toFixed(1)} years`;
-        timeEl.classList.add('text-red-600');
-        timeEl.classList.remove('text-green-600', 'text-gray-700');
-        spendingEl.textContent = 'Not achievable in 12 months';
+        statusEl.innerHTML = `<span class="text-red-600 font-medium">Not achievable</span> &middot; Would take ${yearsNeeded.toFixed(1)} years`;
+        statusEl.className = 'text-sm';
+        cardEl.classList.remove('achievable');
       }
     }
 
