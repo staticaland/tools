@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SAS EuroBonus Credit Card Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sas: {
+              blue: '#000066',
+              gold: '#C9A227',
+              silver: '#A8A9AD',
+              diamond: '#B9D9EB'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Mobile optimizations */
+    html {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+      padding-top: max(1rem, env(safe-area-inset-top));
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+      overflow-x: hidden;
+    }
+
+    /* Ensure inputs don't zoom on iOS */
+    input[type="number"],
+    input[type="text"],
+    select {
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    /* Remove number input spinners */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Better touch targets on mobile */
+    @media (max-width: 640px) {
+      button,
+      input,
+      select {
+        min-height: 44px;
+      }
+    }
+
+    /* Card selection styling */
+    .card-option {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .card-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 102, 0.15);
+    }
+    .card-option.selected {
+      border-color: #000066;
+      background-color: #f0f4ff;
+    }
+
+    /* Tier badges */
+    .tier-badge {
+      background: linear-gradient(135deg, var(--tier-color-1) 0%, var(--tier-color-2) 100%);
+    }
+    .tier-silver {
+      --tier-color-1: #C0C0C0;
+      --tier-color-2: #A8A9AD;
+    }
+    .tier-gold {
+      --tier-color-1: #FFD700;
+      --tier-color-2: #C9A227;
+    }
+    .tier-diamond {
+      --tier-color-1: #B9D9EB;
+      --tier-color-2: #87CEEB;
+    }
+
+    /* Progress bar animation */
+    .progress-fill {
+      transition: width 0.5s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-gray-900 p-4 sm:p-6 font-sans min-h-screen">
+  <div class="max-w-lg mx-auto pb-8">
+    <h1 class="text-2xl sm:text-3xl font-bold text-sas-blue mb-2 text-center">SAS Credit Card Calculator</h1>
+    <p class="text-sm text-gray-600 mb-6 text-center">Calculate how to reach EuroBonus status through spending</p>
+
+    <!-- Monthly Spending Input -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1">Monthly Spending</h2>
+      <p class="text-xs text-gray-500 mb-4">Enter your estimated monthly credit card spending</p>
+
+      <div class="mb-4">
+        <label for="monthlySpending" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Amount (NOK)</label>
+        <div class="flex items-center gap-3">
+          <input id="monthlySpending" type="number" step="1000" min="0" placeholder="25000"
+            class="flex-1 px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sas-blue focus:border-sas-blue text-center" />
+          <span class="text-sm text-gray-500">NOK/month</span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button data-amount="10000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">10k</button>
+        <button data-amount="20000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">20k</button>
+        <button data-amount="30000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">30k</button>
+        <button data-amount="50000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">50k</button>
+        <button data-amount="75000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">75k</button>
+        <button data-amount="100000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">100k</button>
+      </div>
+    </div>
+
+    <!-- Card Selection -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1">Select Your Card</h2>
+      <p class="text-xs text-gray-500 mb-4">Choose the card(s) you have or are considering</p>
+
+      <div class="space-y-3">
+        <!-- SAS Amex Elite -->
+        <label class="card-option block p-4 rounded-xl border-2 border-gray-200" data-card="amex-elite">
+          <div class="flex items-start gap-3">
+            <input type="radio" name="card" value="amex-elite" class="mt-1 w-4 h-4 text-sas-blue border-gray-300 focus:ring-sas-blue" checked />
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">SAS Amex Elite</span>
+                <span class="text-xs px-2 py-0.5 bg-sas-blue text-white rounded-full">Best for Level Points</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">6 Level Points per 100 NOK spent</div>
+              <div class="text-xs text-gray-500 mt-1">Annual fee: 3,900 NOK (from Jan 2026: 4,900 NOK)</div>
+            </div>
+          </div>
+        </label>
+
+        <!-- SAS Mastercard Premium -->
+        <label class="card-option block p-4 rounded-xl border-2 border-gray-200" data-card="mastercard-premium">
+          <div class="flex items-start gap-3">
+            <input type="radio" name="card" value="mastercard-premium" class="mt-1 w-4 h-4 text-sas-blue border-gray-300 focus:ring-sas-blue" />
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-900">SAS EuroBonus Mastercard Premium</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">25% of monthly Bonus Points as Level Points</div>
+              <div class="text-xs text-gray-500 mt-1">Minimum 500 Level Points/month when used</div>
+              <div class="text-xs text-gray-500">Earns ~1 Bonus Point per 10 NOK spent</div>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsCard" class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Time to Reach Each Status</h2>
+
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+          <div class="text-xs text-gray-500 mb-1">Monthly Level Points</div>
+          <div id="monthlyPoints" class="text-xl font-bold text-sas-blue">0</div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+          <div class="text-xs text-gray-500 mb-1">Yearly Level Points</div>
+          <div id="yearlyPoints" class="text-xl font-bold text-sas-blue">0</div>
+        </div>
+      </div>
+
+      <!-- Tier Progress -->
+      <div class="space-y-4">
+        <!-- Silver -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-slate-50 to-gray-100 border border-gray-200">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="tier-badge tier-silver w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow">S</span>
+              <span class="font-semibold text-gray-800">Silver</span>
+            </div>
+            <span class="text-sm text-gray-600">20,000 pts</span>
+          </div>
+          <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+            <div id="silverProgress" class="progress-fill h-full bg-gradient-to-r from-gray-400 to-gray-500 rounded-full" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span id="silverTime" class="font-medium text-gray-700">--</span>
+            <span id="silverSpending" class="text-gray-500">--</span>
+          </div>
+        </div>
+
+        <!-- Gold -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="tier-badge tier-gold w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow">G</span>
+              <span class="font-semibold text-gray-800">Gold</span>
+            </div>
+            <span class="text-sm text-gray-600">45,000 pts</span>
+          </div>
+          <div class="h-2 bg-amber-100 rounded-full overflow-hidden mb-2">
+            <div id="goldProgress" class="progress-fill h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span id="goldTime" class="font-medium text-gray-700">--</span>
+            <span id="goldSpending" class="text-gray-500">--</span>
+          </div>
+        </div>
+
+        <!-- Diamond -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="tier-badge tier-diamond w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-sas-blue shadow">D</span>
+              <span class="font-semibold text-gray-800">Diamond</span>
+            </div>
+            <span class="text-sm text-gray-600">90,000 pts</span>
+          </div>
+          <div class="h-2 bg-sky-100 rounded-full overflow-hidden mb-2">
+            <div id="diamondProgress" class="progress-fill h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span id="diamondTime" class="font-medium text-gray-700">--</span>
+            <span id="diamondSpending" class="text-gray-500">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Comparison -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Card Comparison</h2>
+
+      <div id="comparisonTable" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-2 text-gray-600 font-medium">Feature</th>
+              <th class="text-center py-2 text-gray-600 font-medium">Amex Elite</th>
+              <th class="text-center py-2 text-gray-600 font-medium">MC Premium</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonBody">
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="bg-gradient-to-r from-sas-blue/5 to-sky-50 rounded-2xl p-4 sm:p-5 shadow-lg border border-sas-blue/20 mb-3 sm:mb-4">
+      <h3 class="text-sm font-semibold text-sas-blue mb-2">Pro Tips</h3>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li class="flex items-start gap-2">
+          <span class="text-sas-blue">1.</span>
+          <span>Level points must be earned within a 12-month qualification period</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-sas-blue">2.</span>
+          <span>SAS Amex Elite is the most efficient card for earning Level Points</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-sas-blue">3.</span>
+          <span>Combine card spending with flights for faster status qualification</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-sas-blue">4.</span>
+          <span>SAS Amex Elite includes two 2-for-1 flight vouchers annually</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Reference -->
+    <details class="bg-white rounded-2xl shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <summary class="px-4 sm:px-5 py-4 cursor-pointer text-lg font-semibold text-gray-800 hover:bg-gray-50 transition-colors">
+        EuroBonus Tier Benefits
+      </summary>
+      <div class="px-4 sm:px-5 pb-4 space-y-4 border-t border-gray-100 pt-4">
+        <div class="space-y-3">
+          <div class="p-3 rounded-lg bg-gray-50 border border-gray-200">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="tier-badge tier-silver w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white">S</span>
+              <span class="font-semibold text-gray-800">Silver (20,000 pts)</span>
+            </div>
+            <ul class="text-xs text-gray-600 space-y-1 ml-7">
+              <li>+25% bonus points on SAS flights</li>
+              <li>SkyTeam Elite status</li>
+              <li>Priority check-in</li>
+              <li>Extra baggage allowance</li>
+            </ul>
+          </div>
+
+          <div class="p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="tier-badge tier-gold w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white">G</span>
+              <span class="font-semibold text-gray-800">Gold (45,000 pts)</span>
+            </div>
+            <ul class="text-xs text-gray-600 space-y-1 ml-7">
+              <li>+50% bonus points on SAS flights</li>
+              <li>SkyTeam Elite Plus status</li>
+              <li>Lounge access (you + 1 guest)</li>
+              <li>Fast Track security</li>
+              <li>Priority boarding</li>
+            </ul>
+          </div>
+
+          <div class="p-3 rounded-lg bg-sky-50 border border-sky-200">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="tier-badge tier-diamond w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-sas-blue">D</span>
+              <span class="font-semibold text-gray-800">Diamond (90,000 pts)</span>
+            </div>
+            <ul class="text-xs text-gray-600 space-y-1 ml-7">
+              <li>+75% bonus points on SAS flights</li>
+              <li>Points never expire</li>
+              <li>Lounge access (you + 2 guests)</li>
+              <li>Guaranteed economy seat 24h before departure</li>
+              <li>Priority rebooking during disruptions</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pt-2 text-xs text-gray-500">
+          <p>Status is earned in a 12-month qualification period and maintained for 12 months after qualification, plus a 3-month grace period (15 months total).</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- Disclaimer -->
+    <div class="text-xs text-gray-500 text-center">
+      <p>Information based on SAS EuroBonus program as of 2025. Always verify current terms on <a href="https://www.flysas.com/eurobonus" target="_blank" rel="noopener" class="text-sas-blue hover:underline">flysas.com</a>.</p>
+    </div>
+  </div>
+
+  <script>
+    // EuroBonus tier requirements (Level Points)
+    const TIERS = {
+      silver: { name: 'Silver', points: 20000 },
+      gold: { name: 'Gold', points: 45000 },
+      diamond: { name: 'Diamond', points: 90000 }
+    };
+
+    // Card configurations
+    const CARDS = {
+      'amex-elite': {
+        name: 'SAS Amex Elite',
+        // 6 Level Points per 100 NOK
+        levelPointsPerNOK: 6 / 100,
+        // ~1 Bonus Point per 8 NOK (approximate)
+        bonusPointsPerNOK: 1 / 8,
+        annualFee: 3900,
+        futureFee: 4900,
+        features: {
+          levelPointRate: '6 per 100 NOK',
+          bonusPointRate: '~1 per 8 NOK',
+          twoForOne: 'Yes (2 vouchers/year)',
+          lounge: 'No',
+          insurance: 'Travel insurance included',
+          acceptance: 'Limited (Amex network)'
+        }
+      },
+      'mastercard-premium': {
+        name: 'SAS MC Premium',
+        // ~1 Bonus Point per 10 NOK, then 25% as Level Points
+        // Minimum 500 Level Points per month when used
+        bonusPointsPerNOK: 1 / 10,
+        levelPointRatio: 0.25,
+        minLevelPointsPerMonth: 500,
+        annualFee: 1495,
+        features: {
+          levelPointRate: '25% of Bonus Points (min 500/mo)',
+          bonusPointRate: '~1 per 10 NOK',
+          twoForOne: 'No',
+          lounge: 'No',
+          insurance: 'Travel insurance included',
+          acceptance: 'Global (Mastercard network)'
+        }
+      }
+    };
+
+    // DOM Elements
+    const monthlySpendingInput = document.getElementById('monthlySpending');
+    const monthlyPointsEl = document.getElementById('monthlyPoints');
+    const yearlyPointsEl = document.getElementById('yearlyPoints');
+
+    // Calculate Level Points for a given card and spending
+    function calculateLevelPoints(cardKey, monthlySpending) {
+      const card = CARDS[cardKey];
+
+      if (cardKey === 'amex-elite') {
+        return Math.floor(monthlySpending * card.levelPointsPerNOK);
+      } else if (cardKey === 'mastercard-premium') {
+        // Calculate bonus points earned
+        const bonusPoints = monthlySpending * card.bonusPointsPerNOK;
+        // 25% of bonus points become level points
+        let levelPoints = Math.floor(bonusPoints * card.levelPointRatio);
+        // Minimum 500 if card is used (spending > 0)
+        if (monthlySpending > 0) {
+          levelPoints = Math.max(levelPoints, card.minLevelPointsPerMonth);
+        }
+        return levelPoints;
+      }
+      return 0;
+    }
+
+    // Calculate Bonus Points for a given card and spending
+    function calculateBonusPoints(cardKey, monthlySpending) {
+      const card = CARDS[cardKey];
+      return Math.floor(monthlySpending * card.bonusPointsPerNOK);
+    }
+
+    // Format time duration
+    function formatDuration(months) {
+      if (months <= 0) return 'Instantly';
+      if (months < 1) return 'Less than 1 month';
+      if (months <= 12) {
+        const roundedMonths = Math.ceil(months);
+        return `${roundedMonths} month${roundedMonths !== 1 ? 's' : ''}`;
+      }
+      const years = Math.floor(months / 12);
+      const remainingMonths = Math.ceil(months % 12);
+      if (remainingMonths === 0) {
+        return `${years} year${years !== 1 ? 's' : ''}`;
+      }
+      return `${years}y ${remainingMonths}mo`;
+    }
+
+    // Format currency
+    function formatNOK(amount) {
+      return new Intl.NumberFormat('nb-NO', {
+        style: 'decimal',
+        maximumFractionDigits: 0
+      }).format(amount) + ' NOK';
+    }
+
+    // Format number with thousands separator
+    function formatNumber(num) {
+      return new Intl.NumberFormat('nb-NO').format(Math.floor(num));
+    }
+
+    // Get selected card
+    function getSelectedCard() {
+      const selected = document.querySelector('input[name="card"]:checked');
+      return selected ? selected.value : 'amex-elite';
+    }
+
+    // Update tier display
+    function updateTierDisplay(tierId, monthlyPoints, tierPoints) {
+      const progressEl = document.getElementById(`${tierId}Progress`);
+      const timeEl = document.getElementById(`${tierId}Time`);
+      const spendingEl = document.getElementById(`${tierId}Spending`);
+
+      if (monthlyPoints <= 0) {
+        progressEl.style.width = '0%';
+        timeEl.textContent = 'Enter spending amount';
+        spendingEl.textContent = '';
+        return;
+      }
+
+      const monthsToReach = tierPoints / monthlyPoints;
+      const totalSpending = monthsToReach * parseFloat(monthlySpendingInput.value || 0);
+
+      // Progress as percentage of 12 months (qualification period)
+      const progressPercent = Math.min(100, (12 / monthsToReach) * 100);
+      progressEl.style.width = `${progressPercent}%`;
+
+      timeEl.textContent = formatDuration(monthsToReach);
+
+      if (monthsToReach > 12) {
+        timeEl.classList.add('text-red-600');
+        timeEl.classList.remove('text-green-600', 'text-gray-700');
+        spendingEl.textContent = 'Not achievable in 12 months';
+      } else {
+        timeEl.classList.add('text-green-600');
+        timeEl.classList.remove('text-red-600', 'text-gray-700');
+        spendingEl.textContent = `Total: ${formatNOK(totalSpending)}`;
+      }
+    }
+
+    // Update comparison table
+    function updateComparisonTable(monthlySpending) {
+      const tbody = document.getElementById('comparisonBody');
+
+      const amexLevelPoints = calculateLevelPoints('amex-elite', monthlySpending);
+      const mcLevelPoints = calculateLevelPoints('mastercard-premium', monthlySpending);
+      const amexBonusPoints = calculateBonusPoints('amex-elite', monthlySpending);
+      const mcBonusPoints = calculateBonusPoints('mastercard-premium', monthlySpending);
+
+      const rows = [
+        {
+          feature: 'Level Points/month',
+          amex: formatNumber(amexLevelPoints),
+          mc: formatNumber(mcLevelPoints),
+          highlight: amexLevelPoints > mcLevelPoints ? 'amex' : (mcLevelPoints > amexLevelPoints ? 'mc' : null)
+        },
+        {
+          feature: 'Bonus Points/month',
+          amex: formatNumber(amexBonusPoints),
+          mc: formatNumber(mcBonusPoints),
+          highlight: amexBonusPoints > mcBonusPoints ? 'amex' : (mcBonusPoints > amexBonusPoints ? 'mc' : null)
+        },
+        {
+          feature: 'Level Point rate',
+          amex: CARDS['amex-elite'].features.levelPointRate,
+          mc: CARDS['mastercard-premium'].features.levelPointRate
+        },
+        {
+          feature: 'Bonus Point rate',
+          amex: CARDS['amex-elite'].features.bonusPointRate,
+          mc: CARDS['mastercard-premium'].features.bonusPointRate
+        },
+        {
+          feature: '2-for-1 vouchers',
+          amex: CARDS['amex-elite'].features.twoForOne,
+          mc: CARDS['mastercard-premium'].features.twoForOne
+        },
+        {
+          feature: 'Annual fee',
+          amex: formatNOK(CARDS['amex-elite'].annualFee),
+          mc: formatNOK(CARDS['mastercard-premium'].annualFee),
+          highlight: 'mc' // Lower fee is better
+        },
+        {
+          feature: 'Acceptance',
+          amex: CARDS['amex-elite'].features.acceptance,
+          mc: CARDS['mastercard-premium'].features.acceptance
+        }
+      ];
+
+      tbody.innerHTML = rows.map(row => `
+        <tr class="border-b border-gray-100">
+          <td class="py-2 text-gray-700">${row.feature}</td>
+          <td class="py-2 text-center ${row.highlight === 'amex' ? 'font-semibold text-green-600' : ''}">${row.amex}</td>
+          <td class="py-2 text-center ${row.highlight === 'mc' ? 'font-semibold text-green-600' : ''}">${row.mc}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Main calculation function
+    function calculate() {
+      const monthlySpending = parseFloat(monthlySpendingInput.value) || 0;
+      const selectedCard = getSelectedCard();
+
+      const monthlyPoints = calculateLevelPoints(selectedCard, monthlySpending);
+      const yearlyPoints = monthlyPoints * 12;
+
+      monthlyPointsEl.textContent = formatNumber(monthlyPoints);
+      yearlyPointsEl.textContent = formatNumber(yearlyPoints);
+
+      // Update tier displays
+      updateTierDisplay('silver', monthlyPoints, TIERS.silver.points);
+      updateTierDisplay('gold', monthlyPoints, TIERS.gold.points);
+      updateTierDisplay('diamond', monthlyPoints, TIERS.diamond.points);
+
+      // Update comparison table
+      updateComparisonTable(monthlySpending);
+    }
+
+    // Card selection handlers
+    document.querySelectorAll('.card-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        // Don't prevent default - let the radio button get checked
+        document.querySelectorAll('.card-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        calculate();
+      });
+    });
+
+    // Initialize selection state
+    function updateCardSelectionUI() {
+      const selectedCard = getSelectedCard();
+      document.querySelectorAll('.card-option').forEach(option => {
+        const cardValue = option.querySelector('input[type="radio"]').value;
+        if (cardValue === selectedCard) {
+          option.classList.add('selected');
+        } else {
+          option.classList.remove('selected');
+        }
+      });
+    }
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const amount = btn.getAttribute('data-amount');
+        monthlySpendingInput.value = amount;
+        calculate();
+      });
+    });
+
+    // Input handler
+    monthlySpendingInput.addEventListener('input', calculate);
+
+    // Initialize
+    window.addEventListener('load', () => {
+      monthlySpendingInput.value = '25000';
+      updateCardSelectionUI();
+      calculate();
+    });
+  </script>
+</body>
+</html>
