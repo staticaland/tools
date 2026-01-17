@@ -115,115 +115,124 @@
       box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
     }
 
-    /* Multi-card toggle */
-    .toggle-switch {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      background-color: #d1d5db;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    /* Strategy toggle */
+    .strategy-btn {
+      transition: all 0.2s ease;
     }
-    .toggle-switch.active {
+    .strategy-btn.active {
       background-color: #000066;
+      color: white;
+      border-color: #000066;
     }
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background-color: white;
-      border-radius: 50%;
-      transition: transform 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    .toggle-switch.active::after {
-      transform: translateX(20px);
+    .strategy-btn:not(.active):hover {
+      background-color: #f1f5f9;
     }
 
-    /* Card group headers */
-    .card-group-header {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.5rem 0;
-      margin-top: 0.75rem;
-      border-top: 1px solid #e5e7eb;
+    /* Stack card item */
+    .stack-card {
+      transition: all 0.2s ease;
     }
-    .card-group-header:first-child {
-      margin-top: 0;
-      border-top: none;
+    .stack-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Add card button */
+    .add-card-btn {
+      border: 2px dashed #d1d5db;
+      transition: all 0.2s ease;
+    }
+    .add-card-btn:hover {
+      border-color: #000066;
+      background-color: #f0f4ff;
+    }
+
+    /* Card picker dropdown */
+    .card-picker {
+      position: relative;
+    }
+    .card-picker-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* Spending slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e7eb;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000066;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000066;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
   </style>
 </head>
 <body class="bg-slate-50 text-gray-900 p-4 sm:p-6 font-sans min-h-screen">
   <div class="max-w-lg mx-auto pb-8">
     <h1 class="text-2xl sm:text-3xl font-bold text-sas-blue mb-2 text-center">SAS Credit Card Calculator</h1>
-    <p class="text-sm text-gray-600 mb-6 text-center">Calculate how to reach EuroBonus status through spending</p>
+    <p class="text-sm text-gray-600 mb-6 text-center">Build your optimal card stack for EuroBonus status</p>
+
+    <!-- Strategy Selector -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1">Choose Your Strategy</h2>
+      <p class="text-xs text-gray-500 mb-4">Select a preset or build your own card stack</p>
+
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <button data-strategy="level" class="strategy-btn active px-3 py-2 text-xs font-medium rounded-lg border-2 border-gray-200 bg-white text-gray-700 text-left">
+          <div class="font-semibold mb-0.5">Max Level Points</div>
+          <div class="text-gray-500 text-[10px]">Fastest path to status</div>
+        </button>
+        <button data-strategy="bonus" class="strategy-btn px-3 py-2 text-xs font-medium rounded-lg border-2 border-gray-200 bg-white text-gray-700 text-left">
+          <div class="font-semibold mb-0.5">Max Bonus Points</div>
+          <div class="text-gray-500 text-[10px]">Most rewards for flights</div>
+        </button>
+        <button data-strategy="balanced" class="strategy-btn px-3 py-2 text-xs font-medium rounded-lg border-2 border-gray-200 bg-white text-gray-700 text-left">
+          <div class="font-semibold mb-0.5">Balanced</div>
+          <div class="text-gray-500 text-[10px]">Good status + rewards</div>
+        </button>
+        <button data-strategy="custom" class="strategy-btn px-3 py-2 text-xs font-medium rounded-lg border-2 border-gray-200 bg-white text-gray-700 text-left">
+          <div class="font-semibold mb-0.5">Custom Stack</div>
+          <div class="text-gray-500 text-[10px]">Build your own combo</div>
+        </button>
+      </div>
+
+      <div id="strategyDescription" class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm text-blue-800">
+        <strong>Max Level Points:</strong> Use SAS Amex Elite everywhere Amex is accepted (best level point rate at 6 per 100 NOK). This is the fastest path to Silver, Gold, or Diamond status.
+      </div>
+    </div>
 
     <!-- Monthly Spending Input -->
     <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
       <h2 class="text-lg font-semibold text-gray-800 mb-1">Monthly Spending</h2>
-      <p class="text-xs text-gray-500 mb-4">Enter your estimated monthly credit card spending</p>
+      <p class="text-xs text-gray-500 mb-4">Enter your total monthly credit card spending</p>
 
-      <!-- Multi-card toggle -->
-      <div class="flex items-center justify-between mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-        <div>
-          <div class="text-sm font-medium text-gray-700">Use multiple cards</div>
-          <div class="text-xs text-gray-500">Split spending between Amex and Mastercard</div>
-        </div>
-        <div id="multiCardToggle" class="toggle-switch" role="switch" aria-checked="false" tabindex="0"></div>
-      </div>
-
-      <!-- Single card spending -->
-      <div id="singleCardSpending" class="mb-4">
-        <label for="monthlySpending" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Total Monthly Spending (NOK)</label>
+      <div class="mb-4">
+        <label for="totalSpending" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Total Monthly Spending (NOK)</label>
         <div class="flex items-center gap-3">
-          <input id="monthlySpending" type="number" step="1000" min="0" placeholder="25000"
+          <input id="totalSpending" type="number" step="1000" min="0" placeholder="25000"
             class="flex-1 px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sas-blue focus:border-sas-blue text-center" />
           <span class="text-sm text-gray-500">NOK/month</span>
-        </div>
-      </div>
-
-      <!-- Multi-card spending (hidden by default) -->
-      <div id="multiCardSpending" class="hidden space-y-3 mb-4">
-        <div>
-          <label for="amexSpending" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">
-            <span class="inline-flex items-center gap-1">
-              <span class="w-3 h-3 rounded-full bg-sas-blue"></span>
-              Amex Elite Spending (NOK)
-            </span>
-          </label>
-          <div class="flex items-center gap-3">
-            <input id="amexSpending" type="number" step="1000" min="0" placeholder="15000"
-              class="flex-1 px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sas-blue focus:border-sas-blue text-center" />
-            <span class="text-sm text-gray-500">NOK/month</span>
-          </div>
-          <p class="text-xs text-gray-500 mt-1">Best level points rate (6 per 100 NOK)</p>
-        </div>
-        <div>
-          <label for="mcSpending" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">
-            <span class="inline-flex items-center gap-1">
-              <span class="w-3 h-3 rounded-full bg-dnb-green"></span>
-              Mastercard Spending (NOK)
-            </span>
-          </label>
-          <div class="flex items-center gap-3">
-            <input id="mcSpending" type="number" step="1000" min="0" placeholder="10000"
-              class="flex-1 px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sas-blue focus:border-sas-blue text-center" />
-            <span class="text-sm text-gray-500">NOK/month</span>
-          </div>
-          <p class="text-xs text-gray-500 mt-1">For merchants that don't accept Amex</p>
-        </div>
-        <div class="pt-2 border-t border-gray-200">
-          <div class="flex justify-between text-sm">
-            <span class="text-gray-600">Total monthly spending:</span>
-            <span id="totalMultiSpending" class="font-semibold text-gray-900">0 NOK</span>
-          </div>
         </div>
       </div>
 
@@ -237,121 +246,35 @@
       </div>
     </div>
 
-    <!-- Card Selection -->
+    <!-- Card Stack Builder -->
     <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-800 mb-1">Select Your Card</h2>
-      <p id="cardSelectionSubtitle" class="text-xs text-gray-500 mb-4">Choose the card you have or are considering</p>
+      <h2 class="text-lg font-semibold text-gray-800 mb-1">Your Card Stack</h2>
+      <p class="text-xs text-gray-500 mb-4">Allocate your spending across cards</p>
 
-      <!-- Single card mode -->
-      <div id="singleCardSelection" class="space-y-3">
-        <!-- SAS Cards group -->
-        <div class="card-group-header text-sas-blue">SAS EuroBonus Cards</div>
-
-        <!-- SAS Amex Elite -->
-        <label class="card-option block p-4 rounded-xl border-2 border-gray-200" data-card="amex-elite">
-          <div class="flex items-start gap-3">
-            <input type="radio" name="card" value="amex-elite" class="mt-1 w-4 h-4 text-sas-blue border-gray-300 focus:ring-sas-blue" checked />
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-semibold text-gray-900">SAS Amex Elite</span>
-                <span class="text-xs px-2 py-0.5 bg-sas-blue text-white rounded-full">Best for Level Points</span>
-              </div>
-              <div class="text-sm text-gray-600 mt-1">6 Level Points per 100 NOK spent</div>
-              <div class="text-xs text-gray-500 mt-1">Annual fee: 3,900 NOK (from Jan 2026: 4,900 NOK)</div>
-            </div>
-          </div>
-        </label>
-
-        <!-- SAS Mastercard Premium -->
-        <label class="card-option block p-4 rounded-xl border-2 border-gray-200" data-card="mastercard-premium">
-          <div class="flex items-start gap-3">
-            <input type="radio" name="card" value="mastercard-premium" class="mt-1 w-4 h-4 text-sas-blue border-gray-300 focus:ring-sas-blue" />
-            <div class="flex-1">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-gray-900">SAS EuroBonus Mastercard Premium</span>
-              </div>
-              <div class="text-sm text-gray-600 mt-1">25% of monthly Bonus Points as Level Points</div>
-              <div class="text-xs text-gray-500 mt-1">Minimum 500 Level Points/month when used</div>
-              <div class="text-xs text-gray-500">Earns ~1 Bonus Point per 10 NOK spent</div>
-            </div>
-          </div>
-        </label>
-
-        <!-- DNB Cards group -->
-        <div class="card-group-header text-dnb-green">DNB Mastercard Upgrade</div>
-
-        <!-- DNB Mastercard Upgrade Standard -->
-        <label class="card-option block p-4 rounded-xl border-2 border-gray-200" data-card="dnb-standard">
-          <div class="flex items-start gap-3">
-            <input type="radio" name="card" value="dnb-standard" class="mt-1 w-4 h-4 text-dnb-green border-gray-300 focus:ring-dnb-green" />
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-semibold text-gray-900">DNB Mastercard Upgrade</span>
-                <span class="text-xs px-2 py-0.5 bg-gray-500 text-white rounded-full">Standard/Ung/Pluss</span>
-              </div>
-              <div class="text-sm text-gray-600 mt-1">10 Bonus Points per 100 NOK spent</div>
-              <div class="text-xs text-gray-500 mt-1">Monthly fee: 59 NOK (708 NOK/year)</div>
-              <div class="text-xs text-amber-600 mt-1">No level points from spending</div>
-            </div>
-          </div>
-        </label>
-
-        <!-- DNB SAGA Mastercard Upgrade -->
-        <label class="card-option block p-4 rounded-xl border-2 border-gray-200" data-card="dnb-saga">
-          <div class="flex items-start gap-3">
-            <input type="radio" name="card" value="dnb-saga" class="mt-1 w-4 h-4 text-dnb-green border-gray-300 focus:ring-dnb-green" />
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-semibold text-gray-900">DNB SAGA Mastercard Upgrade</span>
-                <span class="text-xs px-2 py-0.5 bg-dnb-saga text-white rounded-full">SAGA/Private Banking</span>
-              </div>
-              <div class="text-sm text-gray-600 mt-1">15 Bonus Points per 100 NOK spent</div>
-              <div class="text-xs text-green-600 mt-1">Up to 30,000 Level Points/year via spending thresholds</div>
-              <div class="text-xs text-gray-500">Monthly fee: 139 NOK + SAGA fee (295 NOK/year)</div>
-            </div>
-          </div>
-        </label>
+      <div id="cardStack" class="space-y-3">
+        <!-- Cards will be added here dynamically -->
       </div>
 
-      <!-- Multi-card mode -->
-      <div id="multiCardSelection" class="hidden space-y-4">
-        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm text-blue-800">
-          In multi-card mode, you use <strong>SAS Amex Elite</strong> as your primary card for best level points, and a <strong>Mastercard</strong> for merchants that don't accept Amex.
-        </div>
+      <button id="addCardBtn" class="add-card-btn w-full mt-3 p-3 rounded-xl flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-sas-blue">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Add another card
+      </button>
 
-        <!-- Mastercard selection for multi-card mode -->
-        <div>
-          <div class="text-sm font-medium text-gray-700 mb-2">Select your Mastercard:</div>
-          <div class="space-y-2">
-            <label class="card-option block p-3 rounded-xl border-2 border-gray-200" data-card="mastercard-premium-multi">
-              <div class="flex items-start gap-3">
-                <input type="radio" name="multicard-mc" value="mastercard-premium" class="mt-0.5 w-4 h-4 text-sas-blue border-gray-300 focus:ring-sas-blue" checked />
-                <div class="flex-1">
-                  <span class="font-medium text-gray-900 text-sm">SAS EuroBonus MC Premium</span>
-                  <div class="text-xs text-gray-500">25% of Bonus Points as Level Points (min 500/mo)</div>
-                </div>
-              </div>
-            </label>
-
-            <label class="card-option block p-3 rounded-xl border-2 border-gray-200" data-card="dnb-standard-multi">
-              <div class="flex items-start gap-3">
-                <input type="radio" name="multicard-mc" value="dnb-standard" class="mt-0.5 w-4 h-4 text-dnb-green border-gray-300 focus:ring-dnb-green" />
-                <div class="flex-1">
-                  <span class="font-medium text-gray-900 text-sm">DNB MC Upgrade (Standard)</span>
-                  <div class="text-xs text-gray-500">10 pts/100 NOK, no level points</div>
-                </div>
-              </div>
-            </label>
-
-            <label class="card-option block p-3 rounded-xl border-2 border-gray-200" data-card="dnb-saga-multi">
-              <div class="flex items-start gap-3">
-                <input type="radio" name="multicard-mc" value="dnb-saga" class="mt-0.5 w-4 h-4 text-dnb-green border-gray-300 focus:ring-dnb-green" />
-                <div class="flex-1">
-                  <span class="font-medium text-gray-900 text-sm">DNB SAGA MC Upgrade</span>
-                  <div class="text-xs text-gray-500">15 pts/100 NOK + up to 30k level pts/year</div>
-                </div>
-              </div>
-            </label>
+      <!-- Card Picker Modal -->
+      <div id="cardPicker" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-semibold text-gray-800">Add a Card</h3>
+            <button id="closePickerBtn" class="p-1 hover:bg-gray-100 rounded-lg">
+              <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-4 overflow-y-auto max-h-[60vh] space-y-2" id="cardPickerList">
+            <!-- Card options will be here -->
           </div>
         </div>
       </div>
@@ -460,6 +383,74 @@
       </div>
     </div>
 
+    <!-- Optimal Strategies Guide -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Optimal Strategies</h2>
+
+      <div class="space-y-4">
+        <!-- CT Strategy -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">CT</div>
+            <div>
+              <div class="font-semibold text-gray-800 mb-1">Challenge Tier (CT) Strategy</div>
+              <p class="text-sm text-gray-600 mb-2">SAS occasionally offers status challenges where you can earn status with reduced requirements (e.g., 50% of normal points needed). Watch for these promotions!</p>
+              <div class="text-xs text-purple-700 bg-purple-100 rounded-lg px-2 py-1 inline-block">Best time: After off-peak travel seasons</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amex Primary Strategy -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-sas-blue flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AE</div>
+            <div>
+              <div class="font-semibold text-gray-800 mb-1">Amex Elite Primary</div>
+              <p class="text-sm text-gray-600 mb-2">Use SAS Amex Elite for everything. At 6 level points per 100 NOK, it's by far the best for status. Add a Mastercard only for merchants that don't accept Amex (~15-20% of spending).</p>
+              <div class="grid grid-cols-3 gap-2 mt-2 text-xs">
+                <div class="text-center p-2 bg-white rounded-lg">
+                  <div class="font-bold text-sas-blue">28k</div>
+                  <div class="text-gray-500">NOK/mo for Silver</div>
+                </div>
+                <div class="text-center p-2 bg-white rounded-lg">
+                  <div class="font-bold text-sas-blue">63k</div>
+                  <div class="text-gray-500">NOK/mo for Gold</div>
+                </div>
+                <div class="text-center p-2 bg-white rounded-lg">
+                  <div class="font-bold text-sas-blue">125k</div>
+                  <div class="text-gray-500">NOK/mo for Diamond</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DNB SAGA Threshold Strategy -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-dnb-green flex items-center justify-center text-white text-xs font-bold flex-shrink-0">DS</div>
+            <div>
+              <div class="font-semibold text-gray-800 mb-1">DNB SAGA Threshold Hunting</div>
+              <p class="text-sm text-gray-600 mb-2">If you're a SAGA customer, the threshold bonuses (10k LP at 100k, 200k, and 500k spend) can help. But math shows Amex Elite is still better for level points until very high spend.</p>
+              <div class="text-xs text-teal-700 bg-teal-100 rounded-lg px-2 py-1 inline-block">Best for: High spenders wanting max bonus points</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combo Strategy -->
+        <div class="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2+</div>
+            <div>
+              <div class="font-semibold text-gray-800 mb-1">Optimal Two-Card Combo</div>
+              <p class="text-sm text-gray-600 mb-2">Use <strong>SAS Amex Elite</strong> (80% of spend) + <strong>SAS MC Premium</strong> (20% for non-Amex). The MC Premium gives minimum 500 level points/month when used, making it better than DNB for the fallback card.</p>
+              <div class="text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1 inline-block">Recommended for most users</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Card Comparison -->
     <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
       <h2 class="text-lg font-semibold text-gray-800 mb-4">Card Comparison</h2>
@@ -478,33 +469,6 @@
           </tbody>
         </table>
       </div>
-    </div>
-
-    <!-- Tips -->
-    <div class="bg-gradient-to-r from-sas-blue/5 to-sky-50 rounded-2xl p-4 sm:p-5 shadow-lg border border-sas-blue/20 mb-3 sm:mb-4">
-      <h3 class="text-sm font-semibold text-sas-blue mb-2">Pro Tips</h3>
-      <ul class="text-sm text-gray-700 space-y-2">
-        <li class="flex items-start gap-2">
-          <span class="text-sas-blue">1.</span>
-          <span>Level points must be earned within a 12-month qualification period</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <span class="text-sas-blue">2.</span>
-          <span>SAS Amex Elite is the most efficient card for earning Level Points (6 per 100 NOK)</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <span class="text-sas-blue">3.</span>
-          <span>Use multi-card mode: Amex Elite where accepted + Mastercard for other merchants</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <span class="text-sas-blue">4.</span>
-          <span>DNB SAGA gives up to 30k level points/year via spending thresholds (100k/200k/500k)</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <span class="text-sas-blue">5.</span>
-          <span>SAS Amex Elite includes two 2-for-1 flight vouchers annually</span>
-        </li>
-      </ul>
     </div>
 
     <!-- DNB SAGA Level Points Thresholds -->
@@ -610,6 +574,7 @@
       'amex-elite': {
         name: 'SAS Amex Elite',
         shortName: 'Amex Elite',
+        color: '#000066',
         // 6 Level Points per 100 NOK
         levelPointsPerNOK: 6 / 100,
         // ~1 Bonus Point per 8 NOK (approximate)
@@ -617,6 +582,7 @@
         annualFee: 3900,
         futureFee: 4900,
         type: 'amex',
+        description: '6 LP / 100 NOK - Best for status',
         features: {
           levelPointRate: '6 per 100 NOK',
           bonusPointRate: '~1 per 8 NOK',
@@ -629,6 +595,7 @@
       'mastercard-premium': {
         name: 'SAS MC Premium',
         shortName: 'SAS MC Premium',
+        color: '#000066',
         // ~1 Bonus Point per 10 NOK, then 25% as Level Points
         // Minimum 500 Level Points per month when used
         bonusPointsPerNOK: 1 / 10,
@@ -636,6 +603,7 @@
         minLevelPointsPerMonth: 500,
         annualFee: 1495,
         type: 'mastercard',
+        description: '25% of BP as LP (min 500/mo)',
         features: {
           levelPointRate: '25% of Bonus Points (min 500/mo)',
           bonusPointRate: '~1 per 10 NOK',
@@ -648,6 +616,7 @@
       'dnb-standard': {
         name: 'DNB MC Upgrade',
         shortName: 'DNB Standard',
+        color: '#007272',
         // 10 Bonus Points per 100 NOK
         bonusPointsPerNOK: 10 / 100,
         // No level points from spending for standard cards
@@ -655,6 +624,7 @@
         annualFee: 708, // 59 NOK/month
         monthlyFee: 59,
         type: 'mastercard',
+        description: '10 BP / 100 NOK - No LP',
         features: {
           levelPointRate: 'None',
           bonusPointRate: '10 per 100 NOK',
@@ -667,6 +637,7 @@
       'dnb-saga': {
         name: 'DNB SAGA MC Upgrade',
         shortName: 'DNB SAGA',
+        color: '#007272',
         // 15 Bonus Points per 100 NOK
         bonusPointsPerNOK: 15 / 100,
         // Level points via yearly spending thresholds (calendar year)
@@ -681,6 +652,7 @@
         sagaFee: 295,
         type: 'mastercard',
         loungeAccess: true,
+        description: '15 BP / 100 NOK + threshold LP',
         features: {
           levelPointRate: 'Up to 30k/year via thresholds',
           bonusPointRate: '15 per 100 NOK',
@@ -692,26 +664,56 @@
       }
     };
 
+    // Strategy configurations
+    const STRATEGIES = {
+      level: {
+        name: 'Max Level Points',
+        description: '<strong>Max Level Points:</strong> Use SAS Amex Elite everywhere Amex is accepted (best level point rate at 6 per 100 NOK). This is the fastest path to Silver, Gold, or Diamond status.',
+        cards: [
+          { id: 'amex-elite', percentage: 100 }
+        ]
+      },
+      bonus: {
+        name: 'Max Bonus Points',
+        description: '<strong>Max Bonus Points:</strong> Use DNB SAGA MC Upgrade for maximum bonus points (15 per 100 NOK). Great for accumulating flight rewards, but slower for earning status.',
+        cards: [
+          { id: 'dnb-saga', percentage: 100 }
+        ]
+      },
+      balanced: {
+        name: 'Balanced',
+        description: '<strong>Balanced Strategy:</strong> Use SAS Amex Elite as primary (80%) for level points, and SAS MC Premium (20%) where Amex isn\'t accepted. The MC Premium gives minimum 500 LP/month when used.',
+        cards: [
+          { id: 'amex-elite', percentage: 80 },
+          { id: 'mastercard-premium', percentage: 20 }
+        ]
+      },
+      custom: {
+        name: 'Custom Stack',
+        description: '<strong>Custom Stack:</strong> Build your own card combination. Add cards below and set your spending allocation for each.',
+        cards: []
+      }
+    };
+
     // State
-    let isMultiCardMode = false;
+    let currentStrategy = 'level';
+    let cardStack = [];
+    let nextCardId = 0;
 
     // DOM Elements
-    const monthlySpendingInput = document.getElementById('monthlySpending');
-    const amexSpendingInput = document.getElementById('amexSpending');
-    const mcSpendingInput = document.getElementById('mcSpending');
+    const totalSpendingInput = document.getElementById('totalSpending');
+    const cardStackEl = document.getElementById('cardStack');
+    const addCardBtn = document.getElementById('addCardBtn');
+    const cardPicker = document.getElementById('cardPicker');
+    const cardPickerList = document.getElementById('cardPickerList');
+    const closePickerBtn = document.getElementById('closePickerBtn');
     const monthlyPointsEl = document.getElementById('monthlyPoints');
     const yearlyPointsEl = document.getElementById('yearlyPoints');
     const monthlyBonusPointsEl = document.getElementById('monthlyBonusPoints');
     const yearlyBonusPointsEl = document.getElementById('yearlyBonusPoints');
     const redemptionHintEl = document.getElementById('redemptionHint');
     const narrativeContentEl = document.getElementById('narrativeContent');
-    const multiCardToggle = document.getElementById('multiCardToggle');
-    const singleCardSpending = document.getElementById('singleCardSpending');
-    const multiCardSpending = document.getElementById('multiCardSpending');
-    const singleCardSelection = document.getElementById('singleCardSelection');
-    const multiCardSelection = document.getElementById('multiCardSelection');
-    const totalMultiSpendingEl = document.getElementById('totalMultiSpending');
-    const cardSelectionSubtitle = document.getElementById('cardSelectionSubtitle');
+    const strategyDescriptionEl = document.getElementById('strategyDescription');
 
     // Redemption examples (approximate SAS values)
     const REDEMPTIONS = [
@@ -723,6 +725,11 @@
       { points: 100000, description: 'a transatlantic round-trip in economy' },
       { points: 150000, description: 'a transatlantic round-trip in business' }
     ];
+
+    // Generate unique ID for card stack items
+    function generateCardId() {
+      return `card-${nextCardId++}`;
+    }
 
     // Calculate Level Points for a given card and monthly spending
     function calculateLevelPoints(cardKey, monthlySpending) {
@@ -771,30 +778,41 @@
       return Math.floor(monthlySpending * card.bonusPointsPerNOK);
     }
 
-    // Calculate combined results for multi-card mode
-    function calculateMultiCard(amexSpending, mcSpending, mcCardKey) {
-      const amexLevelPoints = calculateLevelPoints('amex-elite', amexSpending);
-      const amexBonusPoints = calculateBonusPoints('amex-elite', amexSpending);
+    // Calculate combined results from card stack
+    function calculateCardStack(totalMonthlySpending) {
+      let totalMonthlyLevelPoints = 0;
+      let totalYearlyLevelPoints = 0;
+      let totalMonthlyBonusPoints = 0;
+      let dnbSagaYearlySpending = 0;
 
-      let mcLevelPoints = calculateLevelPoints(mcCardKey, mcSpending);
-      const mcBonusPoints = calculateBonusPoints(mcCardKey, mcSpending);
+      for (const stackCard of cardStack) {
+        const spending = (stackCard.percentage / 100) * totalMonthlySpending;
+        const cardKey = stackCard.cardId;
 
-      // For DNB SAGA, calculate yearly level points from thresholds
-      let dnbSagaYearlyLevelPoints = 0;
-      if (mcCardKey === 'dnb-saga') {
-        dnbSagaYearlyLevelPoints = calculateDnbSagaYearlyLevelPoints(mcSpending * 12);
+        // Level points
+        const monthlyLP = calculateLevelPoints(cardKey, spending);
+        totalMonthlyLevelPoints += monthlyLP;
+        totalYearlyLevelPoints += monthlyLP * 12;
+
+        // Track DNB SAGA spending for threshold calculation
+        if (cardKey === 'dnb-saga') {
+          dnbSagaYearlySpending += spending * 12;
+        }
+
+        // Bonus points
+        totalMonthlyBonusPoints += calculateBonusPoints(cardKey, spending);
+      }
+
+      // Add DNB SAGA threshold level points
+      if (dnbSagaYearlySpending > 0) {
+        totalYearlyLevelPoints += calculateDnbSagaYearlyLevelPoints(dnbSagaYearlySpending);
       }
 
       return {
-        monthlyLevelPoints: amexLevelPoints + mcLevelPoints,
-        yearlyLevelPoints: (amexLevelPoints * 12) + (mcLevelPoints * 12) + dnbSagaYearlyLevelPoints,
-        monthlyBonusPoints: amexBonusPoints + mcBonusPoints,
-        yearlyBonusPoints: (amexBonusPoints + mcBonusPoints) * 12,
-        dnbSagaYearlyLevelPoints: dnbSagaYearlyLevelPoints,
-        breakdown: {
-          amex: { level: amexLevelPoints, bonus: amexBonusPoints },
-          mc: { level: mcLevelPoints, bonus: mcBonusPoints, yearlyThreshold: dnbSagaYearlyLevelPoints }
-        }
+        monthlyLevelPoints: totalMonthlyLevelPoints,
+        yearlyLevelPoints: totalYearlyLevelPoints,
+        monthlyBonusPoints: totalMonthlyBonusPoints,
+        yearlyBonusPoints: totalMonthlyBonusPoints * 12
       };
     }
 
@@ -865,14 +883,10 @@
     function generateNarrative(params) {
       const {
         monthlySpending,
-        yearlySpending,
-        cardName,
-        monthlyLevelPoints,
         yearlyLevelPoints,
         monthlyBonusPoints,
         yearlyBonusPoints,
-        isMultiCard,
-        mcCardName
+        cardStackDesc
       } = params;
 
       if (monthlySpending <= 0) {
@@ -885,11 +899,7 @@
       let narrative = [];
 
       // Opening - spending context
-      const cardDesc = isMultiCard
-        ? `your SAS Amex Elite and ${mcCardName} combination`
-        : `your ${cardName}`;
-
-      narrative.push(`<p class="text-lg leading-relaxed">Spending <strong>${formatNOK(monthlySpending)}</strong> per month with ${cardDesc}, you'll earn:</p>`);
+      narrative.push(`<p class="text-lg leading-relaxed">Spending <strong>${formatNOK(monthlySpending)}</strong> per month with ${cardStackDesc}, you'll earn:</p>`);
 
       // Points earned summary
       narrative.push(`
@@ -909,16 +919,15 @@
       if (bestTier) {
         const tierInfo = TIERS[bestTier];
         const monthsToTier = (tierInfo.points / yearlyLevelPoints) * 12;
-        const tierEmoji = bestTier === 'diamond' ? '💎' : bestTier === 'gold' ? '🥇' : '🥈';
 
         if (monthsToTier <= 12) {
-          narrative.push(`<p class="text-lg leading-relaxed">${tierEmoji} You can reach <strong>EuroBonus ${tierNames[bestTier]}</strong> status in <strong>${formatDuration(monthsToTier)}</strong>.</p>`);
+          narrative.push(`<p class="text-lg leading-relaxed">You can reach <strong>EuroBonus ${tierNames[bestTier]}</strong> status in <strong>${formatDuration(monthsToTier)}</strong>.</p>`);
         }
 
         // What's next?
         if (bestTier === 'silver' && yearlyLevelPoints < TIERS.gold.points) {
           const extraNeeded = TIERS.gold.points - yearlyLevelPoints;
-          narrative.push(`<p class="text-sm opacity-80 mt-2">To reach Gold, you'd need ${formatNumber(extraNeeded)} more level points per year (about ${formatNOK(extraNeeded / 0.72)} more monthly spending with Amex Elite).</p>`);
+          narrative.push(`<p class="text-sm opacity-80 mt-2">To reach Gold, you'd need ${formatNumber(extraNeeded)} more level points per year.</p>`);
         } else if (bestTier === 'gold' && yearlyLevelPoints < TIERS.diamond.points) {
           const extraNeeded = TIERS.diamond.points - yearlyLevelPoints;
           narrative.push(`<p class="text-sm opacity-80 mt-2">To reach Diamond, you'd need ${formatNumber(extraNeeded)} more level points per year.</p>`);
@@ -927,71 +936,208 @@
         // Can't reach any tier
         const pointsNeeded = TIERS.silver.points - yearlyLevelPoints;
         narrative.push(`<p class="text-lg leading-relaxed">With this spending level, you won't reach Silver status within 12 months. You'd need <strong>${formatNumber(pointsNeeded)}</strong> more level points per year.</p>`);
-
-        // Suggest alternatives
-        if (!isMultiCard) {
-          const selectedCard = getSelectedCard();
-          if (selectedCard !== 'amex-elite') {
-            const amexNeeded = Math.ceil(TIERS.silver.points / 12 / (6/100));
-            narrative.push(`<p class="text-sm opacity-80 mt-2">With SAS Amex Elite, you'd need about ${formatNOK(amexNeeded)}/month to reach Silver.</p>`);
-          }
-        }
       }
 
       return narrative.join('');
     }
 
-    // Get selected card (single card mode)
-    function getSelectedCard() {
-      const selected = document.querySelector('input[name="card"]:checked');
-      return selected ? selected.value : 'amex-elite';
-    }
+    // Set strategy and update card stack
+    function setStrategy(strategyKey) {
+      currentStrategy = strategyKey;
+      const strategy = STRATEGIES[strategyKey];
 
-    // Get selected Mastercard for multi-card mode
-    function getSelectedMultiCardMC() {
-      const selected = document.querySelector('input[name="multicard-mc"]:checked');
-      return selected ? selected.value : 'mastercard-premium';
-    }
+      // Update UI
+      document.querySelectorAll('.strategy-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.strategy === strategyKey);
+      });
 
-    // Toggle multi-card mode
-    function toggleMultiCardMode() {
-      isMultiCardMode = !isMultiCardMode;
-      multiCardToggle.classList.toggle('active', isMultiCardMode);
-      multiCardToggle.setAttribute('aria-checked', isMultiCardMode);
+      // Update description
+      strategyDescriptionEl.innerHTML = strategy.description;
 
-      // Toggle visibility
-      singleCardSpending.classList.toggle('hidden', isMultiCardMode);
-      multiCardSpending.classList.toggle('hidden', !isMultiCardMode);
-      singleCardSelection.classList.toggle('hidden', isMultiCardMode);
-      multiCardSelection.classList.toggle('hidden', !isMultiCardMode);
-
-      // Update subtitle
-      cardSelectionSubtitle.textContent = isMultiCardMode
-        ? 'Amex Elite for best rates + Mastercard for wider acceptance'
-        : 'Choose the card you have or are considering';
-
-      // Sync spending values
-      if (isMultiCardMode) {
-        const total = parseFloat(monthlySpendingInput.value) || 0;
-        // Default split: 60% Amex, 40% MC (common ratio for Amex acceptance)
-        amexSpendingInput.value = Math.round(total * 0.6);
-        mcSpendingInput.value = Math.round(total * 0.4);
-      } else {
-        const amex = parseFloat(amexSpendingInput.value) || 0;
-        const mc = parseFloat(mcSpendingInput.value) || 0;
-        monthlySpendingInput.value = amex + mc;
+      // For non-custom strategies, reset card stack to strategy defaults
+      if (strategyKey !== 'custom') {
+        cardStack = strategy.cards.map(c => ({
+          uid: generateCardId(),
+          cardId: c.id,
+          percentage: c.percentage
+        }));
       }
 
+      renderCardStack();
       calculate();
     }
 
+    // Render card stack
+    function renderCardStack() {
+      cardStackEl.innerHTML = '';
+
+      if (cardStack.length === 0) {
+        cardStackEl.innerHTML = `
+          <div class="text-center py-6 text-gray-500 text-sm">
+            No cards in your stack. Click "Add a card" to get started.
+          </div>
+        `;
+        return;
+      }
+
+      cardStack.forEach((stackCard, index) => {
+        const card = CARDS[stackCard.cardId];
+        const el = document.createElement('div');
+        el.className = 'stack-card p-4 rounded-xl border-2 border-gray-200 bg-white';
+        el.innerHTML = `
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full" style="background-color: ${card.color}"></div>
+              <div>
+                <div class="font-semibold text-gray-800 text-sm">${card.name}</div>
+                <div class="text-xs text-gray-500">${card.description}</div>
+              </div>
+            </div>
+            <button class="remove-card-btn p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-red-500" data-uid="${stackCard.uid}">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-600">Spending allocation</span>
+              <span class="text-sm font-semibold text-sas-blue">${stackCard.percentage}%</span>
+            </div>
+            <input type="range" min="0" max="100" value="${stackCard.percentage}"
+              class="spending-slider w-full" data-uid="${stackCard.uid}" />
+            <div class="flex justify-between text-xs text-gray-400">
+              <span>0%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        `;
+        cardStackEl.appendChild(el);
+      });
+
+      // Add event listeners for sliders
+      document.querySelectorAll('.spending-slider').forEach(slider => {
+        slider.addEventListener('input', handleSliderChange);
+      });
+
+      // Add event listeners for remove buttons
+      document.querySelectorAll('.remove-card-btn').forEach(btn => {
+        btn.addEventListener('click', handleRemoveCard);
+      });
+
+      // Show/hide add button based on remaining percentage
+      const totalPercentage = cardStack.reduce((sum, c) => sum + c.percentage, 0);
+      addCardBtn.style.display = totalPercentage >= 100 && cardStack.length >= Object.keys(CARDS).length ? 'none' : 'flex';
+    }
+
+    // Handle slider change
+    function handleSliderChange(e) {
+      const uid = e.target.dataset.uid;
+      const newValue = parseInt(e.target.value);
+
+      // Find the card and update
+      const cardIndex = cardStack.findIndex(c => c.uid === uid);
+      if (cardIndex === -1) return;
+
+      // Calculate current total without this card
+      const otherTotal = cardStack.reduce((sum, c, i) => i === cardIndex ? sum : sum + c.percentage, 0);
+
+      // Limit to remaining percentage
+      const maxValue = 100 - otherTotal;
+      cardStack[cardIndex].percentage = Math.min(newValue, maxValue);
+
+      // Switch to custom strategy when manually adjusting
+      if (currentStrategy !== 'custom') {
+        currentStrategy = 'custom';
+        document.querySelectorAll('.strategy-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.strategy === 'custom');
+        });
+        strategyDescriptionEl.innerHTML = STRATEGIES.custom.description;
+      }
+
+      renderCardStack();
+      calculate();
+    }
+
+    // Handle remove card
+    function handleRemoveCard(e) {
+      const uid = e.currentTarget.dataset.uid;
+      cardStack = cardStack.filter(c => c.uid !== uid);
+
+      // Switch to custom strategy
+      if (currentStrategy !== 'custom') {
+        currentStrategy = 'custom';
+        document.querySelectorAll('.strategy-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.strategy === 'custom');
+        });
+        strategyDescriptionEl.innerHTML = STRATEGIES.custom.description;
+      }
+
+      renderCardStack();
+      calculate();
+    }
+
+    // Show card picker
+    function showCardPicker() {
+      // Get cards not already in stack
+      const usedCards = new Set(cardStack.map(c => c.cardId));
+      const availableCards = Object.entries(CARDS).filter(([key]) => !usedCards.has(key));
+
+      cardPickerList.innerHTML = availableCards.map(([key, card]) => `
+        <button class="card-picker-option w-full p-3 rounded-xl border-2 border-gray-200 hover:border-sas-blue hover:bg-blue-50 text-left transition-all" data-card="${key}">
+          <div class="flex items-center gap-3">
+            <div class="w-4 h-4 rounded-full flex-shrink-0" style="background-color: ${card.color}"></div>
+            <div>
+              <div class="font-semibold text-gray-800">${card.name}</div>
+              <div class="text-xs text-gray-500">${card.description}</div>
+            </div>
+          </div>
+        </button>
+      `).join('');
+
+      // Add click handlers
+      document.querySelectorAll('.card-picker-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cardKey = btn.dataset.card;
+          const totalPercentage = cardStack.reduce((sum, c) => sum + c.percentage, 0);
+          const remainingPercentage = 100 - totalPercentage;
+
+          cardStack.push({
+            uid: generateCardId(),
+            cardId: cardKey,
+            percentage: Math.min(remainingPercentage, 50) // Default to 50% or remaining
+          });
+
+          // Switch to custom strategy
+          if (currentStrategy !== 'custom') {
+            currentStrategy = 'custom';
+            document.querySelectorAll('.strategy-btn').forEach(btn => {
+              btn.classList.toggle('active', btn.dataset.strategy === 'custom');
+            });
+            strategyDescriptionEl.innerHTML = STRATEGIES.custom.description;
+          }
+
+          hideCardPicker();
+          renderCardStack();
+          calculate();
+        });
+      });
+
+      cardPicker.classList.remove('hidden');
+    }
+
+    // Hide card picker
+    function hideCardPicker() {
+      cardPicker.classList.add('hidden');
+    }
+
     // Update tier display
-    function updateTierDisplay(tierId, monthlyPoints, tierPoints) {
+    function updateTierDisplayYearly(tierId, yearlyPoints, tierPoints, monthlySpending) {
       const progressEl = document.getElementById(`${tierId}Progress`);
       const statusEl = document.getElementById(`${tierId}Status`);
       const cardEl = document.getElementById(`${tierId}Card`);
 
-      if (monthlyPoints <= 0) {
+      if (yearlyPoints <= 0 || monthlySpending <= 0) {
         progressEl.style.width = '0%';
         statusEl.textContent = 'Enter spending to calculate';
         statusEl.className = 'text-sm text-gray-600';
@@ -1000,21 +1146,23 @@
       }
 
       cardEl.style.opacity = '1';
-      const monthsToReach = tierPoints / monthlyPoints;
-      const totalSpending = monthsToReach * parseFloat(monthlySpendingInput.value || 0);
 
-      // Progress as percentage of 12 months (qualification period)
-      const progressPercent = Math.min(100, (12 / monthsToReach) * 100);
-      progressEl.style.width = `${progressPercent}%`;
+      // Check if achievable within 12 months
+      if (yearlyPoints >= tierPoints) {
+        const monthsToReach = (tierPoints / yearlyPoints) * 12;
+        const totalSpending = monthsToReach * monthlySpending;
 
-      if (monthsToReach > 12) {
-        statusEl.innerHTML = `<span class="text-red-600 font-medium">Not achievable</span> in 12 months`;
-        statusEl.className = 'text-sm';
-        cardEl.classList.remove('achievable');
-      } else {
+        progressEl.style.width = '100%';
         statusEl.innerHTML = `<span class="text-green-600 font-medium">${formatDuration(monthsToReach)}</span> &middot; ${formatNOK(totalSpending)} total spending`;
         statusEl.className = 'text-sm';
         cardEl.classList.add('achievable');
+      } else {
+        // Not achievable with current yearly earning rate
+        const yearsNeeded = tierPoints / yearlyPoints;
+        progressEl.style.width = `${Math.min(100, (yearlyPoints / tierPoints) * 100)}%`;
+        statusEl.innerHTML = `<span class="text-red-600 font-medium">Not achievable</span> &middot; Would take ${yearsNeeded.toFixed(1)} years`;
+        statusEl.className = 'text-sm';
+        cardEl.classList.remove('achievable');
       }
     }
 
@@ -1126,236 +1274,85 @@
 
     // Main calculation function
     function calculate() {
-      if (isMultiCardMode) {
-        calculateMultiCardMode();
-      } else {
-        calculateSingleCardMode();
-      }
-    }
+      const totalSpending = parseFloat(totalSpendingInput.value) || 0;
 
-    function calculateSingleCardMode() {
-      const monthlySpending = parseFloat(monthlySpendingInput.value) || 0;
-      const selectedCard = getSelectedCard();
-      const card = CARDS[selectedCard];
-
-      let monthlyPoints = calculateLevelPoints(selectedCard, monthlySpending);
-      let yearlyPoints = monthlyPoints * 12;
-
-      // Special handling for DNB SAGA threshold-based level points
-      if (selectedCard === 'dnb-saga') {
-        const yearlySpending = monthlySpending * 12;
-        yearlyPoints = calculateDnbSagaYearlyLevelPoints(yearlySpending);
-        // For display purposes, show average monthly equivalent
-        monthlyPoints = yearlyPoints / 12;
+      if (cardStack.length === 0) {
+        monthlyPointsEl.textContent = '0';
+        yearlyPointsEl.textContent = '0';
+        monthlyBonusPointsEl.textContent = '0';
+        yearlyBonusPointsEl.textContent = '0';
+        redemptionHintEl.textContent = '';
+        narrativeContentEl.innerHTML = '<p class="text-lg leading-relaxed opacity-90">Add cards to your stack to see your rewards journey.</p>';
+        updateTierDisplayYearly('silver', 0, TIERS.silver.points, 0);
+        updateTierDisplayYearly('gold', 0, TIERS.gold.points, 0);
+        updateTierDisplayYearly('diamond', 0, TIERS.diamond.points, 0);
+        updateComparisonTable(totalSpending);
+        return;
       }
 
-      // Calculate bonus points
-      const monthlyBonusPoints = calculateBonusPoints(selectedCard, monthlySpending);
-      const yearlyBonusPoints = monthlyBonusPoints * 12;
+      const results = calculateCardStack(totalSpending);
 
-      // Update level points display
-      monthlyPointsEl.textContent = formatNumber(monthlyPoints);
-      yearlyPointsEl.textContent = formatNumber(yearlyPoints);
+      // Build card stack description
+      const cardNames = cardStack.map(c => CARDS[c.cardId].shortName);
+      const cardStackDesc = cardNames.length === 1
+        ? `your ${cardNames[0]}`
+        : `your ${cardNames.slice(0, -1).join(', ')} and ${cardNames[cardNames.length - 1]}`;
 
-      // Update bonus points display
-      monthlyBonusPointsEl.textContent = formatNumber(monthlyBonusPoints);
-      yearlyBonusPointsEl.textContent = formatNumber(yearlyBonusPoints);
-
-      // Update redemption hint
-      redemptionHintEl.textContent = getRedemptionHint(yearlyBonusPoints);
-
-      // Generate and display narrative
-      narrativeContentEl.innerHTML = generateNarrative({
-        monthlySpending,
-        yearlySpending: monthlySpending * 12,
-        cardName: card.name,
-        monthlyLevelPoints: monthlyPoints,
-        yearlyLevelPoints: yearlyPoints,
-        monthlyBonusPoints,
-        yearlyBonusPoints,
-        isMultiCard: false,
-        mcCardName: null
-      });
-
-      // Update tier displays
-      // For DNB SAGA, we need to use yearly points directly since they're threshold-based
-      if (selectedCard === 'dnb-saga') {
-        updateTierDisplayYearly('silver', yearlyPoints, TIERS.silver.points, monthlySpending);
-        updateTierDisplayYearly('gold', yearlyPoints, TIERS.gold.points, monthlySpending);
-        updateTierDisplayYearly('diamond', yearlyPoints, TIERS.diamond.points, monthlySpending);
-      } else {
-        updateTierDisplay('silver', monthlyPoints, TIERS.silver.points);
-        updateTierDisplay('gold', monthlyPoints, TIERS.gold.points);
-        updateTierDisplay('diamond', monthlyPoints, TIERS.diamond.points);
-      }
-
-      // Update comparison table
-      updateComparisonTable(monthlySpending);
-    }
-
-    function calculateMultiCardMode() {
-      const amexSpending = parseFloat(amexSpendingInput.value) || 0;
-      const mcSpending = parseFloat(mcSpendingInput.value) || 0;
-      const mcCardKey = getSelectedMultiCardMC();
-      const mcCard = CARDS[mcCardKey];
-      const totalSpending = amexSpending + mcSpending;
-
-      // Update total spending display
-      totalMultiSpendingEl.textContent = formatNOK(totalSpending);
-
-      const results = calculateMultiCard(amexSpending, mcSpending, mcCardKey);
-
-      // For monthly display, show the computed monthly average
-      const effectiveMonthlyPoints = results.yearlyLevelPoints / 12;
-
-      // Update level points display
-      monthlyPointsEl.textContent = formatNumber(effectiveMonthlyPoints);
+      // Update displays
+      const effectiveMonthlyLP = results.yearlyLevelPoints / 12;
+      monthlyPointsEl.textContent = formatNumber(effectiveMonthlyLP);
       yearlyPointsEl.textContent = formatNumber(results.yearlyLevelPoints);
-
-      // Update bonus points display
       monthlyBonusPointsEl.textContent = formatNumber(results.monthlyBonusPoints);
       yearlyBonusPointsEl.textContent = formatNumber(results.yearlyBonusPoints);
 
       // Update redemption hint
       redemptionHintEl.textContent = getRedemptionHint(results.yearlyBonusPoints);
 
-      // Generate and display narrative
+      // Generate narrative
       narrativeContentEl.innerHTML = generateNarrative({
         monthlySpending: totalSpending,
-        yearlySpending: totalSpending * 12,
-        cardName: 'SAS Amex Elite',
-        monthlyLevelPoints: effectiveMonthlyPoints,
         yearlyLevelPoints: results.yearlyLevelPoints,
         monthlyBonusPoints: results.monthlyBonusPoints,
         yearlyBonusPoints: results.yearlyBonusPoints,
-        isMultiCard: true,
-        mcCardName: mcCard.shortName
+        cardStackDesc
       });
 
-      // Update tier displays using yearly points
+      // Update tier displays
       updateTierDisplayYearly('silver', results.yearlyLevelPoints, TIERS.silver.points, totalSpending);
       updateTierDisplayYearly('gold', results.yearlyLevelPoints, TIERS.gold.points, totalSpending);
       updateTierDisplayYearly('diamond', results.yearlyLevelPoints, TIERS.diamond.points, totalSpending);
 
-      // Update comparison table with total spending
+      // Update comparison table
       updateComparisonTable(totalSpending);
     }
 
-    // Update tier display using yearly points (for threshold-based cards and multi-card)
-    function updateTierDisplayYearly(tierId, yearlyPoints, tierPoints, monthlySpending) {
-      const progressEl = document.getElementById(`${tierId}Progress`);
-      const statusEl = document.getElementById(`${tierId}Status`);
-      const cardEl = document.getElementById(`${tierId}Card`);
+    // Event listeners
+    totalSpendingInput.addEventListener('input', calculate);
 
-      if (yearlyPoints <= 0 || monthlySpending <= 0) {
-        progressEl.style.width = '0%';
-        statusEl.textContent = 'Enter spending to calculate';
-        statusEl.className = 'text-sm text-gray-600';
-        cardEl.style.opacity = '0.7';
-        return;
-      }
-
-      cardEl.style.opacity = '1';
-
-      // Check if achievable within 12 months
-      if (yearlyPoints >= tierPoints) {
-        const monthsToReach = (tierPoints / yearlyPoints) * 12;
-        const totalSpending = monthsToReach * monthlySpending;
-
-        progressEl.style.width = '100%';
-        statusEl.innerHTML = `<span class="text-green-600 font-medium">${formatDuration(monthsToReach)}</span> &middot; ${formatNOK(totalSpending)} total spending`;
-        statusEl.className = 'text-sm';
-        cardEl.classList.add('achievable');
-      } else {
-        // Not achievable with current yearly earning rate
-        const yearsNeeded = tierPoints / yearlyPoints;
-        progressEl.style.width = `${Math.min(100, (yearlyPoints / tierPoints) * 100)}%`;
-        statusEl.innerHTML = `<span class="text-red-600 font-medium">Not achievable</span> &middot; Would take ${yearsNeeded.toFixed(1)} years`;
-        statusEl.className = 'text-sm';
-        cardEl.classList.remove('achievable');
-      }
-    }
-
-    // Card selection handlers (single card mode)
-    document.querySelectorAll('#singleCardSelection .card-option').forEach(option => {
-      option.addEventListener('click', (e) => {
-        // Don't prevent default - let the radio button get checked
-        document.querySelectorAll('#singleCardSelection .card-option').forEach(o => o.classList.remove('selected'));
-        option.classList.add('selected');
-        calculate();
-      });
-    });
-
-    // Card selection handlers (multi-card MC selection)
-    document.querySelectorAll('#multiCardSelection .card-option').forEach(option => {
-      option.addEventListener('click', (e) => {
-        document.querySelectorAll('#multiCardSelection .card-option').forEach(o => o.classList.remove('selected'));
-        option.classList.add('selected');
-        calculate();
-      });
-    });
-
-    // Initialize selection state
-    function updateCardSelectionUI() {
-      // Single card mode
-      const selectedCard = getSelectedCard();
-      document.querySelectorAll('#singleCardSelection .card-option').forEach(option => {
-        const radio = option.querySelector('input[type="radio"]');
-        if (radio && radio.value === selectedCard) {
-          option.classList.add('selected');
-        } else {
-          option.classList.remove('selected');
-        }
-      });
-
-      // Multi-card mode
-      const selectedMC = getSelectedMultiCardMC();
-      document.querySelectorAll('#multiCardSelection .card-option').forEach(option => {
-        const radio = option.querySelector('input[type="radio"]');
-        if (radio && radio.value === selectedMC) {
-          option.classList.add('selected');
-        } else {
-          option.classList.remove('selected');
-        }
-      });
-    }
-
-    // Multi-card toggle handler
-    multiCardToggle.addEventListener('click', toggleMultiCardMode);
-    multiCardToggle.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleMultiCardMode();
-      }
-    });
-
-    // Preset buttons
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const amount = parseInt(btn.getAttribute('data-amount'));
-        if (isMultiCardMode) {
-          // Split 60/40 between Amex and MC
-          amexSpendingInput.value = Math.round(amount * 0.6);
-          mcSpendingInput.value = Math.round(amount * 0.4);
-        } else {
-          monthlySpendingInput.value = amount;
-        }
+        const amount = parseInt(btn.dataset.amount);
+        totalSpendingInput.value = amount;
         calculate();
       });
     });
 
-    // Input handlers
-    monthlySpendingInput.addEventListener('input', calculate);
-    amexSpendingInput.addEventListener('input', calculate);
-    mcSpendingInput.addEventListener('input', calculate);
+    document.querySelectorAll('.strategy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setStrategy(btn.dataset.strategy);
+      });
+    });
+
+    addCardBtn.addEventListener('click', showCardPicker);
+    closePickerBtn.addEventListener('click', hideCardPicker);
+    cardPicker.addEventListener('click', (e) => {
+      if (e.target === cardPicker) hideCardPicker();
+    });
 
     // Initialize
     window.addEventListener('load', () => {
-      monthlySpendingInput.value = '25000';
-      amexSpendingInput.value = '15000';
-      mcSpendingInput.value = '10000';
-      updateCardSelectionUI();
-      calculate();
+      totalSpendingInput.value = '25000';
+      setStrategy('level');
     });
   </script>
 </body>
