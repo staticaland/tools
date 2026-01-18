@@ -160,32 +160,6 @@
       overflow-y: auto;
     }
 
-    /* Spending slider */
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: #e5e7eb;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #000066;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    input[type="range"]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #000066;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
   </style>
 </head>
 <body class="bg-slate-50 text-gray-900 p-4 sm:p-6 font-sans min-h-screen">
@@ -222,34 +196,10 @@
       </div>
     </div>
 
-    <!-- Monthly Spending Input -->
-    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-800 mb-1">Monthly Spending</h2>
-      <p class="text-xs text-gray-500 mb-4">Enter your total monthly credit card spending</p>
-
-      <div class="mb-4">
-        <label for="totalSpending" class="block text-xs sm:text-sm mb-1 text-gray-600 font-medium">Total Monthly Spending (NOK)</label>
-        <div class="flex items-center gap-3">
-          <input id="totalSpending" type="number" step="1000" min="0" placeholder="25000"
-            class="flex-1 px-3 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sas-blue focus:border-sas-blue text-center" />
-          <span class="text-sm text-gray-500">NOK/month</span>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap gap-2">
-        <button data-amount="10000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">10k</button>
-        <button data-amount="20000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">20k</button>
-        <button data-amount="30000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">30k</button>
-        <button data-amount="50000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">50k</button>
-        <button data-amount="75000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">75k</button>
-        <button data-amount="100000" class="preset-btn px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sas-blue">100k</button>
-      </div>
-    </div>
-
     <!-- Card Stack Builder -->
     <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-lg mb-3 sm:mb-4 border border-gray-200">
       <h2 class="text-lg font-semibold text-gray-800 mb-1">Your Card Stack</h2>
-      <p class="text-xs text-gray-500 mb-4">Allocate your spending across cards</p>
+      <p class="text-xs text-gray-500 mb-4">Enter monthly spending for each card</p>
 
       <div id="cardStack" class="space-y-3">
         <!-- Cards will be added here dynamically -->
@@ -716,33 +666,33 @@
       }
     };
 
-    // Strategy configurations
+    // Strategy configurations (spending amounts in NOK)
     const STRATEGIES = {
       level: {
         name: 'Max Level Points',
         description: '<strong>Max Level Points:</strong> Use SAS Amex Elite everywhere Amex is accepted (best level point rate at 6 per 100 NOK). This is the fastest path to Silver, Gold, or Diamond status.',
         cards: [
-          { id: 'amex-elite', percentage: 100 }
+          { id: 'amex-elite', spending: 25000 }
         ]
       },
       bonus: {
         name: 'Max Bonus Points',
         description: '<strong>Max Bonus Points:</strong> Use DNB SAGA MC Upgrade for maximum bonus points (15 per 100 NOK). Great for accumulating flight rewards, but slower for earning status.',
         cards: [
-          { id: 'dnb-saga', percentage: 100 }
+          { id: 'dnb-saga', spending: 25000 }
         ]
       },
       balanced: {
         name: 'Balanced',
-        description: '<strong>Balanced Strategy:</strong> Use SAS Amex Elite as primary (80%) for level points, and SAS MC Premium (20%) where Amex isn\'t accepted. The MC Premium gives minimum 500 LP/month when used.',
+        description: '<strong>Balanced Strategy:</strong> Use SAS Amex Elite as primary for level points, and SAS MC Premium where Amex isn\'t accepted. The MC Premium gives minimum 500 LP/month when used.',
         cards: [
-          { id: 'amex-elite', percentage: 80 },
-          { id: 'mastercard-premium', percentage: 20 }
+          { id: 'amex-elite', spending: 20000 },
+          { id: 'mastercard-premium', spending: 5000 }
         ]
       },
       custom: {
         name: 'Custom Stack',
-        description: '<strong>Custom Stack:</strong> Build your own card combination. Add cards below and set your spending allocation for each.',
+        description: '<strong>Custom Stack:</strong> Build your own card combination. Add cards below and enter your monthly spending for each.',
         cards: []
       }
     };
@@ -753,7 +703,6 @@
     let nextCardId = 0;
 
     // DOM Elements
-    const totalSpendingInput = document.getElementById('totalSpending');
     const cardStackEl = document.getElementById('cardStack');
     const addCardBtn = document.getElementById('addCardBtn');
     const cardPicker = document.getElementById('cardPicker');
@@ -834,15 +783,17 @@
     }
 
     // Calculate combined results from card stack
-    function calculateCardStack(totalMonthlySpending) {
+    function calculateCardStack() {
       let totalMonthlyLevelPoints = 0;
       let totalYearlyLevelPoints = 0;
       let totalMonthlyBonusPoints = 0;
+      let totalMonthlySpending = 0;
       let dnbSagaYearlySpending = 0;
 
       for (const stackCard of cardStack) {
-        const spending = (stackCard.percentage / 100) * totalMonthlySpending;
+        const spending = stackCard.spending || 0;
         const cardKey = stackCard.cardId;
+        totalMonthlySpending += spending;
 
         // Level points
         const monthlyLP = calculateLevelPoints(cardKey, spending);
@@ -867,7 +818,8 @@
         monthlyLevelPoints: totalMonthlyLevelPoints,
         yearlyLevelPoints: totalYearlyLevelPoints,
         monthlyBonusPoints: totalMonthlyBonusPoints,
-        yearlyBonusPoints: totalMonthlyBonusPoints * 12
+        yearlyBonusPoints: totalMonthlyBonusPoints * 12,
+        totalMonthlySpending
       };
     }
 
@@ -1014,7 +966,7 @@
         cardStack = strategy.cards.map(c => ({
           uid: generateCardId(),
           cardId: c.id,
-          percentage: c.percentage
+          spending: c.spending
         }));
       }
 
@@ -1054,25 +1006,19 @@
               </svg>
             </button>
           </div>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-xs text-gray-600">Spending allocation</span>
-              <span class="text-sm font-semibold text-sas-blue">${stackCard.percentage}%</span>
-            </div>
-            <input type="range" min="0" max="100" value="${stackCard.percentage}"
-              class="spending-slider w-full" data-uid="${stackCard.uid}" />
-            <div class="flex justify-between text-xs text-gray-400">
-              <span>0%</span>
-              <span>100%</span>
-            </div>
+          <div>
+            <label class="text-xs text-gray-600 block mb-1">Monthly spending (NOK)</label>
+            <input type="number" step="1000" min="0" value="${stackCard.spending || 0}"
+              class="spending-input w-full px-3 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-900 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-sas-blue focus:border-sas-blue"
+              data-uid="${stackCard.uid}" placeholder="25000" />
           </div>
         `;
         cardStackEl.appendChild(el);
       });
 
-      // Add event listeners for sliders
-      document.querySelectorAll('.spending-slider').forEach(slider => {
-        slider.addEventListener('input', handleSliderChange);
+      // Add event listeners for spending inputs
+      document.querySelectorAll('.spending-input').forEach(input => {
+        input.addEventListener('input', handleSpendingChange);
       });
 
       // Add event listeners for remove buttons
@@ -1080,26 +1026,20 @@
         btn.addEventListener('click', handleRemoveCard);
       });
 
-      // Show/hide add button based on remaining percentage
-      const totalPercentage = cardStack.reduce((sum, c) => sum + c.percentage, 0);
-      addCardBtn.style.display = totalPercentage >= 100 && cardStack.length >= Object.keys(CARDS).length ? 'none' : 'flex';
+      // Show/hide add button based on number of cards
+      addCardBtn.style.display = cardStack.length >= Object.keys(CARDS).length ? 'none' : 'flex';
     }
 
-    // Handle slider change
-    function handleSliderChange(e) {
+    // Handle spending input change
+    function handleSpendingChange(e) {
       const uid = e.target.dataset.uid;
-      const newValue = parseInt(e.target.value);
+      const newValue = parseFloat(e.target.value) || 0;
 
       // Find the card and update
       const cardIndex = cardStack.findIndex(c => c.uid === uid);
       if (cardIndex === -1) return;
 
-      // Calculate current total without this card
-      const otherTotal = cardStack.reduce((sum, c, i) => i === cardIndex ? sum : sum + c.percentage, 0);
-
-      // Limit to remaining percentage
-      const maxValue = 100 - otherTotal;
-      cardStack[cardIndex].percentage = Math.min(newValue, maxValue);
+      cardStack[cardIndex].spending = Math.max(0, newValue);
 
       // Switch to custom strategy when manually adjusting
       if (currentStrategy !== 'custom') {
@@ -1110,7 +1050,6 @@
         strategyDescriptionEl.innerHTML = STRATEGIES.custom.description;
       }
 
-      renderCardStack();
       calculate();
     }
 
@@ -1154,13 +1093,11 @@
       document.querySelectorAll('.card-picker-option').forEach(btn => {
         btn.addEventListener('click', () => {
           const cardKey = btn.dataset.card;
-          const totalPercentage = cardStack.reduce((sum, c) => sum + c.percentage, 0);
-          const remainingPercentage = 100 - totalPercentage;
 
           cardStack.push({
             uid: generateCardId(),
             cardId: cardKey,
-            percentage: Math.min(remainingPercentage, 50) // Default to 50% or remaining
+            spending: 10000 // Default spending amount
           });
 
           // Switch to custom strategy
@@ -1329,8 +1266,6 @@
 
     // Main calculation function
     function calculate() {
-      const totalSpending = parseFloat(totalSpendingInput.value) || 0;
-
       if (cardStack.length === 0) {
         monthlyPointsEl.textContent = '0';
         yearlyPointsEl.textContent = '0';
@@ -1341,11 +1276,12 @@
         updateTierDisplayYearly('silver', 0, TIERS.silver.points, 0);
         updateTierDisplayYearly('gold', 0, TIERS.gold.points, 0);
         updateTierDisplayYearly('diamond', 0, TIERS.diamond.points, 0);
-        updateComparisonTable(totalSpending);
+        updateComparisonTable(0);
         return;
       }
 
-      const results = calculateCardStack(totalSpending);
+      const results = calculateCardStack();
+      const totalSpending = results.totalMonthlySpending;
 
       // Build card stack description
       const cardNames = cardStack.map(c => CARDS[c.cardId].shortName);
@@ -1382,16 +1318,6 @@
     }
 
     // Event listeners
-    totalSpendingInput.addEventListener('input', calculate);
-
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const amount = parseInt(btn.dataset.amount);
-        totalSpendingInput.value = amount;
-        calculate();
-      });
-    });
-
     document.querySelectorAll('.strategy-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         setStrategy(btn.dataset.strategy);
@@ -1406,7 +1332,6 @@
 
     // Initialize
     window.addEventListener('load', () => {
-      totalSpendingInput.value = '25000';
       setStrategy('level');
     });
   </script>
